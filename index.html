@@ -165,6 +165,7 @@
   .fire:active{background:rgba(76,201,240,.9)}
   .lvflash{position:absolute;inset:0;z-index:39;pointer-events:none;background:radial-gradient(circle,rgba(255,209,102,0),rgba(255,209,102,.45));opacity:0;transition:opacity .2s}
   .lvflash.on{opacity:1}
+  .savecode{width:100%;height:72px;border-radius:9px;border:2px solid var(--line);background:var(--ui-2);color:#cfd3dc;font:12px/1.4 monospace;padding:8px;resize:none;-webkit-user-select:text;user-select:text}
   .namerow{display:flex;gap:8px}
   .namerow input{flex:1;min-width:0;height:48px;border-radius:9px;border:2px solid var(--line);background:var(--ui-2);color:#fff;font:inherit;font-size:1.05rem;padding:0 12px;-webkit-user-select:text;user-select:text}
   .namerow input:focus{outline:none;border-color:var(--blue)}
@@ -232,6 +233,10 @@
     <div class="help"><b>조작법</b><br>왼쪽 화면 드래그 = 걷기 · 오른쪽 드래그 = 카메라 · ⬆ = 점프<br>물건 근처에 가면 <b>E 버튼</b>이 떠요. 누르면 돼요!<br>
     <b>할 수 있는 것</b><br>🌱 농사 · 🎣 낚시 · 🦈 브레인롯 모으기 · 🥚 펫 키우기 · ➕ 수학 퀴즈 · 🏡 집 짓고 꾸미기 · 👻 귀신의 집(난이도 3) · 🏸 배드민턴 · 🎯 서바이벌(입장료) · ⛰️ 산 · 🏗️ 오비 · 🪙 코인 줍기 · 🚨 도둑 쫓아내기<br>
     <span style="color:#8a8f99">PC: WASD 이동, 스페이스 점프, E 상호작용</span></div>
+    <div class="sec">💾 저장</div>
+    <div class="help" id="saveInfo"></div>
+    <div class="two"><button class="buy blue" id="expBtn" style="height:50px">📋 저장 코드 복사</button><button class="buy" id="impBtn" style="height:50px;background:var(--ui-3)">📥 코드로 불러오기</button></div>
+    <textarea id="saveCode" class="savecode" placeholder="여기에 저장 코드를 붙여넣고 '코드로 불러오기'를 누르세요" spellcheck="false"></textarea>
     <div class="help" id="credits"></div>
     <button class="buy wide" id="resetBtn" style="background:var(--ui-3)">처음부터 다시 (두 번 누르기)</button>
   </div></div></div>
@@ -426,7 +431,10 @@ function load(){
   if(away>5&&ips()>0){ S.cash+=away*ips(); pendingNote=["🎁","안 보는 동안 기지에 코인이 쌓였어! 수금하러 가자","gold"]; }
   S.tick=now();
 }
-function save(){ try{ localStorage.setItem("bra2:"+who,JSON.stringify(S)); }catch(e){} }
+let savedAt=0,saveErr=false;
+function save(){ try{ localStorage.setItem("bra2:"+who,JSON.stringify(S)); savedAt=now(); saveErr=false; }catch(e){ saveErr=true; } }
+function exportCode(){ return "BRA1."+btoa(unescape(encodeURIComponent(JSON.stringify(S)))); }
+function importCode(code){ code=String(code||"").trim(); if(code.indexOf("BRA1.")!==0) throw new Error("형식"); const obj=JSON.parse(decodeURIComponent(escape(atob(code.slice(5))))); if(typeof obj.coins!=="number") throw new Error("내용"); localStorage.setItem("bra2:"+who,JSON.stringify(obj)); }
 const num=n=>Math.floor(n).toLocaleString("ko-KR");
 const $=id=>document.getElementById(id);
 
@@ -1376,7 +1384,13 @@ function equipPet(){ if(petObj){ scene.remove(petObj); petObj=null; } if(petObj2
   if(S.pet){ petObj=mkPet(byId(PETS,S.pet)); petObj.position.set(P.x-2,0,P.z+2); scene.add(petObj); }
   if(S.pet2&&S.up.pet2&&S.pet2!==S.pet){ petObj2=mkPet(byId(PETS,S.pet2)); petObj2.position.set(P.x+2,0,P.z+2); scene.add(petObj2); } }
 $("menuBtn").onclick=()=>{ drawMenu(); openGui("g-menu"); }; $("whoBtn").onclick=()=>{ drawMenu(); openGui("g-menu"); };
-function drawMenu(){ $("nameIn").value=S.name; $("sndBtn").textContent=sndOn?"🔊 소리 켜짐":"🔇 소리 꺼짐"; $("musBtn").textContent=musicOn?"🎵 음악 켜짐":"🎵 음악 꺼짐"; drawCredits(); }
+function drawMenu(){ $("nameIn").value=S.name; $("sndBtn").textContent=sndOn?"🔊 소리 켜짐":"🔇 소리 꺼짐"; $("musBtn").textContent=musicOn?"🎵 음악 켜짐":"🎵 음악 꺼짐"; drawCredits();
+  const ago=savedAt?Math.max(0,Math.round(now()-savedAt)):null;
+  $("saveInfo").innerHTML=(saveErr?"<b style='color:var(--red)'>⚠ 이 브라우저는 저장이 막혀 있어요(개인정보 보호 모드?)</b> — 저장 코드를 복사해 두세요.":"<b>자동 저장 중</b> — 마지막 저장 "+(ago===null?"아직":ago+"초 전")+" · 이 기기·이 앱(브라우저)에 저장돼요.")+
+    "<br><span style='color:#8a8f99'>다른 기기나 홈 화면 앱으로 옮기려면: 저장 코드 복사 → 거기서 붙여넣고 불러오기</span>"; }
+$("expBtn").onclick=()=>{ save(); const code=exportCode(); const ta=$("saveCode"); ta.value=code; ta.focus(); ta.select(); let ok=false; try{ ok=document.execCommand("copy"); }catch(e){} if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(()=>note("📋","저장 코드를 복사했어요 (메모장 등에 붙여넣어 보관)","gold")).catch(()=>{}); else note("📋",ok?"저장 코드를 복사했어요":"아래 코드를 길게 눌러 복사하세요","gold"); SFX.open(); };
+$("impBtn").onclick=()=>{ const code=$("saveCode").value; if(!code.trim()){ note("📥","먼저 아래 칸에 저장 코드를 붙여넣어요","bad"); return; } try{ importCode(code); dropCarry(); H.zone="field"; load(); teleport(SPAWN.x,SPAWN.z); applyState(); closeGui(); note("📥","저장 코드를 불러왔어요! 코인 "+num(S.coins)+" · Lv."+S.lvl,"gold"); SFX.fanfare(); }catch(e){ note("📥","코드가 올바르지 않아요. 'BRA1.'로 시작하는 전체 코드를 붙여넣어요","bad"); bad(); } };
+$("saveCode").addEventListener("keydown",e=>e.stopPropagation()); $("saveCode").addEventListener("keyup",e=>e.stopPropagation());
 $("musBtn").onclick=()=>{ musicOn=!musicOn; localStorage.setItem("bra2:music",musicOn?"1":"0"); if(musicGain) musicGain.gain.value=musicOn?.14:0; if(musicOn) kickAudio(); drawMenu(); SFX.click(); };
 function drawCredits(){
   const box=$("credits"); if(!box) return;
@@ -1684,7 +1698,7 @@ function tick(){
 
 window.BRA={get S(){return S;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
-  addEventListener("visibilitychange",()=>{ S.tick=now(); save(); }); addEventListener("pagehide",()=>{ S.tick=now(); save(); }); }
+  const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
 Promise.race([fontsReady,new Promise(r=>setTimeout(r,1800))]).then(start);
 })();
