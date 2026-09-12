@@ -589,11 +589,11 @@ for(const [x,z] of [[-52,-45],[50,-40],[-45,50],[52,48],[-100,-70],[110,-40],[30
 for(let i=0;i<60;i++){ const a=i*2.399,r=25+(i*13)%110,x=Math.cos(a)*r,z=Math.sin(a)*r; if(inWater(x,z)||(Math.abs(x-MTN.x)<24&&Math.abs(z-MTN.z)<24)) continue; const f=box(.5,.5,.5,[0xff69b4,0xfff176,0xffffff,0xff8c1a][i%4]); at(f,x,.6,z); at(box(.15,.5,.15,0x3f9b3f),x,.25,z); }
 
 function stall(pos,title,color,npcp,npcName){
-  const {x,z}=pos; at(box(5,1.6,1.6,0xcfa66b),x,.8,z); at(box(6,.35,3.2,color),x,6.9,z-.3);
-  at(box(.3,6.9,.3,0xf1f1f1),x-2.7,3.45,z-1.4); at(box(.3,6.9,.3,0xf1f1f1),x+2.7,3.45,z-1.4);
-  at(label(title,{size:46,h:1.5}),x,8.2,z);
-  const n=mkChar(npcp); n.position.set(x,0,z-1.7); scene.add(n); at(label(npcName,{size:30,h:.8,color:"#ffe9a8"}),x,6.4,z-1.7);
-  PLATS.push({x,z,w:5,d:1.6,y:1.6,h:1.6,noDraw:true}); solids.push({x,z:z-1.7,r:1},{x:x-2.7,z:z-1.4,r:.4},{x:x+2.7,z:z-1.4,r:.4}); return n;
+  const {x,z}=pos; at(box(5,1.4,1.4,0xcfa66b),x,.7,z); at(box(6,.3,3.2,color),x,5.8,z-.3);
+  at(box(.3,5.8,.3,0xf1f1f1),x-2.7,2.9,z-1.4); at(box(.3,5.8,.3,0xf1f1f1),x+2.7,2.9,z-1.4);
+  at(label(title,{size:46,h:1.5}),x,7.1,z);
+  const n=mkChar(npcp); n.position.set(x,0,z-1.7); scene.add(n); at(label(npcName,{size:30,h:.8,color:"#ffe9a8"}),x,5.4,z-2.4);
+  PLATS.push({x,z,w:5,d:1.4,y:1.4,h:1.4,noDraw:true}); solids.push({x,z:z-1.7,r:1},{x:x-2.7,z:z-1.4,r:.4},{x:x+2.7,z:z-1.4,r:.4}); return n;
 }
 const npcs=[
   stall(SEEDSHOP,"🌱 씨앗 가게",0x2fbf5a,{skin:0xf5c66e,shirt:0x2fbf5a,pants:0x5b3d2b,hairCol:0x8d5524,hat:"cap"},"샘"),
