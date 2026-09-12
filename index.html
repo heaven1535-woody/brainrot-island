@@ -371,7 +371,7 @@ const PAD={x:-12,z:28.5}, SHIELD={x:-5,z:28.5};
 const RIVAL={x:16,z:42}, RPEDS=[{x:10,z:43},{x:16,z:43},{x:22,z:43}], GUARD={x:16,z:37};
 const OBBY={x:44,z:18};
 const PLATS=[]; // {x,z,w,d,y,col}
-[[0,0,2.8],[5,-2,5.8],[9,2,8.8],[6,7,11.8],[0,8,14.8],[-5,4,17.8],[-4,-3,20.8],[2,-6,23.8]].forEach((p,i)=>PLATS.push({x:OBBY.x+p[0],z:OBBY.z+p[1],w:4.5,d:4.5,y:p[2],h:.6,col:[0xff5252,0xffb300,0x69f0ae,0x40c4ff,0xe040fb,0xff6e40,0xeeff41,0x18ffff][i]}));
+[[0,0,2.8],[5,-2,5.8],[9,2,8.8],[6,7,11.8],[0,8,14.8],[-5,4,17.8],[-4,-3,20.8],[2,-6,23.8]].forEach((p,i)=>PLATS.push({x:OBBY.x+p[0],z:OBBY.z+p[1],w:6,d:6,y:p[2],h:.6,col:[0xff5252,0xffb300,0x69f0ae,0x40c4ff,0xe040fb,0xff6e40,0xeeff41,0x18ffff][i]}));
 const CHEST={x:OBBY.x+2,z:OBBY.z-6,y:23.8};
 const MTN={x:84,z:-70};
 [[44,44,3.6,0x7c9a5a],[32,32,7.2,0x8a9a6a],[20,20,10.8,0x9aa0a6],[10,10,14.4,0xcfd8dc]].forEach(t=>PLATS.push({x:MTN.x,z:MTN.z,w:t[0],d:t[1],y:t[2],h:t[2],col:t[3]}));
@@ -496,10 +496,10 @@ function synthFallback(){ if(MU.mode==="synth") return; MU.mode="synth"; if(MU.a
 function zoneTrack(){
   if(H.zone==="haunt") return "haunt";
   if(BD.on) return "sport";
-  if(fishing||weather.kind==="rain") return "calm";
-  if(guiOpen==="g-shop"||guiOpen==="g-rod"||guiOpen==="g-sell"||guiOpen==="g-pet"||guiOpen==="g-up"||guiOpen==="g-build") return "town";
   if(H.zone==="home") return "town";
   if(SV.on||FP.on) return "sport";
+  if(fishing||weather.kind==="rain") return "calm";
+  if(guiOpen==="g-shop"||guiOpen==="g-rod"||guiOpen==="g-sell"||guiOpen==="g-pet"||guiOpen==="g-up"||guiOpen==="g-build") return "town";
   if(Math.hypot(P.x-TOWN.x,P.z-TOWN.z)<36) return "town";
   if(Math.hypot(P.x-FARM.cx,P.z-FARM.cz)<22) return "farm";
   return "field";
@@ -1482,8 +1482,8 @@ $("fgo").onclick=()=>{
   if(!inZ){ $("fmsg").textContent="🥾 앗, 헌 신발… 다시!"; bad(); return; }
   const luck=RODS[S.rod].luck*(perfect?3:1)*(1+bonus("luck"))*(weather.kind==="rainbow"?2:1);
   let tot=0; const ws=FISH.map((f,i)=>{ const w=i>=5?f.w*luck:f.w; tot+=w; return w; }); let r=Math.random()*tot,f=FISH[0]; for(let i=0;i<FISH.length;i++){ r-=ws[i]; if(r<=0){ f=FISH[i]; break; } }
-  const val=f.val*(perfect?2:1); S.goods.push({e:f.e,nm:(perfect?"⭐ ":"")+f.nm,val,k:"fish",id:f.id}); S.book[f.id]=(S.book[f.id]||0)+1; drawHotbar();
-  $("fmsg").textContent=(perfect?"완벽! ":"")+f.e+" "+f.nm+" 잡았다! (팔면 "+num(val)+")"; note(f.e,f.nm+" 잡았어! '물고기 팔기'로 바로 팔 수 있어",f.val>=1900?"gold":""); drawFishSell();
+  const val=Math.round(f.val*(perfect?1.5:1)); S.goods.push({e:f.e,nm:(perfect?"⭐ ":"")+f.nm,val,k:"fish",id:f.id}); S.book[f.id]=(S.book[f.id]||0)+1; drawHotbar();
+  $("fmsg").textContent=(perfect?"완벽! ×1.5 ":"")+f.e+" "+f.nm+" 잡았다! (팔면 "+num(val)+")"; note(f.e,f.nm+" 잡았어! '물고기 팔기'로 바로 팔 수 있어",f.val>=1900?"gold":""); drawFishSell();
   SFX.splash(); burst(bobber.position.x,.6,bobber.position.z,0x4cc9f0,18,5,.8); if(f.val>=1900){ SFX.fanfare(); burst(P.x,P.y+4,P.z,0xffd166,30,7,1); } else if(perfect) chime(680,900); else SFX.pop();
   gainXp(4+FISH.indexOf(f)*4); quest("fish"); save();
 };
@@ -1500,7 +1500,7 @@ function tick(){
     if(keys.KeyW||keys.ArrowUp) fy=1; if(keys.KeyS||keys.ArrowDown) fy=-1; if(keys.KeyA||keys.ArrowLeft) fx=-1; if(keys.KeyD||keys.ArrowRight) fx=1;
     const l=Math.hypot(fx,fy); if(l>1){ fx/=l; fy/=l; } const f=[-Math.sin(camYaw),-Math.cos(camYaw)],r=[-f[1],f[0]]; mx=f[0]*fy+r[0]*fx; mz=f[1]*fy+r[1]*fx; }
   P.moving=Math.hypot(mx,mz)>.05;
-  if(P.moving){ const sp=(carry?9:16)*(1+bonus("speed")+(S.up.shoes?.3:0)+(t<S.cakeUntil?.5:0)); tryMove(P.x+mx*sp*dt,P.z+mz*sp*dt); P.ry=Math.atan2(mx,mz); }
+  if(P.moving){ const air=P.y>groundY(P.x,P.z)+.05&&P.vy>-50; const sp=(carry?9:16)*(1+bonus("speed")+(S.up.shoes?.3:0)+(t<S.cakeUntil?.5:0))*(air?.6:1); tryMove(P.x+mx*sp*dt,P.z+mz*sp*dt); P.ry=Math.atan2(mx,mz); }
   const gy=groundY(P.x,P.z); P.vy-=GRAV*dt; P.y+=P.vy*dt;
   if(P.y<=gy){ if(P.vy<-9){ SFX.land(); burst(P.x,gy+.2,P.z,0xdddddd,8,3,.5); if(P.vy<-22) shake(.35,.25); } P.y=gy; P.vy=0; lastGround=t; if(t-jumpReq<.15){ jumpReq=0; doJump(); } }
   if(P.y<=gy+.01&&!guiOpen) for(const l of LPADS) if(Math.abs(P.x-l.x)<1.9&&Math.abs(P.z-l.z)<1.9){ P.vy=34; SFX.whoosh(); burst(l.x,.6,l.z,0xff8c1a,24,7,.9); break; }
