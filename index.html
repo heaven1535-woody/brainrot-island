@@ -201,8 +201,11 @@
   <div class="gui" id="g-math"><div class="win"><div class="hd">➕ 민지의 수학 퀴즈 <small id="mqLeft"></small><button class="x" data-close>✕</button></div><div class="bd" id="mathBody"></div></div></div>
   <div class="gui" id="g-up"><div class="win"><div class="hd">🛒 준호의 업그레이드 가게 <button class="x" data-close>✕</button></div><div class="bd" id="upBody"></div></div></div>
   <div class="gui inv" id="g-inv"><div class="win"><div class="hd">🎒 인벤토리 <small id="invCap"></small><button class="x" data-close>✕</button></div><div class="bd" id="invBody"></div></div></div>
+  <div class="gui" id="g-hdiff"><div class="win"><div class="hd">👻 귀신의 집 <button class="x" data-close>✕</button></div><div class="bd" id="hdiffBody"></div></div></div>
+  <div class="gui" id="g-surv"><div class="win"><div class="hd">🎯 서바이벌 게임장 <button class="x" data-close>✕</button></div><div class="bd" id="survBody"></div></div></div>
+  <div class="fishwin" id="survwin"><div class="fishmsg" id="svmsg"></div><div class="fishbtns"><button class="buy blue" id="svquit">그만하기</button></div></div>
   <div class="gui side" id="g-build"><div class="win"><div class="hd">🧱 수지의 자재 가게 <small id="hval"></small><button class="x" data-close>✕</button></div><div class="bd" id="buildBody"></div></div></div>
-  <div id="scare" class="scare"><span>👻 깜짝!</span></div>
+  <div id="scare" class="scare"><span id="scaretxt">👻 깜짝!</span></div>
   <div id="lvflash" class="lvflash"></div>
 
   <div class="gui" id="g-shop"><div class="win"><div class="hd">🌱 샘의 씨앗 가게 <small id="restock">보충 60초</small><button class="x" data-close>✕</button></div><div class="bd" id="shopList"></div></div></div>
@@ -214,8 +217,9 @@
     <div class="namerow"><input id="nameIn" maxlength="10" placeholder="이름 입력"><button class="buy" id="nameBtn">이름 바꾸기</button></div>
     <div class="two"><button class="buy blue" id="sndBtn" style="height:54px">🔊 소리 켜짐</button><button class="buy blue" id="musBtn" style="height:54px">🎵 음악 켜짐</button></div>
     <div class="help"><b>조작법</b><br>왼쪽 화면 드래그 = 걷기 · 오른쪽 드래그 = 카메라 · ⬆ = 점프<br>물건 근처에 가면 <b>E 버튼</b>이 떠요. 누르면 돼요!<br>
-    <b>할 수 있는 것</b><br>🌱 농사 · 🎣 낚시 · 🦈 브레인롯 모으기 · 🥚 펫 키우기 · 🏗️ 오비 꼭대기 보물상자 · 🪙 바닥 코인 줍기 · 🚨 도둑 쫓아내기<br>
+    <b>할 수 있는 것</b><br>🌱 농사 · 🎣 낚시 · 🦈 브레인롯 모으기 · 🥚 펫 키우기 · ➕ 수학 퀴즈 · 🏡 집 짓고 꾸미기 · 👻 귀신의 집(난이도 3) · 🏸 배드민턴 · 🎯 서바이벌(입장료) · ⛰️ 산 · 🏗️ 오비 · 🪙 코인 줍기 · 🚨 도둑 쫓아내기<br>
     <span style="color:#8a8f99">PC: WASD 이동, 스페이스 점프, E 상호작용</span></div>
+    <div class="help" id="credits"></div>
     <button class="buy wide" id="resetBtn" style="background:var(--ui-3)">처음부터 다시 (두 번 누르기)</button>
   </div></div></div>
 </div>
@@ -275,7 +279,8 @@ const QUESTS=[
   {k:"sell",nm:"코인 벌기(판매)",e:"💰",n:[300,1000,3000],r:100},{k:"chase",nm:"도둑 쫓아내기",e:"🚨",n:[1,2],r:150},
   {k:"water",nm:"물주기",e:"💧",n:[3,5],r:40},{k:"chest",nm:"보물상자 열기",e:"🎁",n:[1],r:100},
   {k:"math",nm:"수학 퀴즈 맞히기",e:"➕",n:[5,10],r:90},{k:"feed",nm:"펫 먹이 주기",e:"🍖",n:[2,5],r:60},
-  {k:"haunt",nm:"귀신의 집 촛불 모으기",e:"🕯️",n:[12,24],r:200},{k:"badminton",nm:"배드민턴 랠리",e:"🏸",n:[10,25],r:120}
+  {k:"haunt",nm:"귀신의 집 촛불 모으기",e:"🕯️",n:[12,24],r:200},{k:"badminton",nm:"배드민턴 랠리",e:"🏸",n:[10,25],r:120},
+  {k:"survive",nm:"서바이벌 버티기(초)",e:"🎯",n:[20,45],r:180}
 ];
 const UPGRADES=[
   {id:"shoes",nm:"스피드 신발",e:"👟",cost:3000,sub:"걷기 30% 빨라져요 (영구)"},
@@ -289,6 +294,12 @@ const UPGRADES=[
   {id:"racket",nm:"배드민턴 라켓",e:"🏸",cost:800,sub:"배드민턴장에서 코치 태오와 시합 (시합비 50코인 + 셔틀콕 1개)"}
 ];
 const COURT={x:44,z:62,w:12,d:24};
+const SURV={x:-78,z:-26,w:34,d:34};
+const SDIFF=[
+  {nm:"쉬움",e:"🟢",fee:100,hp:5,sp:9,max:4,pay:12,sub:"하트 5개 · 공이 느려요"},
+  {nm:"보통",e:"🟡",fee:200,hp:3,sp:13,max:6,pay:22,sub:"하트 3개 · 조금 빨라요"},
+  {nm:"어려움",e:"🔴",fee:400,hp:3,sp:18,max:9,pay:40,sub:"하트 3개 · 공이 많고 빨라요"}
+];
 function bagCap(){ return 20+(S.up.bag1?20:0)+(S.up.bag2?30:0); }
 function storeCap(){ return [0,200,500,1000][S.house.storage||0]; }
 function bagFull(){ if(S.goods.length>=bagCap()){ note("🎒","가방이 꽉 찼어! 팔거나 창고에 넣자","bad"); bad(); return true; } return false; }
@@ -302,6 +313,24 @@ const EXTRAS=[{id:"door",nm:"문",e:"🚪",cost:300,max:1,sub:"문이 있어야 
   {id:"flag",nm:"깃발",e:"🚩",cost:250,max:1},{id:"pond",nm:"작은 연못",e:"💧",cost:700,max:1},{id:"tree",nm:"마당 나무",e:"🌳",cost:300,max:2},{id:"lamp",nm:"가로등",e:"🏮",cost:200,max:2},{id:"mailbox",nm:"우편함",e:"📫",cost:150,max:1},{id:"swing",nm:"그네",e:"🛝",cost:900,max:1},
   {id:"storage",nm:"창고",e:"🏚",cost:2000,costs:[2000,4000,8000],max:3,sub:"작물·물고기 보관 200 → 500 → 1000개"}];
 const SIDES=[["F","앞 벽"],["B","뒷 벽"],["L","왼쪽 벽"],["R","오른쪽 벽"]];
+/* ---- 집 안 가구 (고정 자리에 놓여요) ---- */
+const FURN=[
+  {id:"rug",   nm:"카펫",     e:"🟧", cost:300,  x:0,    z:0,    sub:"방 가운데"},
+  {id:"bed",   nm:"침대",     e:"🛏️", cost:1200, x:-3.4, z:-3.6, sub:"누워서 자면 수입을 한 번에 받아요", act:1},
+  {id:"sofa",  nm:"소파",     e:"🛋️", cost:900,  x:3.4,  z:3.2,  sub:"앉는 자리"},
+  {id:"table", nm:"식탁",     e:"🍽️", cost:700,  x:-3.6, z:3.2,  sub:"의자 2개 포함"},
+  {id:"tv",    nm:"텔레비전", e:"📺", cost:1500, x:0,    z:-5.2, sub:"채널을 바꿀 수 있어요", act:1},
+  {id:"fridge",nm:"냉장고",   e:"🧊", cost:1100, x:5.1,  z:-3.6, sub:"주방 가구"},
+  {id:"shelf", nm:"책장",     e:"📚", cost:800,  x:-5.2, z:0,    sub:"내 기록을 볼 수 있어요", act:1},
+  {id:"piano", nm:"피아노",   e:"🎹", cost:2500, x:5.1,  z:1.2,  sub:"연주할 수 있어요", act:1},
+  {id:"tank",  nm:"어항",     e:"🐠", cost:1800, x:4.6,  z:-5.3, sub:"잡은 물고기 중 최고를 전시", act:1},
+  {id:"plant", nm:"화분",     e:"🪴", cost:250,  x:-5.2, z:-5.2, sub:"초록 식물"},
+  {id:"lamp2", nm:"스탠드",   e:"💡", cost:400,  x:5.2,  z:5.2,  sub:"방이 환해져요"},
+  {id:"clock", nm:"벽시계",   e:"🕰️", cost:600,  x:-2.2, z:-5.6, sub:"째깍째깍"},
+  {id:"cake",  nm:"케이크",   e:"🎂", cost:500,  x:-3.6, z:1.4,  sub:"먹으면 20초 동안 빨라져요", act:1},
+  {id:"toy",   nm:"곰인형",   e:"🧸", cost:450,  x:2.6,  z:-2.4, sub:"안아줄 수 있어요", act:1}
+];
+const HMILE=[{v:8000,r:2000},{v:20000,r:6000},{v:45000,r:15000}];
 /* ---- 아바타 옵션 ---- */
 const AV_SKIN=[0xf5c66e,0xffdbac,0xd9a066,0xa8734a,0x6b4423,0xffc1d6,0xa5d8ff,0xb9f6ca,0xe1bee7,0xcfd8dc];
 const AV_COL=[0xffffff,0x111111,0xf4443c,0xff8c1a,0xffc83d,0x2fbf5a,0x00b06f,0x00a2ff,0x1f6fff,0x4b2fa8,0xb57bff,0xff4f9a,0xa0522d,0x9aa0a6];
@@ -317,6 +346,7 @@ const PLOTS=[]; for(let i=0;i<4;i++) for(let j=0;j<4;j++) PLOTS.push({x:FARM.cx-
 const SEEDSHOP={x:-16,z:2}, SELL={x:0,z:-8}, RODSHOP={x:13,z:-1}, PETSHOP={x:-15,z:12}, MATHSHOP={x:17,z:9}, UPSHOP={x:8,z:-22};
 const HOUSE={x:-100,z:-84}, ARENA={x:0,z:270,w:70,d:70};
 const LOT={x:-44,z:70}, BUILDSHOP={x:-28,z:78};
+const ROOM={x:0,z:200,w:28,d:28};
 const POND={x1:20,x2:48,z1:-34,z2:-8}, DOCK={x:28,z1:-4,z2:-18};
 const BELT={x1:-6,x2:22,z:21,y:1.25};
 const BASE={x:-12,z:36}; const PEDS=[]; for(const z of [32,37,42]) for(const x of [-18,-12,-6]) PEDS.push({x,z});
@@ -349,7 +379,8 @@ function fresh(){
     can:0,sprinkler:false,pets:[],pet:null,eggs:[],quests:[],qc:{},chestAt:0,chest2At:0,shieldUntil:0,shieldCd:0,
     av:Object.assign({},DEFAULT_AV),hats:["none","cap","bow"],baseSize:6,petXp:{},market:{id:"fish",until:now()+240},mathRest:0,mathBest:0,
     boostUntil:0,baseLv:PEDS.map(()=>0),up:{},pet2:null,hauntAt:0,hauntClears:0,name:"플레이어",store:[],shuttles:0,badBest:0,
-    house:{walls:{F:null,B:null,L:null,R:null},roof:null,door:0,windows:0,fence:0,pots:0,flag:0,pond:0,tree:0,lamp:0,mailbox:0,swing:0,wallCol:0xc19a6b,roofCol:0xb5533c,done:false}};
+    house:{walls:{F:null,B:null,L:null,R:null},roof:null,door:0,windows:0,fence:0,pots:0,flag:0,pond:0,tree:0,lamp:0,mailbox:0,swing:0,wallCol:0xc19a6b,roofCol:0xb5533c,done:false,storage:0,furn:{},tv:0,mile:0},
+    bedAt:0,cakeAt:0,cakeUntil:0,hdiff:1,svBest:0,svDiff:0};
 }
 function upCost(i){ const r=byId(ROTS,S.base[i]),lv=S.baseLv[i]||0; return Math.max(60,Math.round(r.cost*.6*(lv+1))); }
 function freeSlot(){ for(let i=0;i<S.baseSize;i++) if(!S.base[i]) return i; return -1; }
@@ -368,7 +399,7 @@ function load(){
     S.rod=Math.min(S.rod,RODS.length-1);
     S.av=Object.assign({},DEFAULT_AV,raw.av||{});
     if(!S.hats.includes("none")) S.hats=["none","cap","bow"].concat(S.hats);
-    S.house=Object.assign(fresh().house,raw.house||{}); S.house.walls=Object.assign({F:null,B:null,L:null,R:null},(raw.house&&raw.house.walls)||{});
+    S.house=Object.assign(fresh().house,raw.house||{}); S.house.walls=Object.assign({F:null,B:null,L:null,R:null},(raw.house&&raw.house.walls)||{}); S.house.furn=(raw.house&&raw.house.furn)||{};
     if(typeof S.name!=="string"||!S.name.trim()) S.name="플레이어";
   }
   while(S.quests.length<3) S.quests.push(newQuest());
@@ -426,7 +457,53 @@ const music={track:null,step:0,next:0,timer:null,
 };
 function mnote(midi,len,type,vol,t0){ try{ const f=440*Math.pow(2,(midi-69)/12),o=AC.createOscillator(),g=AC.createGain(); o.type=type; o.frequency.value=f; g.gain.setValueAtTime(vol,t0); g.gain.exponentialRampToValueAtTime(.0001,t0+len); o.connect(g); g.connect(musicGain); o.start(t0); o.stop(t0+len+.02); }catch(e){} }
 function mhat(t0){ try{ const n=Math.floor(AC.sampleRate*.03),b=AC.createBuffer(1,n,AC.sampleRate),d=b.getChannelData(0); for(let i=0;i<n;i++) d[i]=Math.random()*2-1; const s=AC.createBufferSource(); s.buffer=b; const f=AC.createBiquadFilter(); f.type="highpass"; f.frequency.value=6000; const g=AC.createGain(); g.gain.setValueAtTime(.025,t0); g.gain.exponentialRampToValueAtTime(.0001,t0+.03); s.connect(f); f.connect(g); g.connect(musicGain); s.start(t0); }catch(e){} }
-function kickAudio(){ if(!sndOn) return; audio(); music.set(H.zone==="haunt"?"haunt":"field"); music.start(); }
+/* ---- 저작권 프리 배경음악 (모두 CC0 / OpenGameArt.org) ---- */
+const TRACKS=[
+  {id:"field",f:"music/field.mp3",nm:"Happy Adventure",by:"TinyWorlds",vol:.30,use:"섬을 돌아다닐 때"},
+  {id:"farm", f:"music/farm.ogg", nm:"Flowerbed Fields",by:"Zane Little Music",vol:.26,use:"농장에서"},
+  {id:"town", f:"music/town.mp3", nm:"Town Theme",by:"cynicmusic",vol:.34,use:"마을·가게·집 안에서"},
+  {id:"haunt",f:"music/haunt.ogg",nm:"Spooky Dungeon",by:"Memoraphile",vol:.38,use:"귀신의 집에서"},
+  {id:"sport",f:"music/sport.ogg",nm:"Invincibility",by:"Zane Little Music",vol:.26,use:"배드민턴 시합"},
+  {id:"calm", f:"music/calm.ogg", nm:"Heavenly Loop",by:"isaiah658",vol:.30,use:"낚시할 때·비 올 때"}
+];
+const trk=id=>{ for(const t of TRACKS) if(t.id===id) return t; return TRACKS[0]; };
+const MU={mode:"?",want:null,cur:null,a:null,vol:0};
+function musEl(){
+  if(MU.a) return MU.a;
+  const a=new Audio(); a.loop=true; a.preload="auto"; a.volume=0; a.crossOrigin="anonymous";
+  a.addEventListener("canplay",()=>{ MU.mode="files"; });
+  a.addEventListener("error",()=>{ if(MU.mode!=="files") synthFallback(); });
+  MU.a=a; return a;
+}
+function synthFallback(){ if(MU.mode==="synth") return; MU.mode="synth"; if(MU.a){ try{ MU.a.pause(); }catch(e){} } if(sndOn&&musicOn){ music.set(H.zone==="haunt"?"haunt":"field"); music.start(); } }
+function zoneTrack(){
+  if(H.zone==="haunt") return "haunt";
+  if(BD.on) return "sport";
+  if(fishing||weather.kind==="rain") return "calm";
+  if(guiOpen==="g-shop"||guiOpen==="g-rod"||guiOpen==="g-sell"||guiOpen==="g-pet"||guiOpen==="g-up"||guiOpen==="g-build") return "town";
+  if(H.zone==="home") return "town";
+  if(SV.on) return "sport";
+  if(Math.hypot(P.x-TOWN.x,P.z-TOWN.z)<36) return "town";
+  if(Math.hypot(P.x-FARM.cx,P.z-FARM.cz)<22) return "farm";
+  return "field";
+}
+function musTick(dt){
+  if(MU.mode==="synth"||!MU.a) return;
+  const a=MU.a,want=musicOn&&sndOn?MU.want:null;
+  if(want!==MU.cur){
+    MU.vol=Math.max(0,MU.vol-dt*1.4); a.volume=MU.vol;
+    if(MU.vol<=.002){ MU.cur=want;
+      if(want){ const t=trk(want); if(String(a.src).indexOf(t.f)<0) a.src=t.f; try{ a.currentTime=0; }catch(e){} const p=a.play(); if(p&&p.catch) p.catch(()=>{}); }
+      else { try{ a.pause(); }catch(e){} } }
+  } else if(want){ const tv=trk(want).vol; if(MU.vol<tv){ MU.vol=Math.min(tv,MU.vol+dt*.5); a.volume=MU.vol; } if(a.paused){ const p=a.play(); if(p&&p.catch) p.catch(()=>{}); } }
+}
+function musPrefetch(){ TRACKS.forEach((t,i)=>setTimeout(()=>{ if(MU.mode!=="synth") try{ fetch(t.f).catch(()=>{}); }catch(e){} },2500+i*1200)); }
+function kickAudio(){
+  if(!sndOn) return; audio();
+  if(MU.mode==="synth"){ music.set(H.zone==="haunt"?"haunt":"field"); music.start(); return; }
+  const a=musEl(); MU.want=zoneTrack();
+  if(!MU.cur&&musicOn){ MU.cur=MU.want; const t=trk(MU.cur); a.src=t.f; const p=a.play(); if(p&&p.catch) p.catch(()=>{}); }
+}
 ["touchstart","mousedown","keydown"].forEach(ev=>addEventListener(ev,kickAudio,{once:false,passive:true}));
 
 /* ======================= UI 유틸 ======================= */
@@ -470,7 +547,10 @@ function drawQuests(){
 QUESTS.forEach(q=>q.id=q.k);
 
 const GOALS=["🌱 샘의 씨앗 가게(왼쪽)로 가서 씨앗을 사자!","🟫 내 밭(왼쪽 위)의 흙 옆에서 E를 눌러 심자!","⏳ 다 자라면 반짝여요. 다시 가서 수확!","💰 스티븐(가운데)에게 가서 팔자!","🦈 컨베이어(아래)에서 브레인롯을 사면 기지에서 1초마다 코인이 생겨요. 초록 패드에서 수금!","➕ 민지 선생님 퀴즈 · 🎣 낚시 · 🥚 펫 · ⛰️ 산꼭대기 보물상자도 있어요!",""];
-function drawGoal(){ const g=$("goal"); if(H.zone==="haunt"){ g.className="goal wx"; g.textContent="👻 🕯️ 촛불 "+H.got+" / "+H.candles.length+" · 유령을 피해요! 문으로 나가면 촛불당 30코인"; return; } if(weather.kind){ g.className="goal wx"; g.textContent=(weather.kind==="rain"?"🌧️ 비가 와요! 작물이 2배로 자라고 젖음 변이가 생겨요":"🌈 무지개 이벤트! 변이 확률과 낚시 행운이 크게 올라요")+" ("+Math.ceil(weather.until-now())+"초)"; return; } g.className="goal"; g.textContent=GOALS[Math.min(S.tut,GOALS.length-1)]; }
+function drawGoal(){ const g=$("goal");
+  if(SV.on){ const d=SDIFF[SV.diff],sec=Math.floor(now()-SV.t0); g.className="goal wx"; g.textContent=d.e+" "+d.nm+" · "+"❤️".repeat(Math.max(0,SV.hp))+" · "+sec+"초 버팀 (초당 "+d.pay+"코인)"; return; }
+  if(H.zone==="home"){ g.className="goal"; g.textContent="🏡 우리 집 · 가구를 눌러서 써보세요 · 🚪 문으로 나가기"; return; }
+  if(H.zone==="haunt"){ const d=HDIFF[H.diff]||HDIFF[1]; g.className="goal wx"; g.textContent=d.e+" "+d.nm+" · 🕯️ 촛불 "+H.got+" / "+H.n+" · 문으로 나가면 촛불당 "+d.pay+"코인"; return; } if(weather.kind){ g.className="goal wx"; g.textContent=(weather.kind==="rain"?"🌧️ 비가 와요! 작물이 2배로 자라고 젖음 변이가 생겨요":"🌈 무지개 이벤트! 변이 확률과 낚시 행운이 크게 올라요")+" ("+Math.ceil(weather.until-now())+"초)"; return; } g.className="goal"; g.textContent=GOALS[Math.min(S.tut,GOALS.length-1)]; }
 function advance(step){ if(S.tut===step-1){ S.tut=step; drawGoal(); if(step<5) chime(700,900); } }
 
 function drawLB(){
@@ -480,7 +560,9 @@ function drawLB(){
     '<div class="r"><span style="color:var(--txt-2)">🏡 집 가치</span><span>'+num(hv)+'</span></div>'+
     '<div class="r"><span style="color:var(--txt-2)">🦈 초당 수입</span><span>'+num(ips())+'</span></div>';
 }
-function houseValue(){ const h=S.house; let v=0; for(const k in h.walls){ const w=byId(WALLS,h.walls[k]); if(h.walls[k]) v+=w.cost; } if(h.roof) v+=byId(ROOFS,h.roof).cost; for(const x of EXTRAS) v+=(h[x.id]||0)*x.cost; return v; }
+function houseValue(){ const h=S.house; let v=0; for(const k in h.walls){ const w=byId(WALLS,h.walls[k]); if(h.walls[k]) v+=w.cost; } if(h.roof) v+=byId(ROOFS,h.roof).cost; for(const x of EXTRAS) v+=(h[x.id]||0)*(x.costs?x.costs.slice(0,h[x.id]||0).reduce((a,b)=>a+b,0)/(h[x.id]||1):x.cost); for(const f of FURN) if(h.furn[f.id]) v+=f.cost; return v; }
+function furnCount(){ let n=0; for(const f of FURN) if(S.house.furn[f.id]) n++; return n; }
+function houseReady(){ const h=S.house; return !!(h.walls.F&&h.walls.B&&h.walls.L&&h.walls.R&&h.door); }
 function drawHotbar(){
   const hb=$("hotbar"); hb.innerHTML="";
   const seedIds=Object.keys(S.seeds).filter(k=>S.seeds[k]>0);
@@ -628,7 +710,7 @@ function tree(x,z,s){ s=s||1; at(box(1,3.2*s,1,0x7a4b2a),x,1.6*s,z); const c1=bo
 const TREES=[[-58,-58],[-40,-62],[-64,-30],[-62,4],[-60,36],[-56,58],[-30,62],[0,64],[30,62],[56,58],[62,30],[64,-14],[60,-32],[48,-58],[20,-62],[-6,-60],[-18,-40],[8,-30],[-48,-8],[-48,20],[34,34],[-36,44],[6,52],[-2,26],[-34,22],
   [-90,-20],[-100,12],[-112,-60],[-70,-92],[-20,-104],[30,-108],[-40,-80],[112,32],[100,72],[60,104],[20,112],[-30,108],[-116,104],[-124,40],[-100,-100],[110,-20],[80,50],[-60,100],[0,-128],[40,-90],[-80,-40],[126,-60],[-128,-10],[90,110],[-110,70],[10,90],[-40,124],[60,-118],[124,112]];
 for(let i=0;i<44;i++){ const a=i/44*Math.PI*2,r=132+(i%3)*6; TREES.push([Math.cos(a)*r,Math.sin(a)*r]); }
-TREES.forEach((p,i)=>{ if(Math.abs(p[0]-MTN.x)<26&&Math.abs(p[1]-MTN.z)<26) return; if(Math.abs(p[0]-TOWN.x)<26&&Math.abs(p[1]-TOWN.z)<26) return; if(Math.abs(p[0]-HOUSE.x)<22&&Math.abs(p[1]-HOUSE.z)<22) return; tree(p[0],p[1],.9+((i*7)%5)*.12); });
+TREES.forEach((p,i)=>{ if(Math.abs(p[0]-MTN.x)<26&&Math.abs(p[1]-MTN.z)<26) return; if(Math.abs(p[0]-TOWN.x)<26&&Math.abs(p[1]-TOWN.z)<26) return; if(Math.abs(p[0]-HOUSE.x)<22&&Math.abs(p[1]-HOUSE.z)<22) return; if(Math.abs(p[0]-SURV.x)<24&&Math.abs(p[1]-SURV.z)<24) return; if(Math.abs(p[0]-LOT.x)<14&&Math.abs(p[1]-LOT.z)<14) return; tree(p[0],p[1],.9+((i*7)%5)*.12); });
 for(const [x,z] of [[-52,-45],[50,-40],[-45,50],[52,48],[-100,-70],[110,-40],[30,-120],[-120,110],[100,90]]){ const r=box(3,2,2.4,0x9aa0a6); r.rotation.y=x*.3; at(r,x,1,z); solids.push({x,z,r:1.6}); }
 for(let i=0;i<60;i++){ const a=i*2.399,r=25+(i*13)%110,x=Math.cos(a)*r,z=Math.sin(a)*r; if(inWater(x,z)||(Math.abs(x-MTN.x)<24&&Math.abs(z-MTN.z)<24)) continue; const f=box(.5,.5,.5,[0xff69b4,0xfff176,0xffffff,0xff8c1a][i%4]); at(f,x,.6,z); at(box(.15,.5,.15,0x3f9b3f),x,.25,z); }
 
@@ -733,7 +815,12 @@ function beacon(x,z,c){ const m=new T.Mesh(new T.CylinderGeometry(1.1,1.1,70,10,
 beacon(FARM.cx,FARM.cz-9,0x69f0ae); beacon(DOCK.x,DOCK.z2-6,0x40c4ff); beacon(BELT.x2+3,BELT.z,0xff5252); beacon(BASE.x,BASE.z+7,0x9ed0ff); beacon(OBBY.x+8,OBBY.z-8,0xffb300); beacon(MTN.x,MTN.z,0xffffff); beacon(TOWN.x,TOWN.z+10,0xe040fb);
 
 /* ---- 귀신의 집 (건물 + 실내) ---- */
-const H={zone:"field",candles:[],got:0,ghosts:[],inv:0,moan:0};
+const HDIFF=[
+  {nm:"쉬움",e:"🌙",sub:"유령 1마리 · 느려요 · 잡혀도 촛불을 안 잃어요",gh:1,sp:3.6,see:10,cd:8,mult:1,pay:25},
+  {nm:"보통",e:"👻",sub:"유령 2마리 · 잡히면 촛불 1개를 떨어뜨려요",gh:2,sp:5.4,see:15,cd:12,mult:1.7,pay:35},
+  {nm:"무서움",e:"💀",sub:"유령 3마리 · 빠르고 멀리서도 쫓아와요",gh:3,sp:7.2,see:22,cd:16,mult:2.8,pay:45}
+];
+const H={zone:"field",candles:[],got:0,ghosts:[],inv:0,moan:0,diff:1,n:12,gn:2};
 (function haunted(){
   const {x,z}=HOUSE;
   at(box(16,10,12,0x2a1f3d),x,5,z); at(box(17.5,1.4,13.5,0x1a1226),x,10.7,z); at(box(11,1.4,8,0x1a1226),x,12,z); at(box(5,1.6,3,0x1a1226),x,13.3,z);
@@ -756,7 +843,7 @@ const H={zone:"field",candles:[],got:0,ghosts:[],inv:0,moan:0};
   for(let i=0;i<10;i++){ const b=box(2.4,1.2,1.2,0x4a3a5d); at(b,A.x+(i%5-2)*12,.6,A.z+(i<5?-33:33)); }
   at(box(3,4.5,.6,0x5b3d2b),A.x,2.25,A.z+A.d/2-1.2); at(label("🚪 나가기",{size:34,h:1,color:"#c8ffc8"}),A.x,5.5,A.z+A.d/2-1.5);
   let seed=11; const rnd=()=>{ seed=(seed*9301+49297)%233280; return seed/233280; };
-  for(let i=0;i<12;i++){ const cx=A.x+(rnd()-.5)*(A.w-10), cz=A.z+(rnd()-.5)*(A.d-14); const g=new T.Group(); const s=box(.3,.9,.3,0xfff3d6); s.position.y=.45; g.add(s);
+  for(let i=0;i<16;i++){ const cx=A.x+(rnd()-.5)*(A.w-10), cz=A.z+(rnd()-.5)*(A.d-14); const g=new T.Group(); const s=box(.3,.9,.3,0xfff3d6); s.position.y=.45; g.add(s);
     const f=new T.Mesh(new T.BoxGeometry(.3,.4,.3),new T.MeshLambertMaterial({color:0xffc233,emissive:0xff9900})); f.position.y=1.1; g.add(f); const lb=label("🕯️",{size:34,h:.9}); lb.position.y=2; g.add(lb);
     g.position.set(cx,0,cz); scene.add(g); H.candles.push({x:cx,z:cz,obj:g,got:false}); }
   for(let i=0;i<3;i++){ const sp=emojiSprite("👻",3.4); sp.position.set(A.x+(i-1)*12,3,A.z-10); scene.add(sp); H.ghosts.push({sp,x:sp.position.x,z:sp.position.z,tx:A.x,tz:A.z,ph:i*2}); }
@@ -780,6 +867,26 @@ const coachRacket=mkRacket(); coach.userData.aR.add(coachRacket);
 const shuttle=new T.Group(); { const c=new T.Mesh(new T.ConeGeometry(.28,.6,8,1,true),mat(0xffffff,{side:T.DoubleSide})); c.rotation.x=Math.PI; c.position.y=.3; shuttle.add(c); const k=new T.Mesh(new T.SphereGeometry(.14,8,6),mat(0xf4443c)); shuttle.add(k); } shuttle.visible=false; scene.add(shuttle);
 const BD={on:false,rally:0,phase:"idle",t0:0,dur:1.4,from:new T.Vector3(),to:new T.Vector3(),racket:null,swing:0,cswing:0};
 
+/* ---- 서바이벌 게임장 ---- */
+const SV={on:false,t0:0,hp:3,diff:1,balls:[],inv:0,next:0};
+(function arena(){
+  const A=SURV,hw=A.w/2,hd=A.d/2;
+  const fl=box(A.w,.3,A.d,0xd9b382); fl.receiveShadow=true; at(fl,A.x,.12,A.z);
+  for(let i=-hw+3;i<hw;i+=6) for(let j=-hd+3;j<hd;j+=6) if((i+j)%12===0) at(box(5.8,.06,5.8,0xc9a072),A.x+i,.28,A.z+j);
+  for(const [dx,dz,w,d] of [[0,-hd,A.w,.8],[-hw,0,.8,A.d],[hw,0,.8,A.d]]){ at(box(w,3.4,d,0xff8c1a),A.x+dx,1.7,A.z+dz); PLATS.push({x:A.x+dx,z:A.z+dz,w,d,y:3.4,h:3.4,noDraw:true}); }
+  for(const s of [-1,1]){ at(box(hw-2.5,3.4,.8,0xff8c1a),A.x+s*(hw/2+1.25),1.7,A.z+hd); PLATS.push({x:A.x+s*(hw/2+1.25),z:A.z+hd,w:hw-2.5,d:.8,y:3.4,h:3.4,noDraw:true}); }
+  for(let i=-hw;i<=hw;i+=4){ at(box(.5,4.2,.5,0xf1f1f1),A.x+i,2.1,A.z-hd); at(box(.5,4.2,.5,0xf1f1f1),A.x-hw,2.1,A.z+i); at(box(.5,4.2,.5,0xf1f1f1),A.x+hw,2.1,A.z+i); }
+  for(const [dx,dz] of [[-9,-9],[9,-9],[-9,9],[9,9],[0,0]]){ at(box(3,2.6,3,0x9aa0a6),A.x+dx,1.3,A.z+dz); PLATS.push({x:A.x+dx,z:A.z+dz,w:3,d:3,y:2.6,h:2.6,pad:.4,noDraw:true}); }
+  at(label("🎯 서바이벌 게임장",{size:46,h:1.6}),A.x,8,A.z+hd+2);
+  at(label("입장료를 내고 공을 피해 버티기!",{size:28,h:.8,color:"#bdbebe"}),A.x,6.6,A.z+hd+2);
+  beacon(A.x,A.z,0xff8c1a);
+  const bm=new T.MeshLambertMaterial({color:0xf4443c});
+  for(let i=0;i<10;i++){ const b=new T.Mesh(new T.SphereGeometry(1.1,12,9),bm); b.castShadow=true; b.visible=false; scene.add(b); SV.balls.push({m:b,on:false,x:0,z:0,vx:0,vz:0}); }
+})();
+const svHost=mkChar({skin:0xd9a066,shirt:0xff8c1a,pants:0x1b1b1b,hairCol:0x111111,hair:"spiky",face:"cool",hat:"cap"});
+svHost.position.set(SURV.x+SURV.w/2-4,0,SURV.z+SURV.d/2+2.5); scene.add(svHost); solids.push({x:svHost.position.x,z:svHost.position.z,r:1});
+at(label("대장 리호",{size:30,h:.8,color:"#ffe9a8"}),svHost.position.x,6.4,svHost.position.z);
+
 /* ---- 파티클 / 떠오르는 글자 / 카메라 흔들림 ---- */
 const parts=[],partGeo=new T.BoxGeometry(.32,.32,.32),partMats={};
 function burst(x,y,z,col,n,spd,life){ if(parts.length>400) return; const m=partMats[col]||(partMats[col]=new T.MeshBasicMaterial({color:col})); for(let i=0;i<(n||10);i++){ const p=new T.Mesh(partGeo,m); p.position.set(x,y,z); const a=Math.random()*Math.PI*2,s=(spd||6)*(.4+Math.random()*.8); p.userData={vx:Math.cos(a)*s,vy:(spd||6)*(.6+Math.random()*.9),vz:Math.sin(a)*s,life:life||.8,t:0}; scene.add(p); parts.push(p); } }
@@ -794,15 +901,26 @@ const houseGrp=new T.Group(); scene.add(houseGrp);
 const lotSign=label("🏡 내 집터",{size:46,h:1.5,color:"#ffe08a"}); at(lotSign,LOT.x,9,LOT.z);
 { const s=box(14,.3,14,0xd7c9a3); s.receiveShadow=true; at(s,LOT.x,.15,LOT.z); at(label("수지에게 자재를 사서 집을 지어요",{size:28,h:.8,color:"#bdbebe"}),LOT.x,7.6,LOT.z); beacon(LOT.x,LOT.z-9,0xffd166); }
 function hb(w,h,d,c,x,y,z,o){ const m=new T.Mesh(new T.BoxGeometry(w,h,d),mat(c,o)); m.castShadow=true; m.receiveShadow=true; m.position.set(LOT.x+x,y,LOT.z+z); houseGrp.add(m); return m; }
+let doorGrp=null,tvScreen=null,tankFish=null;
+const roomLight=new T.PointLight(0xfff1c0,0,20,1.6); roomLight.position.set(LOT.x,4.6,LOT.z); scene.add(roomLight);
 function buildHouse(){
   while(houseGrp.children.length) houseGrp.remove(houseGrp.children[0]);
   for(let i=PLATS.length-1;i>=0;i--) if(PLATS[i].house) PLATS.splice(i,1);
+  doorGrp=null; tvScreen=null; tankFish=null;
   const h=S.house, wc=h.wallCol, W=12, HT=6;
   const wallMat=id=>({wood:wc,brick:wc,stone:0x9aa0a6,candy:0xff9ad5}[id]);
+  if(h.walls.F||h.walls.B||h.walls.L||h.walls.R){ hb(W-.4,.22,W-.4,0x9a6b3f,0,.41,0); PLATS.push({x:LOT.x,z:LOT.z,w:W-.4,d:W-.4,y:.52,h:.22,noDraw:true,house:true}); }
   if(h.walls.B){ hb(W,HT,.6,wallMat(h.walls.B),0,HT/2,-W/2); PLATS.push({x:LOT.x,z:LOT.z-W/2,w:W,d:.6,y:HT,h:HT,noDraw:true,house:true}); }
   if(h.walls.L){ hb(.6,HT,W,wallMat(h.walls.L),-W/2,HT/2,0); PLATS.push({x:LOT.x-W/2,z:LOT.z,w:.6,d:W,y:HT,h:HT,noDraw:true,house:true}); }
   if(h.walls.R){ hb(.6,HT,W,wallMat(h.walls.R),W/2,HT/2,0); PLATS.push({x:LOT.x+W/2,z:LOT.z,w:.6,d:W,y:HT,h:HT,noDraw:true,house:true}); }
-  if(h.walls.F){ if(h.door){ for(const s of [-1,1]){ hb(4.5,HT,.6,wallMat(h.walls.F),s*3.75,HT/2,W/2); PLATS.push({x:LOT.x+s*3.75,z:LOT.z+W/2,w:4.5,d:.6,y:HT,h:HT,noDraw:true,house:true}); } hb(3,1.6,.6,wallMat(h.walls.F),0,HT-.8,W/2); hb(3.4,4.6,.2,0x5b3d2b,0,2.3,W/2-.5); hb(.3,.3,.3,0xffc83d,1.1,2.3,W/2-.3); }
+  if(h.walls.F){ if(h.door){
+      for(const s of [-1,1]){ hb(3,HT,.6,wallMat(h.walls.F),s*4.5,HT/2,W/2); PLATS.push({x:LOT.x+s*4.5,z:LOT.z+W/2,w:3,d:.6,y:HT,h:HT,pad:.35,noDraw:true,house:true}); }
+      hb(6.4,.9,.6,wallMat(h.walls.F),0,HT-.45,W/2);
+      hb(3.4,.16,2.4,0xbfc4c9,0,.3,W/2+1.6);
+      doorGrp=new T.Group(); doorGrp.position.set(LOT.x-3,0,LOT.z+W/2);
+      const leaf=new T.Mesh(new T.BoxGeometry(5.9,5,.2),mat(0x6b4423)); leaf.position.set(2.95,2.6,0); leaf.castShadow=true; doorGrp.add(leaf);
+      const kn=new T.Mesh(new T.SphereGeometry(.2,8,6),mat(0xffc83d)); kn.position.set(5.5,2.6,.25); doorGrp.add(kn);
+      houseGrp.add(doorGrp); }
     else { hb(W,HT,.6,wallMat(h.walls.F),0,HT/2,W/2); PLATS.push({x:LOT.x,z:LOT.z+W/2,w:W,d:.6,y:HT,h:HT,noDraw:true,house:true}); } }
   if(h.walls.brick||h.walls.F==="brick"||h.walls.B==="brick"){ for(let i=0;i<6;i++) for(const side of ["F","B"]) if(h.walls[side]==="brick") hb(.5,.25,.1,0x8a3a2a,-5+i*2,1+(i%2)*2.4,(side==="F"?W/2+.35:-W/2-.35)); }
   for(let i=0;i<h.windows;i++){ const side=i===0?"L":"R"; if(h.walls[side]) hb(.3,1.8,1.8,0xbfe6ff,(side==="L"?-W/2-.2:W/2+.2),3.6,0); }
@@ -818,19 +936,72 @@ function buildHouse(){
   if(h.mailbox){ hb(.25,2,.25,0x7a4b2a,8.2,1,9.4); hb(1,.8,.7,0xf4443c,8.2,2.3,9.4); }
   if(h.storage){ const s=3.6+h.storage*.6; hb(s,s*.9,s,0x8b5a2b,9.5,s*.45,-8.5); hb(s+.8,.4,s+.8,0x5b3d2b,9.5,s*.9+.2,-8.5); hb(1.2,1.8,.2,0x3d2718,9.5,.9,-8.5+s/2+.05); PLATS.push({x:LOT.x+9.5,z:LOT.z-8.5,w:s,d:s,y:s*.9,h:s*.9,noDraw:true,house:true}); const l=label("🏚 창고 Lv."+h.storage,{size:28,h:.8,color:"#ffe08a"}); l.position.set(LOT.x+9.5,s*.9+1.6,LOT.z-8.5); houseGrp.add(l); }
   if(h.swing){ hb(4,.3,.3,0x9aa0a6,-5.5,4,6); hb(.3,4,.3,0x9aa0a6,-7.3,2,6); hb(.3,4,.3,0x9aa0a6,-3.7,2,6); hb(1.4,.2,.5,0xf4443c,-5.5,1.2,6); hb(.06,2.8,.06,0x222222,-6.1,2.6,6); hb(.06,2.8,.06,0x222222,-4.9,2.6,6); }
+  buildFurn(h);
   relabel(lotSign,h.done?"🏡 "+S.name+"의 집":"🏡 내 집터");
 }
-function enterHaunt(){
-  if(now()>=S.hauntAt){ H.candles.forEach(c=>{ c.got=false; c.obj.visible=true; }); }
+/* ---- 집 안 (별도 공간, 문으로 드나들어요) ---- */
+const roomGrp=new T.Group(); scene.add(roomGrp);
+const FS=2.1;
+(function roomShell(){
+  const R=ROOM, hw=R.w/2, hd=R.d/2, WH=9.5;
+  const fl=box(R.w,.5,R.d,0xc08a58); fl.receiveShadow=true; at(fl,R.x,-.25,R.z);
+  for(let i=-hw+2;i<hw;i+=4) for(let j=-hd+2;j<hd;j+=4) if((i+j)%8===0) at(box(3.9,.06,3.9,0xa87445),R.x+i,.04,R.z+j);
+  for(const [dx,dz,w,d] of [[0,-hd,R.w,1],[-hw,0,1,R.d],[hw,0,1,R.d]]){ at(box(w,WH,d,0xfaf0dc),R.x+dx,WH/2,R.z+dz); at(box(w,.5,d+.08,0xd9c4a3),R.x+dx,.25,R.z+dz); PLATS.push({x:R.x+dx,z:R.z+dz,w,d,y:WH,h:WH,noDraw:true}); }
+  for(const s of [-1,1]){ at(box(hw-2,WH,1,0xfaf0dc),R.x+s*(hw/2+1),WH/2,R.z+hd); at(box(hw-2,.5,1.08,0xd9c4a3),R.x+s*(hw/2+1),.25,R.z+hd); PLATS.push({x:R.x+s*(hw/2+1),z:R.z+hd,w:hw-2,d:1,y:WH,h:WH,noDraw:true}); }
+  at(box(4.4,4.7,1,0xfaf0dc),R.x,WH-2.35,R.z+hd);
+  at(box(R.w+1,.5,R.d+1,0xfff8ea),R.x,WH+.25,R.z);
+  for(const dx of [-hw+.65,hw-.65]) for(const dz of [-7,5]){ at(box(.2,2.6,3.4,0xbfe6ff),R.x+dx,3.6,R.z+dz); at(box(.32,.25,3.8,0xffffff),R.x+dx,2.2,R.z+dz); at(box(.32,.25,3.8,0xffffff),R.x+dx,5,R.z+dz); }
+  at(box(3.6,.16,2.6,0xbfc4c9),R.x,.1,R.z+hd-1.8);
+  at(label("🚪 밖으로 나가기",{size:34,h:1,color:"#c8ffc8"}),R.x,4.4,R.z+hd-1.6);
+})();
+const roomCeil=new T.PointLight(0xfff0d0,1,40,1.6); roomCeil.position.set(ROOM.x,7,ROOM.z); scene.add(roomCeil);
+function rb(w,ht,d,c,x,y,z,o){ const m=new T.Mesh(new T.BoxGeometry(w,ht,d),mat(c,o)); m.castShadow=true; m.receiveShadow=true; m.position.set(ROOM.x+x,y,ROOM.z+z); roomGrp.add(m); return m; }
+function buildFurn(h){
+  while(roomGrp.children.length) roomGrp.remove(roomGrp.children[0]);
+  tvScreen=null; tankFish=null;
+  const F=h.furn, put=(w,ht,d,c,x,z,dy,o)=>rb(w,ht,d,c,x*FS,ht/2+(dy||0),z*FS,o);
+  if(F.rug){ const r=rb(13,.08,10,0xd94f4f,0,.05,0); r.receiveShadow=true; rb(10,.1,7,0xffd166,0,.06,0); }
+  if(F.bed){ const f=byId(FURN,"bed"); put(4.4,.6,6.4,0x8b5a2b,f.x,f.z); put(4.2,.6,4.4,0xffffff,f.x,f.z+.35,.6); put(3.8,.5,1.4,0xffe0ec,f.x,f.z-1.1,.6); put(4.4,2.2,.4,0x6b4423,f.x,f.z-1.65,0); put(4.2,.3,3.8,0x4fc3f7,f.x,f.z+.5,1.1); }
+  if(F.sofa){ const f=byId(FURN,"sofa"); put(5.2,1.1,2.4,0x5b8def,f.x,f.z); put(5.2,1.8,.7,0x4a7ad0,f.x,f.z+.5,.6); put(.7,1.2,2.4,0x4a7ad0,f.x-1.2,f.z,.5); put(.7,1.2,2.4,0x4a7ad0,f.x+1.2,f.z,.5); }
+  if(F.table){ const f=byId(FURN,"table"); put(3.8,.3,3.2,0xcfa66b,f.x,f.z,1.6); for(const [dx,dz] of [[-.7,-.6],[.7,-.6],[-.7,.6],[.7,.6]]) put(.26,1.7,.26,0x8b5a2b,f.x+dx,f.z+dz); for(const dx of [-1.3,1.3]){ put(1.1,.25,1.1,0xcfa66b,f.x+dx,f.z,.9); put(1.1,1.2,.25,0xcfa66b,f.x+dx,f.z-.3,1.4); } put(.7,.7,.7,0xffffff,f.x,f.z,1.95); }
+  if(F.tv){ const f=byId(FURN,"tv"); put(5,.9,1.4,0x5b3d2b,f.x,f.z+.25); put(.5,1.4,.5,0x333333,f.x,f.z,.9); put(6,3.4,.5,0x222222,f.x,f.z,2.6);
+    tvScreen=new T.Mesh(new T.BoxGeometry(5.4,2.9,.12),new T.MeshBasicMaterial({color:h.tv?0x4fc3f7:0x111318})); tvScreen.position.set(ROOM.x+f.x*FS,2.6+1.7,ROOM.z+f.z*FS+.32); roomGrp.add(tvScreen); }
+  if(F.fridge){ const f=byId(FURN,"fridge"); put(2.4,4.4,2,0xeceff1,f.x,f.z); put(.2,1.1,.2,0x9aa0a6,f.x-.45,f.z+.55,3); put(2.3,.12,.12,0xb0bec5,f.x,f.z+.52,2.7); }
+  if(F.shelf){ const f=byId(FURN,"shelf"); put(1.4,4.2,4.4,0x8b5a2b,f.x,f.z); for(let i=0;i<3;i++) put(.7,.9,3.4,[0xf4443c,0x00a2ff,0xffc83d][i],f.x+.15,f.z,.9+i*1.3); }
+  if(F.piano){ const f=byId(FURN,"piano"); put(2.2,2.6,4.2,0x1b1b1b,f.x,f.z); put(2.6,.25,3.9,0xffffff,f.x-.1,f.z,1.5); for(let i=0;i<9;i++) rb(.7,.3,.24,0x111111,f.x*FS-.5,1.75,f.z*FS-1.8+i*.45); put(.5,1.1,.5,0x1b1b1b,f.x,f.z,2.6); }
+  if(F.tank){ const f=byId(FURN,"tank"); put(3.6,1,2.2,0x8b5a2b,f.x,f.z); put(3.4,2.4,2,0x7fd4ff,f.x,f.z,1,{transparent:true,opacity:.45}); put(2.9,.25,1.5,0xe6d3a3,f.x,f.z,1.05);
+    let best=null; for(const fi of FISH) if(S.book[fi.id]&&(!best||fi.val>best.val)) best=fi;
+    tankFish=emojiSprite(best?best.e:"🐟",1.5); tankFish.position.set(ROOM.x+f.x*FS,2.4,ROOM.z+f.z*FS); roomGrp.add(tankFish); }
+  if(F.plant){ const f=byId(FURN,"plant"); put(1.4,1.1,1.4,0xb5533c,f.x,f.z); put(.3,2.2,.3,0x3f9b3f,f.x,f.z,1.1); put(2,1.2,2,0x49b049,f.x,f.z,2.6); }
+  if(F.lamp2){ const f=byId(FURN,"lamp2"); put(1.1,.25,1.1,0x333333,f.x,f.z); put(.2,4,.2,0x9aa0a6,f.x,f.z,.2); put(1.8,1.3,1.8,0xfff176,f.x,f.z,4.2,{emissive:0x8a7a00}); }
+  if(F.clock){ const f=byId(FURN,"clock"); rb(2.4,2.4,.25,0xffffff,f.x*FS,5.4,f.z*FS); rb(.16,.9,.3,0x111111,f.x*FS,5.7,f.z*FS+.1); rb(.7,.16,.3,0x111111,f.x*FS+.26,5.4,f.z*FS+.1); }
+  if(F.cake){ const f=byId(FURN,"cake"); put(1.6,1.1,1.6,0xcfa66b,f.x,f.z); put(1.9,.9,1.9,0xffe0ec,f.x,f.z,1); put(1.6,.3,1.6,0xff6b8a,f.x,f.z,1.9); put(.2,.7,.2,0xfff176,f.x,f.z,2.4); }
+  if(F.toy){ const f=byId(FURN,"toy"); put(1.5,1.5,1.2,0xc98f5a,f.x,f.z); put(1.2,1.2,1.1,0xc98f5a,f.x,f.z,1.3); for(const dx of [-.3,.3]) put(.5,.5,.4,0xc98f5a,f.x+dx,f.z,2.1); put(.7,.5,.25,0xffe0c0,f.x,f.z+.3,1.25); }
+  roomCeil.intensity=F.lamp2?1.5:1.05;
+}
+function enterHome(){ H.zone="home"; camYaw=0; teleport(ROOM.x,ROOM.z+ROOM.d/2-4); drawGoal(); note("🏡","우리 집! 가구를 눌러서 써볼 수 있어요","gold"); SFX.creak(); save(); }
+function exitHome(){ H.zone="field"; camYaw=0; teleport(LOT.x,LOT.z+9.5); drawGoal(); SFX.open(); save(); }
+function openHaunt(){
+  const B=$("hdiffBody"); B.innerHTML="";
+  const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>어떤 난이도로 할까?</b><br>촛불을 모아서 문으로 나오면 코인을 받아요. 무서우면 언제든 나올 수 있어요!"; B.appendChild(h);
+  HDIFF.forEach((d,i)=>{ const r=row(d.e,d.nm+" · 촛불 "+d.cd+"개",d.sub+" · 촛불당 "+d.pay+"코인"); const b=btn(S.hdiff===i?"이걸로!":"고르기",S.hdiff===i?"":"blue");
+    b.onclick=()=>{ S.hdiff=i; closeGui(); enterHaunt(i); }; r.appendChild(b); B.appendChild(r); });
+  openGui("g-hdiff");
+}
+function enterHaunt(lv){
+  const d=HDIFF[lv!==undefined?lv:(S.hdiff||0)]; H.diff=lv!==undefined?lv:(S.hdiff||0); H.n=d.cd; H.gn=d.gh;
+  H.candles.forEach((c,i)=>{ c.got=false; c.obj.visible=i<H.n; });
+  H.ghosts.forEach((g,i)=>{ g.sp.visible=i<H.gn; g.x=ARENA.x+(i-1)*18; g.z=ARENA.z-18; g.tx=g.x; g.tz=g.z; });
   H.got=0; H.zone="haunt"; H.inv=now()+3; camYaw=0; teleport(ARENA.x,ARENA.z+ARENA.d/2-6);
-  H.ghosts.forEach((g,i)=>{ g.x=ARENA.x+(i-1)*18; g.z=ARENA.z-18; g.tx=g.x; g.tz=g.z; });
-  drawGoal(); note("👻","촛불을 모으고 유령을 피해요. 무서우면 문으로 나가면 돼요!","gold"); SFX.creak(); shake(.25,.6); save();
+  drawGoal(); note(d.e,d.nm+" 시작! 촛불 "+H.n+"개를 모아 문으로 나와요","gold"); SFX.creak(); shake(.25,.6); save();
 }
 function exitHaunt(){
-  const got=H.got, all=H.candles.every(c=>c.got); H.zone="field"; H.got=0; camYaw=0; teleport(HOUSE.x,HOUSE.z+10);
-  if(got>0){ earn(got*30); gainXp(got*8); quest("haunt",got); S.hauntAt=now()+180;
-    if(all){ earn(500); gainXp(150); S.hauntClears++; note("🏆","촛불을 다 모았어! +500 코인 보너스","gold"); if(!S.hats.includes("pumpkin")){ S.hats.push("pumpkin"); note("🎃","호박 모자를 얻었어! 👕에서 써봐","gold"); } chime(660,880,1320); }
-    else { note("🕯️","촛불 "+got+"개 = +"+num(got*30)+" 코인"); chime(600,800); } }
+  const d=HDIFF[H.diff]||HDIFF[1], got=H.got, all=got>=H.n, pay=Math.round(got*d.pay);
+  H.zone="field"; H.got=0; camYaw=0; teleport(HOUSE.x,HOUSE.z+10);
+  if(got>0){ earn(pay); gainXp(got*8); quest("haunt",got);
+    if(all){ const bo=Math.round(400*d.mult); earn(bo); gainXp(150); S.hauntClears++; note("🏆",d.nm+" 클리어! 촛불 전부 · 보너스 +"+num(bo),"gold");
+      if(!S.hats.includes("pumpkin")){ S.hats.push("pumpkin"); setTimeout(()=>note("🎃","호박 모자를 얻었어! 👕에서 써봐","gold"),700); } SFX.fanfare(); burst(P.x,P.y+4,P.z,0xff8c1a,30,7,1); }
+    else { note("🕯️","촛불 "+got+"개 = +"+num(pay)+" 코인"); chime(600,800); } }
   drawGoal(); save();
 }
 
@@ -868,13 +1039,18 @@ function groundY(x,z){
   else if(x>BASE.x-9&&x<BASE.x+9&&z>BASE.z-10&&z<BASE.z+10) g=.4;
   else if(x>RIVAL.x-8&&x<RIVAL.x+8&&z>RIVAL.z-4&&z<RIVAL.z+4) g=.4;
   else if(Math.abs(x)<7&&z>-1&&z<9) g=.12;
+  else if(x>LOT.x-7.2&&x<LOT.x+7.2&&z>LOT.z-7.2&&z<LOT.z+7.2) g=.3;
+  else if(Math.abs(x-SURV.x)<SURV.w/2&&Math.abs(z-SURV.z)<SURV.d/2) g=.27;
   for(const p of PLATS) if(Math.abs(x-p.x)<p.w/2&&Math.abs(z-p.z)<p.d/2&&p.y<=P.y+.8&&p.y>g) g=p.y;
   return g;
 }
 function inWater(x,z){ if(x>DOCK.x-1.6&&x<DOCK.x+1.6&&z<DOCK.z1&&z>DOCK.z2) return false; return x>POND.x1-.5&&x<POND.x2+.5&&z>POND.z1-.5&&z<POND.z2+.5; }
-function blocked(x,z){ for(const p of PLATS){ if(p.y>P.y+.8&&p.y-p.h<P.y+4.5&&Math.abs(x-p.x)<p.w/2+.7&&Math.abs(z-p.z)<p.d/2+.7) return true; } return false; }
+function blocked(x,z){ for(const p of PLATS){ const pd=p.pad!==undefined?p.pad:.7; if(p.y>P.y+.8&&p.y-p.h<P.y+4.5&&Math.abs(x-p.x)<p.w/2+pd&&Math.abs(z-p.z)<p.d/2+pd) return true; } return false; }
+function blockers(x,z){ const out=[]; for(const p of PLATS){ const pd=p.pad!==undefined?p.pad:.7; if(p.y>P.y+.8&&p.y-p.h<P.y+4.5&&Math.abs(x-p.x)<p.w/2+pd&&Math.abs(z-p.z)<p.d/2+pd) out.push({x:p.x,z:p.z,w:p.w,d:p.d,y:p.y,house:!!p.house}); } return out; }
 function tryMove(nx,nz){
   if(H.zone==="haunt"){ const A=ARENA; nx=Math.min(Math.max(nx,A.x-A.w/2+1.5),A.x+A.w/2-1.5); nz=Math.min(Math.max(nz,A.z-A.d/2+1.5),A.z+A.d/2-1.5); }
+  else if(H.zone==="home"){ const A=ROOM; nx=Math.min(Math.max(nx,A.x-A.w/2+1.6),A.x+A.w/2-1.6); nz=Math.min(Math.max(nz,A.z-A.d/2+1.6),A.z+A.d/2-1); }
+  else if(SV.on){ const A=SURV; nx=Math.min(Math.max(nx,A.x-A.w/2+1.4),A.x+A.w/2-1.4); nz=Math.min(Math.max(nz,A.z-A.d/2+1.4),A.z+A.d/2-1.4); }
   else { if(Math.abs(nx)>BOUND) nx=Math.sign(nx)*BOUND; if(Math.abs(nz)>BOUND) nz=Math.sign(nz)*BOUND; }
   if(inWater(nx,P.z)||blocked(nx,P.z)) nx=P.x; if(inWater(nx,nz)||blocked(nx,nz)) nz=P.z;
   for(const s of solids){ const dx=nx-s.x,dz=nz-s.z,d=Math.hypot(dx,dz),m=s.r+.9; if(d<m&&d>0){ nx=s.x+dx/d*m; nz=s.z+dz/d*m; } }
@@ -914,6 +1090,72 @@ addI({x:UPSHOP.x,z:UPSHOP.z+1.2,h:4.8,r:4.5,text:()=>"업그레이드 가게",ac
 addI({x:BUILDSHOP.x,z:BUILDSHOP.z+1.2,h:4.8,r:4.5,text:()=>"🧱 집 짓기 자재 사기",act:()=>{ drawBuild(); openGui("g-build"); }});
 addI({x:LOT.x,z:LOT.z+9,h:4,r:4,text:()=>"🏡 집 꾸미기",act:()=>{ drawBuild(); openGui("g-build"); }});
 addI({x:LOT.x+9.5,z:LOT.z-5,h:4.5,r:3.5,text:()=>S.house.storage?"📦 창고 열기 ("+S.store.length+"/"+storeCap()+")":null,act:()=>{ drawInv(); openGui("g-inv"); }});
+/* ---- 집 안 가구 상호작용 ---- */
+const SCALE=[523,587,659,784,880,1046,1174];
+function playPiano(){ const n=5+Math.floor(Math.random()*3); for(let i=0;i<n;i++) tone(SCALE[Math.floor(Math.random()*SCALE.length)],.4,"triangle",.07,null,i*.2); }
+addI({x:LOT.x,z:LOT.z+7.6,h:4.2,r:3.4,text:()=>H.zone!=="field"?null:(houseReady()?"🚪 집에 들어가기":"🧱 벽 4개와 문이 있어야 들어갈 수 있어요"),ok:()=>houseReady(),act:()=>{ if(houseReady()) enterHome(); }});
+addI({x:ROOM.x,z:ROOM.z+ROOM.d/2-1.6,h:4.2,r:3.6,text:()=>H.zone==="home"?"🚪 밖으로 나가기":null,act:()=>exitHome()});
+FURN.filter(f=>f.act).forEach(f=>addI({x:ROOM.x+f.x*FS,z:ROOM.z+f.z*FS,h:3.4,r:3,
+  text:()=>{ if(!S.house.furn[f.id]) return null;
+    if(f.id==="bed") return now()<S.bedAt?"🛏️ 잠깨는 중 "+Math.ceil(S.bedAt-now())+"초":"🛏️ 자기 (수입 한 번에 받기)";
+    if(f.id==="cake") return now()<S.cakeAt?"🎂 다시 굽는 중 "+Math.ceil(S.cakeAt-now())+"초":"🎂 케이크 먹기 (20초 빨라짐)";
+    if(f.id==="tv") return S.house.tv?"📺 텔레비전 끄기":"📺 텔레비전 켜기";
+    if(f.id==="piano") return "🎹 피아노 치기";
+    if(f.id==="tank") return "🐠 물고기 구경하기";
+    if(f.id==="shelf") return "📚 내 기록 보기";
+    if(f.id==="toy") return "🧸 곰인형 안아주기";
+    return null; },
+  ok:()=>{ if(f.id==="bed") return now()>=S.bedAt; if(f.id==="cake") return now()>=S.cakeAt; return true; },
+  act:()=>{
+    if(f.id==="bed"){ const got=Math.max(60,Math.round(ips()*60)); S.cash=Math.max(0,S.cash-got*0); earn(got); gainXp(20); S.bedAt=now()+120;
+      const fl=$("lvflash"); fl.style.background="radial-gradient(circle,rgba(0,0,0,.8),rgba(0,0,0,.95))"; fl.classList.add("on");
+      setTimeout(()=>{ fl.classList.remove("on"); setTimeout(()=>fl.style.background="",400); },900);
+      note("🛏️","쿨쿨… 잘 잤다! +"+num(got)+" 코인","gold"); tone(300,.5,"sine",.05,180); setTimeout(()=>SFX.chirp(),950); save(); return; }
+    if(f.id==="cake"){ S.cakeUntil=now()+20; S.cakeAt=now()+120; note("🎂","맛있다! 20초 동안 빨라져요","gold"); SFX.pop(); burst(ROOM.x+f.x*FS,2.5,ROOM.z+f.z*FS,0xff6b8a,16,4,.7); gainXp(10); save(); return; }
+    if(f.id==="tv"){ S.house.tv=S.house.tv?0:1; if(tvScreen&&!S.house.tv) tvScreen.material.color.setHex(0x111318); note("📺",S.house.tv?"텔레비전 켰다!":"텔레비전 껐다"); tone(S.house.tv?900:300,.12,"square",.04); save(); return; }
+    if(f.id==="piano"){ playPiano(); note("🎹","도레미파솔라시~"); burst(ROOM.x+f.x*FS,3,ROOM.z+f.z*FS,0xb57bff,10,3,.6); gainXp(2); return; }
+    if(f.id==="tank"){ let best=null,n=0; for(const fi of FISH) if(S.book[fi.id]){ n++; if(!best||fi.val>best.val) best=fi; }
+      note(best?best.e:"🐠",best?"제일 큰 물고기: "+best.nm+" (도감 "+n+"/"+FISH.length+")":"아직 잡은 물고기가 없어요"); SFX.splash(); return; }
+    if(f.id==="shelf"){ let n=0; for(const fi of FISH) if(S.book[fi.id]) n++;
+      note("📚","Lv."+S.lvl+" · 물고기 도감 "+n+"/"+FISH.length+" · 배드민턴 최고 "+S.badBest+" · 수학 최고 "+S.mathBest+"/5 · 집 가치 "+num(houseValue())); SFX.open(); return; }
+    if(f.id==="toy"){ note("🧸","포옹! 기분이 좋아졌어"); tone(700,.14,"sine",.05,900); burst(ROOM.x+f.x*FS,2.4,ROOM.z+f.z*FS,0xff6b8a,12,3,.8); return; }
+  }}));
+addI({x:SURV.x,z:SURV.z+SURV.d/2+2,h:4.4,r:4.5,text:()=>SV.on?null:"🎯 서바이벌 게임장 (입장료 필요)",act:()=>openSurv()});
+function openSurv(){
+  const B=$("survBody"); B.innerHTML="";
+  const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>리호:</b> 굴러오는 공을 피해서 오래 버티면 코인을 줄게! <b>점프로 넘을 수도</b> 있어. 하트가 다 없어지면 끝!<br>최고 기록 "+S.svBest+"초"; B.appendChild(h);
+  SDIFF.forEach((d,i)=>{ const r=row(d.e,d.nm+" · 입장료 "+num(d.fee)+"코인",d.sub+" · 1초당 "+d.pay+"코인"); const b=btn(coinSvg+num(d.fee),"blue"); b.disabled=S.coins<d.fee;
+    b.onclick=()=>{ if(!pay(d.fee)) return; S.svDiff=i; closeGui(); startSurv(i); }; r.appendChild(b); B.appendChild(r); });
+  openGui("g-surv");
+}
+function startSurv(lv){
+  const d=SDIFF[lv]; SV.on=true; SV.diff=lv; SV.hp=d.hp; SV.t0=now(); SV.inv=now()+1.5; SV.next=now()+1.2;
+  SV.balls.forEach(b=>{ b.on=false; b.m.visible=false; });
+  camYaw=0; teleport(SURV.x,SURV.z+SURV.d/2-5); $("survwin").classList.add("on"); $("svmsg").textContent="공을 피해요! 점프로 넘을 수도 있어요";
+  drawGoal(); note("🎯",d.nm+" 시작! 오래 버텨봐","gold"); SFX.alarm(); save();
+}
+function endSurv(why){
+  const d=SDIFF[SV.diff],sec=Math.floor(now()-SV.t0),pay=sec*d.pay,bonus=sec>=60?Math.round(600*(1+SV.diff*.6)):sec>=30?Math.round(250*(1+SV.diff*.6)):0;
+  SV.on=false; SV.balls.forEach(b=>{ b.on=false; b.m.visible=false; }); $("survwin").classList.remove("on");
+  teleport(SURV.x,SURV.z+SURV.d/2+5);
+  if(sec>S.svBest) S.svBest=sec;
+  earn(pay+bonus); gainXp(sec*3); quest("survive",sec);
+  if(bonus){ note("🏆",why+" "+sec+"초! +"+num(pay)+" +보너스 "+num(bonus),"gold"); SFX.fanfare(); burst(P.x,P.y+4,P.z,0xff8c1a,30,7,1); }
+  else note("🎯",why+" "+sec+"초 · +"+num(pay)+" 코인"+(S.svBest>sec?" (최고 "+S.svBest+"초)":""));
+  drawGoal(); save();
+}
+function svSpawn(){
+  const d=SDIFF[SV.diff],A=SURV,alive=SV.balls.filter(b=>b.on).length,sec=now()-SV.t0;
+  const cap=Math.min(d.max,2+Math.floor(sec/12));
+  if(alive>=cap) return;
+  const b=SV.balls.find(x=>!x.on); if(!b) return;
+  const side=Math.floor(Math.random()*4),hw=A.w/2-1,hd=A.d/2-1;
+  if(side===0){ b.x=A.x-hw; b.z=A.z+(Math.random()-.5)*A.d*.8; } else if(side===1){ b.x=A.x+hw; b.z=A.z+(Math.random()-.5)*A.d*.8; }
+  else if(side===2){ b.x=A.x+(Math.random()-.5)*A.w*.8; b.z=A.z-hd; } else { b.x=A.x+(Math.random()-.5)*A.w*.8; b.z=A.z+hd; }
+  const sp=d.sp*(1+Math.min(.8,sec/70)),dx=P.x-b.x,dz=P.z-b.z,dl=Math.hypot(dx,dz)||1;
+  b.vx=dx/dl*sp; b.vz=dz/dl*sp; b.on=true; b.m.visible=true; b.m.position.set(b.x,1.3,b.z);
+  tone(220,.1,"square",.03);
+}
 addI({x:COURT.x,z:COURT.z+COURT.d/2+1.5,h:4,r:4.5,text:()=>BD.on?null:!S.up.racket?"🏸 라켓이 필요해요 (준호 가게)":!S.shuttles?"🪶 셔틀콕이 없어요 (준호 가게)":"🏸 시합하기 · 50코인 + 셔틀콕 1개 (남은 "+S.shuttles+")",ok:()=>!!S.up.racket&&S.shuttles>0&&S.coins>=50,act:()=>startBad()});
 function startBad(){
   if(!S.up.racket||S.shuttles<=0) return; if(!pay(50)) return; S.shuttles--; BD.on=true; BD.rally=0; teleport(COURT.x,COURT.z+9); camYaw=0; player.rotation.y=Math.PI; P.ry=Math.PI;
@@ -929,7 +1171,8 @@ function endBad(msg){
 }
 $("bhit").onclick=()=>{ if(!BD.on) return; if(BD.phase!=="in"){ $("bmsg").textContent="아직! 셔틀콕이 올 때까지 기다려"; return; } const k=(now()-BD.t0)/BD.dur; if(k>=.62&&k<=.9) playerHit(k>=.72&&k<=.8); else if(k<.62){ $("bmsg").textContent="너무 빨라! 초록칸에서 쳐"; SFX.wrong(); BD.swing=now(); } };
 $("bquit").onclick=()=>{ if(BD.on) endBad("여기까지!"); };
-addI({x:HOUSE.x,z:HOUSE.z+7.5,h:5.5,r:4,text:()=>H.zone==="field"?"👻 귀신의 집 들어가기":null,act:()=>enterHaunt()});
+$("svquit").onclick=()=>{ if(SV.on) endSurv("그만했어!"); };
+addI({x:HOUSE.x,z:HOUSE.z+7.5,h:5.5,r:4,text:()=>H.zone==="field"?"👻 귀신의 집 들어가기":null,act:()=>openHaunt()});
 addI({x:ARENA.x,z:ARENA.z+ARENA.d/2-2.5,h:5,r:3.5,text:()=>H.zone==="haunt"?"🚪 나가기 (촛불 "+H.got+"개)":null,act:()=>exitHaunt()});
 PEDS.forEach((p,i)=>addI({x:p.x,z:p.z,h:3.8,r:2.4,text:()=>{ if(i>=S.baseSize||!S.base[i]) return null; const lv=S.baseLv[i]||0; return lv>=5?"⭐ 최고 강화":"⬆ 강화 Lv."+lv+"→"+(lv+1)+" · "+num(upCost(i)); },
   ok:()=>(S.baseLv[i]||0)<5&&S.coins>=upCost(i),act:()=>{ if((S.baseLv[i]||0)>=5) return; if(!pay(upCost(i))) return; S.baseLv[i]=(S.baseLv[i]||0)+1; const r=byId(ROTS,S.base[i]); note("⬆",r.nm+" Lv."+S.baseLv[i]+"! 수입 +"+Math.round(30*S.baseLv[i])+"%","gold"); chime(620,820,1100); gainXp(15); save(); }}));
@@ -1056,8 +1299,14 @@ function equipPet(){ if(petObj){ scene.remove(petObj); petObj=null; } if(petObj2
   if(S.pet){ petObj=mkPet(byId(PETS,S.pet)); petObj.position.set(P.x-2,0,P.z+2); scene.add(petObj); }
   if(S.pet2&&S.up.pet2&&S.pet2!==S.pet){ petObj2=mkPet(byId(PETS,S.pet2)); petObj2.position.set(P.x+2,0,P.z+2); scene.add(petObj2); } }
 $("menuBtn").onclick=()=>{ drawMenu(); openGui("g-menu"); }; $("whoBtn").onclick=()=>{ drawMenu(); openGui("g-menu"); };
-function drawMenu(){ $("nameIn").value=S.name; $("sndBtn").textContent=sndOn?"🔊 소리 켜짐":"🔇 소리 꺼짐"; $("musBtn").textContent=musicOn?"🎵 음악 켜짐":"🎵 음악 꺼짐"; }
+function drawMenu(){ $("nameIn").value=S.name; $("sndBtn").textContent=sndOn?"🔊 소리 켜짐":"🔇 소리 꺼짐"; $("musBtn").textContent=musicOn?"🎵 음악 켜짐":"🎵 음악 꺼짐"; drawCredits(); }
 $("musBtn").onclick=()=>{ musicOn=!musicOn; localStorage.setItem("bra2:music",musicOn?"1":"0"); if(musicGain) musicGain.gain.value=musicOn?.14:0; if(musicOn) kickAudio(); drawMenu(); SFX.click(); };
+function drawCredits(){
+  const box=$("credits"); if(!box) return;
+  box.innerHTML="<b>배경음악</b> — 모두 CC0(퍼블릭 도메인), OpenGameArt.org<br>"+
+    TRACKS.map(t=>"· "+t.nm+" — "+t.by+" <span style='color:#8a8f99'>("+t.use+")</span>").join("<br>")+
+    "<br><span style='color:#8a8f99'>"+(MU.mode==="files"?"음원 파일 재생 중":MU.mode==="synth"?"음원 파일이 없어 직접 만든 음악으로 연주 중":"음원 불러오는 중…")+"</span>";
+}
 $("nameBtn").onclick=()=>{ const v=$("nameIn").value.trim().slice(0,10); if(!v){ note("✏️","이름을 입력해줘","bad"); return; } S.name=v; drawChip(); drawLB(); relabel(nameTag,S.name); relabel(baseSign,S.name+"의 기지"); buildHouse(); note("✏️","이제 이름은 "+S.name+"!","gold"); beep(700,.08); save(); $("nameIn").blur(); };
 $("nameIn").addEventListener("keydown",e=>{ e.stopPropagation(); if(e.key==="Enter") $("nameBtn").click(); });
 $("nameIn").addEventListener("keyup",e=>e.stopPropagation());
@@ -1092,13 +1341,18 @@ function drawBuild(){
   sec("벽 색"); const sw=document.createElement("div"); sw.className="sw"; for(const c of AV_COL){ const b=document.createElement("button"); b.style.background=hex(c); b.setAttribute("aria-pressed",h.wallCol===c?"true":"false"); b.onclick=()=>{ h.wallCol=c; afterBuild("🎨","벽 색 바꿈!"); }; sw.appendChild(b); } B.appendChild(sw);
   sec("지붕"); { const c=document.createElement("div"); c.className="chips"; for(const rf of ROOFS){ const b=document.createElement("button"); const own=h.roof===rf.id; b.textContent=rf.e+" "+rf.nm+(own?"":" · "+num(rf.cost)); if(own) b.className="own"; b.disabled=own; b.onclick=()=>{ if(!pay(rf.cost)) return; h.roof=rf.id; afterBuild(rf.e,rf.nm+" 완성!"); }; c.appendChild(b); } B.appendChild(c); }
   sec("지붕 색"); const sw2=document.createElement("div"); sw2.className="sw"; for(const c of AV_COL){ const b=document.createElement("button"); b.style.background=hex(c); b.setAttribute("aria-pressed",h.roofCol===c?"true":"false"); b.onclick=()=>{ h.roofCol=c; afterBuild("🎨","지붕 색 바꿈!"); }; sw2.appendChild(b); } B.appendChild(sw2);
+  sec("🛋️ 집 안 가구 ("+furnCount()+" / "+FURN.length+"개) — 벽이 있어야 놓을 수 있어요");
+  for(const f of FURN){ const own=!!h.furn[f.id]; const r=row(f.e,f.nm+(own?' <span class="rar" style="color:var(--green)">놓았음</span>':""),f.sub); const b=btn(own?"✓":coinSvg+num(f.cost)); b.disabled=own||!(h.walls.F&&h.walls.B&&h.walls.L&&h.walls.R);
+    b.onclick=()=>{ if(!pay(f.cost)) return; h.furn[f.id]=1; afterBuild(f.e,f.nm+"을(를) 집에 놓았어!"); }; r.appendChild(b); B.appendChild(r); }
   sec("문 · 창문 · 마당");
   for(const x of EXTRAS){ const n=h[x.id]||0, cost=x.costs?x.costs[Math.min(n,x.costs.length-1)]:x.cost; const r=row(x.e,x.nm+(n?(x.id==="storage"?" Lv."+n:" ×"+n):""),x.sub||(x.max>1?"최대 "+x.max+"개":"")); const b=btn(n>=x.max?"완료":coinSvg+num(cost)); b.disabled=n>=x.max;
     b.onclick=()=>{ if(!pay(cost)) return; h[x.id]=n+1; afterBuild(x.e,x.nm+(x.id==="storage"?" Lv."+(n+1)+"! 보관 "+num(storeCap())+"개":" 설치!")); }; r.appendChild(b); B.appendChild(r); }
 }
 function afterBuild(e,msg){
   const h=S.house; buildHouse(); note(e,msg); beep(700,.08); gainXp(10);
-  if(!h.done&&h.walls.F&&h.walls.B&&h.walls.L&&h.walls.R&&h.roof&&h.door){ h.done=true; earn(5000,true); gainXp(300); note("🏡","집 완성! +5,000 코인 보너스","gold"); chime(660,880,1320); buildHouse(); }
+  if(!h.done&&h.walls.F&&h.walls.B&&h.walls.L&&h.walls.R&&h.roof&&h.door){ h.done=true; earn(5000,true); gainXp(300); note("🏡","집 완성! 문으로 들어가 볼 수 있어요 · +5,000 코인","gold"); SFX.fanfare(); buildHouse(); }
+  const hv=houseValue();
+  while((h.mile||0)<HMILE.length&&hv>=HMILE[h.mile||0].v){ const m=HMILE[h.mile||0]; h.mile=(h.mile||0)+1; earn(m.r,true); gainXp(150); note("🏆","집 가치 "+num(m.v)+" 달성! +"+num(m.r)+" 코인","gold"); SFX.fanfare(); }
   drawBuild(); drawLB(); save();
 }
 function drawUp(){ const L=$("upBody"); L.innerHTML=""; const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>준호:</b> 코인을 모아서 영구 업그레이드! 한 번 사면 계속 남아."; L.appendChild(h);
@@ -1172,7 +1426,7 @@ function tick(){
     if(keys.KeyW||keys.ArrowUp) fy=1; if(keys.KeyS||keys.ArrowDown) fy=-1; if(keys.KeyA||keys.ArrowLeft) fx=-1; if(keys.KeyD||keys.ArrowRight) fx=1;
     const l=Math.hypot(fx,fy); if(l>1){ fx/=l; fy/=l; } const f=[-Math.sin(camYaw),-Math.cos(camYaw)],r=[-f[1],f[0]]; mx=f[0]*fy+r[0]*fx; mz=f[1]*fy+r[1]*fx; }
   P.moving=Math.hypot(mx,mz)>.05;
-  if(P.moving){ const sp=(carry?9:16)*(1+bonus("speed")+(S.up.shoes?.3:0)); tryMove(P.x+mx*sp*dt,P.z+mz*sp*dt); P.ry=Math.atan2(mx,mz); }
+  if(P.moving){ const sp=(carry?9:16)*(1+bonus("speed")+(S.up.shoes?.3:0)+(t<S.cakeUntil?.5:0)); tryMove(P.x+mx*sp*dt,P.z+mz*sp*dt); P.ry=Math.atan2(mx,mz); }
   const gy=groundY(P.x,P.z); P.vy-=GRAV*dt; P.y+=P.vy*dt;
   if(P.y<=gy){ if(P.vy<-9){ SFX.land(); burst(P.x,gy+.2,P.z,0xdddddd,8,3,.5); if(P.vy<-22) shake(.35,.25); } P.y=gy; P.vy=0; lastGround=t; if(t-jumpReq<.15){ jumpReq=0; doJump(); } }
   if(P.y<=gy+.01&&!guiOpen) for(const l of LPADS) if(Math.abs(P.x-l.x)<1.9&&Math.abs(P.z-l.z)<1.9){ P.vy=34; SFX.whoosh(); burst(l.x,.6,l.z,0xff8c1a,24,7,.9); break; }
@@ -1191,37 +1445,70 @@ function tick(){
       else { $("bbob").style.left="0%"; if(k>=1) coachHit(); } }
   } else if(!fishing) coach.userData.aR.rotation.x=Math.sin(t*2)*.04;
 
+  /* 서바이벌 */
+  if(SV.on){
+    const d=SDIFF[SV.diff],A=SURV;
+    if(t>=SV.next){ SV.next=t+Math.max(.55,1.5-(t-SV.t0)/40); svSpawn(); }
+    for(const b of SV.balls){ if(!b.on) continue;
+      b.x+=b.vx*dt; b.z+=b.vz*dt; b.m.position.set(b.x,1.3,b.z); b.m.rotation.x+=dt*4; b.m.rotation.z-=dt*3;
+      if(Math.abs(b.x-A.x)>A.w/2+2||Math.abs(b.z-A.z)>A.d/2+2){ b.on=false; b.m.visible=false; continue; }
+      if(t>SV.inv&&P.y<2.1&&Math.hypot(P.x-b.x,P.z-b.z)<2.0){
+        SV.hp--; SV.inv=t+1.4; b.on=false; b.m.visible=false; SFX.sting(); shake(.5,.3); burst(b.x,1.5,b.z,0xf4443c,16,5,.6);
+        const el=$("scare"); $("scaretxt").textContent="💥 아앗!"; el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),350);
+        if(SV.hp<=0){ endSurv("아쉽다!"); break; }
+        $("svmsg").textContent="앗! 하트 "+SV.hp+"개 남았어"; drawGoal(); } }
+    if(SV.on&&Math.floor(t)!==Math.floor(t-dt)) drawGoal();
+  }
+  swing(svHost,t*.6,false);
+
   /* 펫 */
   { const follow=(o,tx,tz)=>{ const dx=tx-o.position.x,dz=tz-o.position.z,d=Math.hypot(dx,dz); if(d>.3){ const s=Math.min(d,(d>8?30:14)*dt); o.position.x+=dx/d*s; o.position.z+=dz/d*s; o.rotation.y=Math.atan2(dx,dz); } o.position.y=groundY(o.position.x,o.position.z)+(d>.6?Math.abs(Math.sin(t*9))*.5:0); };
     const sy=Math.sin(player.rotation.y),cy=Math.cos(player.rotation.y); if(petObj) follow(petObj,P.x-sy*2.4+cy*1.2,P.z-cy*2.4-sy*1.2); if(petObj2) follow(petObj2,P.x-sy*2.4-cy*1.2,P.z-cy*2.4+sy*1.2); }
 
   /* 카메라 */
   if(guiOpen==="g-av"){ player.rotation.y+=dt*.9; const fx=Math.sin(editYaw),fz=Math.cos(editYaw); camPos.set(P.x+fx*9,P.y+3.6,P.z+fz*9); camera.position.lerp(camPos,Math.min(1,dt*6)); camera.lookAt(P.x-fz*1.6,P.y+2.9,P.z+fx*1.6); }
-  else { const hz=H.zone==="haunt",D=hz?9.5:13,Hy=hz?5:7.5; camPos.set(P.x+Math.sin(camYaw)*D,P.y+Hy,P.z+Math.cos(camYaw)*D); camera.position.lerp(camPos,Math.min(1,dt*8)); camera.lookAt(P.x,P.y+3.2,P.z); }
+  else { const hz=H.zone==="haunt",hm=H.zone==="home",D=hz?9.5:hm?16:13,Hy=hz?5:hm?8.5:7.5;
+    camPos.set(P.x+Math.sin(camYaw)*D,P.y+Hy,P.z+Math.cos(camYaw)*D);
+    if(hm){ const R=ROOM,m=1.6; camPos.x=Math.min(Math.max(camPos.x,R.x-R.w/2+m),R.x+R.w/2-m); camPos.z=Math.min(Math.max(camPos.z,R.z-R.d/2+m),R.z+R.d/2-m); }
+    camera.position.lerp(camPos,Math.min(1,dt*8)); camera.lookAt(P.x,P.y+(hm?2.4:3.2),P.z); }
   if(shakeT>0){ shakeT-=dt; camera.position.x+=(Math.random()-.5)*shakeA; camera.position.y+=(Math.random()-.5)*shakeA; }
 
   /* 파티클 · 떠오르는 글자 · 새소리 */
   for(let i=parts.length-1;i>=0;i--){ const p=parts[i],u=p.userData; u.t+=dt; u.vy-=22*dt; p.position.x+=u.vx*dt; p.position.y+=u.vy*dt; p.position.z+=u.vz*dt; p.rotation.x+=dt*6; p.rotation.y+=dt*4; p.scale.setScalar(Math.max(.01,1-u.t/u.life)); if(u.t>=u.life){ scene.remove(p); parts.splice(i,1); } }
   for(let i=floats.length-1;i>=0;i--){ const f=floats[i]; f.userData.t+=dt; f.position.y+=dt*2.2; f.material.opacity=Math.max(0,1-f.userData.t/1.4); if(f.userData.t>1.4){ scene.remove(f); floats.splice(i,1); } }
   if(H.zone==="field"&&t>chirpT){ chirpT=t+7+Math.random()*10; if(weather.kind!=="rain") SFX.chirp(); }
-  if(music.timer) music.set(H.zone==="haunt"?"haunt":"field");
+  if(MU.mode==="synth"){ if(music.timer) music.set(H.zone==="haunt"?"haunt":"field"); }
+  else { MU.want=zoneTrack(); musTick(dt); }
 
   /* 귀신의 집 */
   torch.position.set(P.x,P.y+4.5,P.z); torch.intensity=H.zone==="haunt"?(S.up.lantern?1.8:1.3):0; torch.distance=S.up.lantern?52:40; hauntAmb.intensity=H.zone==="haunt"?(S.up.lantern?.75:.55):0;
   if(H.zone==="haunt"){
-    H.candles.forEach(c=>{ if(c.got) return; c.obj.children[2].position.y=2+Math.sin(t*3+c.x)*.15;
-      if(Math.hypot(P.x-c.x,P.z-c.z)<1.9){ c.got=true; c.obj.visible=false; H.got++; SFX.coin(); burst(c.x,1.2,c.z,0xffc233,10,3,.6); drawGoal(); if(H.candles.every(k=>k.got)){ note("✨","촛불을 다 모았어! 문으로 나가자!","gold"); chime(700,900,1300); } } });
-    H.ghosts.forEach((g,i)=>{ const dp=Math.hypot(P.x-g.x,P.z-g.z); let tx=g.tx,tz=g.tz,sp=3; if(dp<18){ tx=P.x; tz=P.z; sp=6.5+i*.5; }
+    const D=HDIFF[H.diff]||HDIFF[1];
+    H.candles.forEach((c,ci)=>{ if(c.got||ci>=H.n) return; c.obj.children[2].position.y=2+Math.sin(t*3+c.x)*.15;
+      if(Math.hypot(P.x-c.x,P.z-c.z)<2.2){ c.got=true; c.obj.visible=false; H.got++; SFX.coin(); burst(c.x,1.2,c.z,0xffc233,10,3,.6); drawGoal(); if(H.got>=H.n){ note("✨","촛불을 다 모았어! 문으로 나가자!","gold"); SFX.quest(); } } });
+    H.ghosts.forEach((g,i)=>{ if(i>=H.gn) return; const dp=Math.hypot(P.x-g.x,P.z-g.z); let tx=g.tx,tz=g.tz,sp=D.sp*.55; if(dp<D.see){ tx=P.x; tz=P.z; sp=D.sp+i*.4; }
       const dx=tx-g.x,dz=tz-g.z,d=Math.hypot(dx,dz);
-      if(d<1.5&&dp>=18){ g.tx=ARENA.x+(Math.random()-.5)*(ARENA.w-6); g.tz=ARENA.z+(Math.random()-.5)*(ARENA.d-6); } else if(d>0){ g.x+=dx/d*sp*dt; g.z+=dz/d*sp*dt; }
+      if(d<1.5&&dp>=D.see){ g.tx=ARENA.x+(Math.random()-.5)*(ARENA.w-6); g.tz=ARENA.z+(Math.random()-.5)*(ARENA.d-6); } else if(d>0){ g.x+=dx/d*sp*dt; g.z+=dz/d*sp*dt; }
       g.sp.position.set(g.x,3+Math.sin(t*2+g.ph)*.5,g.z); g.sp.material.opacity=.7+Math.sin(t*3+g.ph)*.2;
-      if(dp<2.3&&t>H.inv){ H.inv=t+2.5; const el=$("scare"); el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),650); SFX.sting(); shake(.7,.5); burst(g.x,3,g.z,0xd9b3ff,16,5,.7);
-        const mine=H.candles.filter(c=>c.got); if(H.got>0&&mine.length){ const c=mine[Math.floor(Math.random()*mine.length)]; c.got=false; c.obj.visible=true; H.got--; note("👻","깜짝! 촛불 하나를 떨어뜨렸어","bad"); } else note("👻","깜짝!","bad");
+      if(dp<2.3&&t>H.inv){ H.inv=t+(H.diff===0?3.5:2.5); const el=$("scare"); $("scaretxt").textContent="👻 깜짝!"; el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),650); SFX.sting(); shake(H.diff===0?.35:.7,.5); burst(g.x,3,g.z,0xd9b3ff,16,5,.7);
+        const mine=H.candles.filter((c,ci)=>c.got&&ci<H.n);
+        if(H.diff>0&&H.got>0&&mine.length){ const c=mine[Math.floor(Math.random()*mine.length)]; c.got=false; c.obj.visible=true; H.got--; note("👻","깜짝! 촛불 하나를 떨어뜨렸어","bad"); }
+        else note("👻","깜짝! 괜찮아, 계속 모아보자","bad");
         const ax=g.x-P.x,az=g.z-P.z,al=Math.hypot(ax,az)||1; g.x=Math.min(Math.max(P.x+ax/al*14,ARENA.x-ARENA.w/2+2),ARENA.x+ARENA.w/2-2); g.z=Math.min(Math.max(P.z+az/al*14,ARENA.z-ARENA.d/2+2),ARENA.z+ARENA.d/2-2); drawGoal(); } });
-    if(t>H.moan){ H.moan=t+5+Math.random()*6; beep(70+Math.random()*40,.9,"sine",.035); }
+    if(t>H.moan){ H.moan=t+(H.diff===0?10:6)+Math.random()*6; beep(70+Math.random()*40,.9,"sine",H.diff===0?.02:.035); }
   }
   { const bl=S.boostUntil-t; $("boost").hidden=bl<=0; if(bl>0) $("boostT").textContent=Math.ceil(bl); }
   if(guiOpen==="g-build"){ camPos.set(LOT.x+14,10,LOT.z+22); camera.position.lerp(camPos,Math.min(1,dt*4)); camera.lookAt(LOT.x,3,LOT.z); }
+
+  /* 집: 문 열림 · 가구 애니메이션 */
+  if(doorGrp){ const near=Math.hypot(P.x-LOT.x,P.z-(LOT.z+6))<7, want=near?-1.65:0;
+    if(Math.abs(doorGrp.rotation.y-want)>.01){ if(!doorGrp.userData.creak&&near){ doorGrp.userData.creak=1; SFX.creak(); } if(!near) doorGrp.userData.creak=0;
+      doorGrp.rotation.y+=(want-doorGrp.rotation.y)*Math.min(1,dt*5); } }
+  if(tankFish){ tankFish.position.x=ROOM.x+byId(FURN,"tank").x*FS+Math.sin(t*1.4)*.9; tankFish.position.y=2.4+Math.sin(t*2.2)*.25; }
+  if(tvScreen&&S.house.tv) tvScreen.material.color.setHSL((t*.12)%1,.6,.55);
+  if(roomLight) roomLight.intensity=(S.house.furn.lamp2&&H.zone==="field")?(.9+Math.sin(t*3)*.05):0;
+  if(H.zone==="field"&&houseReady()&&Math.abs(P.x-LOT.x)<2.4&&P.z<LOT.z+5.6&&P.z>LOT.z+1) enterHome();
+  if(H.zone==="home"&&P.z>ROOM.z+ROOM.d/2-2.6&&Math.abs(P.x-ROOM.x)<2.6) exitHome();
 
   /* 시장 / 안내 */
   if(t>=S.market.until){ S.market={id:MARKETS[Math.floor(Math.random()*MARKETS.length)].id,until:t+240}; const m=byId(MARKETS,S.market.id); note("🔥","오늘의 인기: "+m.e+" "+m.nm+" 값이 2배! 스티븐에게 팔자","gold"); relabel(marketSign,"🔥 인기: "+m.e+" "+m.nm+" ×2"); if(guiOpen==="g-sell") drawSell(); }
@@ -1297,8 +1584,8 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get P(){return P;},get BD(){return BD;},get H(){return H;},teleport,jump,earn,openGui,tick,get guiOpen(){return guiOpen;}};
-function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop();
+window.BRA={get S(){return S;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   addEventListener("visibilitychange",()=>{ S.tick=now(); save(); }); addEventListener("pagehide",()=>{ S.tick=now(); save(); }); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
 Promise.race([fontsReady,new Promise(r=>setTimeout(r,1800))]).then(start);
