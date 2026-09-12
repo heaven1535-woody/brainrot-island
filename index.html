@@ -250,31 +250,31 @@ const T=THREE;
 
 /* ======================= 데이터 ======================= */
 const SEEDS=[
-  {id:"carrot",nm:"당근",e:"🥕",cost:10,grow:10,sell:28,tier:"일반",tc:"#8f98a3",stock:8,col:0xff8c1a,size:.42,xp:4},
-  {id:"berry",nm:"딸기",e:"🍓",cost:45,grow:18,sell:130,tier:"고급",tc:"#2fb4ff",stock:6,col:0xff3b6b,size:.48,xp:8},
-  {id:"corn",nm:"옥수수",e:"🌽",cost:150,grow:28,sell:440,tier:"희귀",tc:"#b57bff",stock:5,col:0xffd83d,size:.6,xp:14},
-  {id:"melon",nm:"수박",e:"🍉",cost:500,grow:42,sell:1550,tier:"전설",tc:"#ffb52e",stock:4,col:0x2fbf5a,size:.85,xp:24},
-  {id:"dragon",nm:"용과",e:"🐲",cost:1800,grow:60,sell:6000,tier:"신화",tc:"#ff5aa0",stock:3,col:0xff2e88,size:.75,xp:40},
-  {id:"rainbow",nm:"무지개 열매",e:"🌈",cost:7000,grow:90,sell:25000,tier:"신성",tc:"#ffffff",stock:2,col:0xffffff,size:.95,xp:80}
+  {id:"carrot",nm:"당근",e:"🥕",cost:10,grow:30,sell:16,tier:"일반",tc:"#8f98a3",stock:6,col:0xff8c1a,size:.42,xp:4},
+  {id:"berry",nm:"딸기",e:"🍓",cost:45,grow:60,sell:70,tier:"고급",tc:"#2fb4ff",stock:5,col:0xff3b6b,size:.48,xp:8},
+  {id:"corn",nm:"옥수수",e:"🌽",cost:150,grow:120,sell:230,tier:"희귀",tc:"#b57bff",stock:4,col:0xffd83d,size:.6,xp:14},
+  {id:"melon",nm:"수박",e:"🍉",cost:500,grow:240,sell:760,tier:"전설",tc:"#ffb52e",stock:3,col:0x2fbf5a,size:.85,xp:24},
+  {id:"dragon",nm:"용과",e:"🐲",cost:1800,grow:420,sell:2700,tier:"신화",tc:"#ff5aa0",stock:2,col:0xff2e88,size:.75,xp:40},
+  {id:"rainbow",nm:"무지개 열매",e:"🌈",cost:7000,grow:600,sell:10500,tier:"신성",tc:"#ffffff",stock:1,col:0xffffff,size:.95,xp:80}
 ];
 const GEAR=[
   {id:"can",nm:"물뿌리개 (5회)",e:"💧",cost:120,sub:"자라는 식물에 주면 8초 빨라져요"},
   {id:"sprinkler",nm:"스프링클러",e:"⛲",cost:2500,sub:"밭 전체가 항상 25% 빨리 자라요 (한 번만)"}
 ];
 const FISH=[
-  {id:"f0",nm:"멸치",e:"🐟",val:18,w:300},{id:"f1",nm:"고등어",e:"🐠",val:48,w:230},{id:"f2",nm:"오징어",e:"🦑",val:110,w:150},
-  {id:"f3",nm:"문어",e:"🐙",val:230,w:95},{id:"f4",nm:"복어",e:"🐡",val:420,w:62},{id:"f5",nm:"거북이",e:"🐢",val:850,w:34},
-  {id:"f6",nm:"돌고래",e:"🐬",val:1900,w:18},{id:"f7",nm:"상어",e:"🦈",val:4600,w:8},{id:"f8",nm:"고래",e:"🐳",val:11000,w:3},{id:"f9",nm:"황금 물고기",e:"✨",val:32000,w:1}
+  {id:"f0",nm:"멸치",e:"🐟",val:5,w:300},{id:"f1",nm:"고등어",e:"🐠",val:12,w:230},{id:"f2",nm:"오징어",e:"🦑",val:26,w:150},
+  {id:"f3",nm:"문어",e:"🐙",val:55,w:95},{id:"f4",nm:"복어",e:"🐡",val:100,w:62},{id:"f5",nm:"거북이",e:"🐢",val:200,w:34},
+  {id:"f6",nm:"돌고래",e:"🐬",val:450,w:18},{id:"f7",nm:"상어",e:"🦈",val:1100,w:8},{id:"f8",nm:"고래",e:"🐳",val:2600,w:3},{id:"f9",nm:"황금 물고기",e:"✨",val:7500,w:1}
 ];
 const RODS=[
   {nm:"나무 낚싯대",zone:.40,luck:1.0,up:120,e:"🪵"},{nm:"대나무 낚싯대",zone:.33,luck:1.6,up:600,e:"🎋"},
   {nm:"쇠 낚싯대",zone:.27,luck:2.6,up:2600,e:"⚙️"},{nm:"번개 낚싯대",zone:.21,luck:4.2,up:12000,e:"⚡"},{nm:"무지개 낚싯대",zone:.16,luck:7.0,up:0,e:"🌈"}
 ];
 const ROTS=[
-  {id:"tra",nm:"트랄랄레로",e:"🦈",cost:40,ips:2,col:0x3d8bff},{id:"bom",nm:"봄바르디로",e:"🐊",cost:180,ips:7,col:0x4caf50},
-  {id:"tun",nm:"퉁퉁퉁 사후르",e:"🪵",cost:700,ips:24,col:0x8d6e63},{id:"bal",nm:"발레리나 카푸치나",e:"☕",cost:2600,ips:85,col:0xd7a86e},
-  {id:"chi",nm:"치미판지니",e:"🍌",cost:9000,ips:270,col:0xffd54f},{id:"gar",nm:"가라마 케이크",e:"🍰",cost:30000,ips:850,col:0xff8a80},
-  {id:"rnb",nm:"무지개 브레인롯",e:"🌈",cost:90000,ips:2400,col:0xffffff}
+  {id:"tra",nm:"트랄랄레로",e:"🦈",cost:40,ips:.2,col:0x3d8bff},{id:"bom",nm:"봄바르디로",e:"🐊",cost:180,ips:.6,col:0x4caf50},
+  {id:"tun",nm:"퉁퉁퉁 사후르",e:"🪵",cost:700,ips:2,col:0x8d6e63},{id:"bal",nm:"발레리나 카푸치나",e:"☕",cost:2600,ips:6,col:0xd7a86e},
+  {id:"chi",nm:"치미판지니",e:"🍌",cost:9000,ips:18,col:0xffd54f},{id:"gar",nm:"가라마 케이크",e:"🍰",cost:30000,ips:50,col:0xff8a80},
+  {id:"rnb",nm:"무지개 브레인롯",e:"🌈",cost:90000,ips:130,col:0xffffff}
 ];
 const PETS=[
   {id:"dog",nm:"강아지",e:"🐶",col:0xd9a066,desc:"수확 코인 +15%",b:{harvest:.15}},
@@ -291,14 +291,14 @@ const EGGS=[
   {id:"e3",nm:"전설 알",e:"💎",cost:6000,time:180,pool:["panda","panda","panda","uni","uni"]}
 ];
 const QUESTS=[
-  {k:"harvest",nm:"작물 수확",e:"🌱",n:[3,6,10],r:60},{k:"fish",nm:"물고기 낚기",e:"🎣",n:[3,5,8],r:80},
-  {k:"buyrot",nm:"브레인롯 사기",e:"🦈",n:[1,2,3],r:120},{k:"steal",nm:"옆집에서 가져오기",e:"🤫",n:[1,2],r:200},
-  {k:"pick",nm:"바닥 코인 줍기",e:"🪙",n:[5,10,15],r:50},{k:"jump",nm:"점프하기",e:"⬆️",n:[20,40],r:30},
-  {k:"sell",nm:"코인 벌기(판매)",e:"💰",n:[300,1000,3000],r:100},{k:"chase",nm:"도둑 쫓아내기",e:"🚨",n:[1,2],r:150},
-  {k:"water",nm:"물주기",e:"💧",n:[3,5],r:40},{k:"chest",nm:"보물상자 열기",e:"🎁",n:[1],r:100},
-  {k:"math",nm:"수학 퀴즈 맞히기",e:"➕",n:[5,10],r:90},{k:"feed",nm:"펫 먹이 주기",e:"🍖",n:[2,5],r:60},
-  {k:"haunt",nm:"귀신의 집 촛불 모으기",e:"🕯️",n:[12,24],r:200},{k:"badminton",nm:"배드민턴 랠리",e:"🏸",n:[10,25],r:120},
-  {k:"survive",nm:"서바이벌 버티기(초)",e:"🎯",n:[20,45],r:180},{k:"shoot",nm:"풍선 터뜨리기",e:"💦",n:[15,40],r:160}
+  {k:"harvest",nm:"작물 수확",e:"🌱",n:[3,6,10],r:30},{k:"fish",nm:"물고기 낚기",e:"🎣",n:[3,5,8],r:40},
+  {k:"buyrot",nm:"브레인롯 사기",e:"🦈",n:[1,2,3],r:60},{k:"steal",nm:"옆집에서 가져오기",e:"🤫",n:[1,2],r:100},
+  {k:"pick",nm:"바닥 코인 줍기",e:"🪙",n:[5,10,15],r:25},{k:"jump",nm:"점프하기",e:"⬆️",n:[20,40],r:15},
+  {k:"sell",nm:"코인 벌기(판매)",e:"💰",n:[100,300,800],r:50},{k:"chase",nm:"도둑 쫓아내기",e:"🚨",n:[1,2],r:80},
+  {k:"water",nm:"물주기",e:"💧",n:[3,5],r:20},{k:"chest",nm:"보물상자 열기",e:"🎁",n:[1],r:50},
+  {k:"math",nm:"수학 퀴즈 맞히기",e:"➕",n:[5,10],r:150},{k:"feed",nm:"펫 먹이 주기",e:"🍖",n:[2,5],r:30},
+  {k:"haunt",nm:"귀신의 집 촛불 모으기",e:"🕯️",n:[12,24],r:100},{k:"badminton",nm:"배드민턴 랠리",e:"🏸",n:[10,25],r:60},
+  {k:"survive",nm:"서바이벌 버티기(초)",e:"🎯",n:[20,45],r:90},{k:"shoot",nm:"풍선 터뜨리기",e:"💦",n:[15,40],r:80}
 ];
 const UPGRADES=[
   {id:"shoes",nm:"스피드 신발",e:"👟",cost:3000,sub:"걷기 30% 빨라져요 (영구)"},
@@ -315,14 +315,14 @@ const UPGRADES=[
 const COURT={x:44,z:62,w:12,d:24};
 const SURV={x:-78,z:-26,w:34,d:34};
 const SDIFF=[
-  {nm:"쉬움",e:"🟢",fee:100,hp:5,sp:9,max:4,pay:12,sub:"하트 5개 · 공이 느려요"},
-  {nm:"보통",e:"🟡",fee:200,hp:3,sp:13,max:6,pay:22,sub:"하트 3개 · 조금 빨라요"},
-  {nm:"어려움",e:"🔴",fee:400,hp:3,sp:18,max:9,pay:40,sub:"하트 3개 · 공이 많고 빨라요"}
+  {nm:"쉬움",e:"🟢",fee:100,hp:5,sp:9,max:4,pay:3,sub:"하트 5개 · 공이 느려요"},
+  {nm:"보통",e:"🟡",fee:200,hp:3,sp:13,max:6,pay:6,sub:"하트 3개 · 조금 빨라요"},
+  {nm:"어려움",e:"🔴",fee:400,hp:3,sp:18,max:9,pay:11,sub:"하트 3개 · 공이 많고 빨라요"}
 ];
 const FDIFF=[
-  {nm:"쉬움",e:"🎈",fee:100,n:4,size:1.7,move:0,pay:6,aim:.12,sub:"큰 풍선 · 안 움직여요 · 조준 도우미"},
-  {nm:"보통",e:"🎯",fee:200,n:5,size:1.25,move:3,pay:10,aim:.08,sub:"풍선이 옆으로 움직여요"},
-  {nm:"어려움",e:"🔥",fee:400,n:6,size:.95,move:6,pay:16,aim:.055,sub:"작고 빠른 풍선"}
+  {nm:"쉬움",e:"🎈",fee:100,n:4,size:1.7,move:0,pay:2,aim:.12,sub:"큰 풍선 · 안 움직여요 · 조준 도우미"},
+  {nm:"보통",e:"🎯",fee:200,n:5,size:1.25,move:3,pay:4,aim:.08,sub:"풍선이 옆으로 움직여요"},
+  {nm:"어려움",e:"🔥",fee:400,n:6,size:.95,move:6,pay:7,aim:.055,sub:"작고 빠른 풍선"}
 ];
 function bagCap(){ return 20+(S.up.bag1?20:0)+(S.up.bag2?30:0); }
 function storeCap(){ return [0,200,500,1000][S.house.storage||0]; }
@@ -354,7 +354,7 @@ const FURN=[
   {id:"cake",  nm:"케이크",   e:"🎂", cost:500,  x:-3.6, z:1.4,  sub:"먹으면 20초 동안 빨라져요", act:1},
   {id:"toy",   nm:"곰인형",   e:"🧸", cost:450,  x:2.6,  z:-2.4, sub:"안아줄 수 있어요", act:1}
 ];
-const HMILE=[{v:8000,r:2000},{v:20000,r:6000},{v:45000,r:15000}];
+const HMILE=[{v:8000,r:400},{v:20000,r:1200},{v:45000,r:3000}];
 /* ---- 아바타 옵션 ---- */
 const AV_SKIN=[0xf5c66e,0xffdbac,0xd9a066,0xa8734a,0x6b4423,0xffc1d6,0xa5d8ff,0xb9f6ca,0xe1bee7,0xcfd8dc];
 const AV_COL=[0xffffff,0x111111,0xf4443c,0xff8c1a,0xffc83d,0x2fbf5a,0x00b06f,0x00a2ff,0x1f6fff,0x4b2fa8,0xb57bff,0xff4f9a,0xa0522d,0x9aa0a6];
@@ -436,6 +436,7 @@ function save(){ try{ localStorage.setItem("bra2:"+who,JSON.stringify(S)); saved
 function exportCode(){ return "BRA1."+btoa(unescape(encodeURIComponent(JSON.stringify(S)))); }
 function importCode(code){ code=String(code||"").trim(); if(code.indexOf("BRA1.")!==0) throw new Error("형식"); const obj=JSON.parse(decodeURIComponent(escape(atob(code.slice(5))))); if(typeof obj.coins!=="number") throw new Error("내용"); localStorage.setItem("bra2:"+who,JSON.stringify(obj)); }
 const num=n=>Math.floor(n).toLocaleString("ko-KR");
+const fips=v=>v<10?(Math.round(v*10)/10).toString():num(v);
 const $=id=>document.getElementById(id);
 
 /* ---- 보너스 ---- */
@@ -543,13 +544,13 @@ document.addEventListener("click",e=>{ if(e.target.closest("[data-close]")) clos
 function drawCoins(){ $("coins").textContent=num(S.coins); }
 function flashCoins(){ const c=$("coinBox"); c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); }
 function earn(n,raw){ if(!raw&&now()<S.boostUntil) n*=2; S.coins+=n; drawCoins(); flashCoins(); if(n>=1&&window.floatText) floatText("+"+num(n)+" 코인","#ffe08a"); }
-function pay(n){ if(S.coins<n){ note("🪙","코인이 "+num(n-S.coins)+" 더 필요해","bad"); bad(); return false; } S.coins-=n; drawCoins(); SFX.buy(); if(window.floatText) floatText("-"+num(n),"#ffb3b3"); return true; }
+function pay(n){ if(S.coins<n){ note("🪙","코인이 "+num(n-S.coins)+" 더 필요해 — ➕ 민지 선생님 수학 퀴즈가 제일 빨라!","bad"); bad(); return false; } S.coins-=n; drawCoins(); SFX.buy(); if(window.floatText) floatText("-"+num(n),"#ffb3b3"); return true; }
 
 /* ---- XP / 레벨 ---- */
 const need=l=>60+40*l*l;
 function gainXp(n){
   S.xp+=n;
-  while(S.xp>=need(S.lvl)){ S.xp-=need(S.lvl); S.lvl++; const bonusC=50*S.lvl; S.coins+=bonusC; drawCoins(); note("⭐","레벨 "+S.lvl+" 달성! +"+num(bonusC)+" 코인","lv"); SFX.levelup(); if(window.burst){ burst(P.x,P.y+3,P.z,0xffd166,40,9,1.2); burst(P.x,P.y+3,P.z,0xb57bff,25,7,1.1); floatText("⭐ 레벨 "+S.lvl+"!","#e1bee7"); const f=$("lvflash"); f.classList.add("on"); setTimeout(()=>f.classList.remove("on"),700); } }
+  while(S.xp>=need(S.lvl)){ S.xp-=need(S.lvl); S.lvl++; const bonusC=20*S.lvl; S.coins+=bonusC; drawCoins(); note("⭐","레벨 "+S.lvl+" 달성! +"+num(bonusC)+" 코인","lv"); SFX.levelup(); if(window.burst){ burst(P.x,P.y+3,P.z,0xffd166,40,9,1.2); burst(P.x,P.y+3,P.z,0xb57bff,25,7,1.1); floatText("⭐ 레벨 "+S.lvl+"!","#e1bee7"); const f=$("lvflash"); f.classList.add("on"); setTimeout(()=>f.classList.remove("on"),700); } }
   drawChip();
 }
 function drawChip(){ $("whoTxt").innerHTML="🙂 "+esc(S.name)+"<small>Lv."+S.lvl+"</small>"; $("xpBar").style.width=(S.xp/need(S.lvl)*100).toFixed(0)+"%"; }
@@ -587,7 +588,7 @@ function drawLB(){
   $("lb").innerHTML='<div class="h"><span>플레이어</span><span>코인</span></div>'+
     '<div class="r me"><span>🙂 '+esc(S.name)+' <span style="color:var(--gold);font-size:.7rem">Lv.'+S.lvl+'</span></span><span>'+num(S.coins)+'</span></div>'+
     '<div class="r"><span style="color:var(--txt-2)">🏡 집 가치</span><span>'+num(hv)+'</span></div>'+
-    '<div class="r"><span style="color:var(--txt-2)">🦈 초당 수입</span><span>'+num(ips())+'</span></div>';
+    '<div class="r"><span style="color:var(--txt-2)">🦈 초당 수입</span><span>'+fips(ips())+'</span></div>';
 }
 function houseValue(){ const h=S.house; let v=0; for(const k in h.walls){ const w=byId(WALLS,h.walls[k]); if(h.walls[k]) v+=w.cost; } if(h.roof) v+=byId(ROOFS,h.roof).cost; for(const x of EXTRAS) v+=(h[x.id]||0)*(x.costs?x.costs.slice(0,h[x.id]||0).reduce((a,b)=>a+b,0)/(h[x.id]||1):x.cost); for(const f of FURN) if(h.furn[f.id]) v+=f.cost; return v; }
 function furnCount(){ let n=0; for(const f of FURN) if(S.house.furn[f.id]) n++; return n; }
@@ -845,9 +846,9 @@ beacon(FARM.cx,FARM.cz-9,0x69f0ae); beacon(DOCK.x,DOCK.z2-6,0x40c4ff); beacon(BE
 
 /* ---- 귀신의 집 (건물 + 실내) ---- */
 const HDIFF=[
-  {nm:"쉬움",e:"🌙",sub:"유령 1마리 · 느려요 · 잡혀도 촛불을 안 잃어요",gh:1,sp:3.6,see:10,cd:8,mult:1,pay:25},
-  {nm:"보통",e:"👻",sub:"유령 2마리 · 잡히면 촛불 1개를 떨어뜨려요",gh:2,sp:5.4,see:15,cd:12,mult:1.7,pay:35},
-  {nm:"무서움",e:"💀",sub:"유령 3마리 · 빠르고 멀리서도 쫓아와요",gh:3,sp:7.2,see:22,cd:16,mult:2.8,pay:45}
+  {nm:"쉬움",e:"🌙",sub:"유령 1마리 · 느려요 · 잡혀도 촛불을 안 잃어요",gh:1,sp:3.6,see:10,cd:8,mult:1,pay:6},
+  {nm:"보통",e:"👻",sub:"유령 2마리 · 잡히면 촛불 1개를 떨어뜨려요",gh:2,sp:5.4,see:15,cd:12,mult:1.7,pay:10},
+  {nm:"무서움",e:"💀",sub:"유령 3마리 · 빠르고 멀리서도 쫓아와요",gh:3,sp:7.2,see:22,cd:16,mult:2.8,pay:15}
 ];
 const H={zone:"field",candles:[],got:0,ghosts:[],inv:0,moan:0,diff:1,n:12,gn:2};
 (function haunted(){
@@ -1038,7 +1039,7 @@ function exitHaunt(){
   const d=HDIFF[H.diff]||HDIFF[1], got=H.got, all=got>=H.n, pay=Math.round(got*d.pay);
   H.zone="field"; H.got=0; camYaw=0; teleport(HOUSE.x,HOUSE.z+10);
   if(got>0){ earn(pay); gainXp(got*8); quest("haunt",got);
-    if(all){ const bo=Math.round(400*d.mult); earn(bo); gainXp(150); S.hauntClears++; note("🏆",d.nm+" 클리어! 촛불 전부 · 보너스 +"+num(bo),"gold");
+    if(all){ const bo=Math.round(80*d.mult); earn(bo); gainXp(150); S.hauntClears++; note("🏆",d.nm+" 클리어! 촛불 전부 · 보너스 +"+num(bo),"gold");
       if(!S.hats.includes("pumpkin")){ S.hats.push("pumpkin"); setTimeout(()=>note("🎃","호박 모자를 얻었어! 👕에서 써봐","gold"),700); } SFX.fanfare(); burst(P.x,P.y+4,P.z,0xff8c1a,30,7,1); }
     else { note("🕯️","촛불 "+got+"개 = +"+num(pay)+" 코인"); chime(600,800); } }
   drawGoal(); save();
@@ -1148,7 +1149,7 @@ FURN.filter(f=>f.act).forEach(f=>addI({x:ROOM.x+f.x*FS,z:ROOM.z+f.z*FS,h:3.4,r:3
     return null; },
   ok:()=>{ if(f.id==="bed") return now()>=S.bedAt; if(f.id==="cake") return now()>=S.cakeAt; return true; },
   act:()=>{
-    if(f.id==="bed"){ const got=Math.max(60,Math.round(ips()*60)); S.cash=Math.max(0,S.cash-got*0); earn(got); gainXp(20); S.bedAt=now()+120;
+    if(f.id==="bed"){ const got=Math.max(10,Math.round(ips()*60)); S.cash=Math.max(0,S.cash-got*0); earn(got); gainXp(20); S.bedAt=now()+120;
       const fl=$("lvflash"); fl.style.background="radial-gradient(circle,rgba(0,0,0,.8),rgba(0,0,0,.95))"; fl.classList.add("on");
       setTimeout(()=>{ fl.classList.remove("on"); setTimeout(()=>fl.style.background="",400); },900);
       note("🛏️","쿨쿨… 잘 잤다! +"+num(got)+" 코인","gold"); tone(300,.5,"sine",.05,180); setTimeout(()=>SFX.chirp(),950); save(); return; }
@@ -1189,7 +1190,7 @@ function startFP(lv){
   drawGoal(); SFX.alarm(); save();
 }
 function endFP(why){
-  const d=FDIFF[FP.diff],sc=FP.score,pay=sc*d.pay,bonus=sc>=30?Math.round(500*(1+FP.diff*.5)):sc>=15?Math.round(200*(1+FP.diff*.5)):0;
+  const d=FDIFF[FP.diff],sc=FP.score,pay=sc*d.pay,bonus=sc>=30?Math.round(120*(1+FP.diff*.5)):sc>=15?Math.round(50*(1+FP.diff*.5)):0;
   FP.on=false; FP.targets.forEach(tg=>{ tg.on=false; tg.g.visible=false; }); FP.shots.forEach(s=>{ s.on=false; s.m.visible=false; });
   player.visible=true; nameTag.visible=true; $("fpwin").classList.remove("on"); $("fireBtn").hidden=true; $("cross").hidden=true;
   teleport(SURV.x,SURV.z+SURV.d/2+5); camYaw=0;
@@ -1220,7 +1221,7 @@ function startSurv(lv){
   drawGoal(); note("🎯",d.nm+" 시작! 오래 버텨봐","gold"); SFX.alarm(); save();
 }
 function endSurv(why){
-  const d=SDIFF[SV.diff],sec=Math.floor(now()-SV.t0),pay=sec*d.pay,bonus=sec>=60?Math.round(600*(1+SV.diff*.6)):sec>=30?Math.round(250*(1+SV.diff*.6)):0;
+  const d=SDIFF[SV.diff],sec=Math.floor(now()-SV.t0),pay=sec*d.pay,bonus=sec>=60?Math.round(150*(1+SV.diff*.6)):sec>=30?Math.round(60*(1+SV.diff*.6)):0;
   SV.on=false; SV.balls.forEach(b=>{ b.on=false; b.m.visible=false; }); $("survwin").classList.remove("on");
   teleport(SURV.x,SURV.z+SURV.d/2+5);
   if(sec>S.svBest) S.svBest=sec;
@@ -1249,9 +1250,9 @@ function startBad(){
 }
 function coachHit(){ BD.phase="in"; BD.t0=now(); BD.dur=Math.max(.7,1.5-BD.rally*.07); BD.from.set(coach.position.x+(Math.random()-.5)*2,3.2,coach.position.z+1); BD.to.set(P.x+(Math.random()-.5)*1.5,2.6,P.z-1.2); BD.cswing=now(); SFX.pop(); }
 function playerHit(perfect){ BD.rally++; BD.phase="out"; BD.t0=now(); BD.from.set(P.x,2.8,P.z-1.2); BD.to.set(coach.position.x+(Math.random()-.5)*2,3,coach.position.z+1); BD.swing=now(); tone(perfect?1200:900,.08,"square",.06); noise(.05,.05,3000);
-  burst(P.x,3,P.z-1.5,perfect?0xffd166:0xffffff,perfect?14:6,4,.5); if(perfect){ earn(10,true); } $("bmsg").textContent=(perfect?"완벽! ":"좋아! ")+"랠리 "+BD.rally+(BD.rally>=10?" · 코치를 이기고 있어!":""); if(BD.rally>S.badBest){ S.badBest=BD.rally; } }
+  burst(P.x,3,P.z-1.5,perfect?0xffd166:0xffffff,perfect?14:6,4,.5); if(perfect){ earn(3,true); } $("bmsg").textContent=(perfect?"완벽! ":"좋아! ")+"랠리 "+BD.rally+(BD.rally>=10?" · 코치를 이기고 있어!":""); if(BD.rally>S.badBest){ S.badBest=BD.rally; } }
 function endBad(msg){
-  const r=BD.rally, win=r>=10, reward=r*15+(win?300:0); BD.on=false; BD.phase="idle"; shuttle.visible=false; if(BD.racket){ player.userData.aR.remove(BD.racket); BD.racket=null; } player.userData.aR.rotation.x=0; coach.userData.aR.rotation.x=0; $("badwin").classList.remove("on");
+  const r=BD.rally, win=r>=10, reward=r*5+(win?100:0); BD.on=false; BD.phase="idle"; shuttle.visible=false; if(BD.racket){ player.userData.aR.remove(BD.racket); BD.racket=null; } player.userData.aR.rotation.x=0; coach.userData.aR.rotation.x=0; $("badwin").classList.remove("on");
   if(reward>0){ earn(reward); gainXp(r*4+(win?60:0)); } quest("badminton",r); if(win){ note("🏆","코치를 이겼다! 랠리 "+r+" · +"+num(reward)+" 코인","gold"); SFX.fanfare(); burst(P.x,P.y+4,P.z,0x69f0ae,30,7,1); } else note("🏸",msg+" 랠리 "+r+" · +"+num(reward)+" 코인"+(S.badBest>r?" (최고 "+S.badBest+")":"")); save();
 }
 $("bhit").onclick=()=>{ if(!BD.on) return; if(BD.phase!=="in"){ $("bmsg").textContent="아직! 셔틀콕이 올 때까지 기다려"; return; } const k=(now()-BD.t0)/BD.dur; if(k>=.62&&k<=.9) playerHit(k>=.72&&k<=.8); else if(k<.62){ $("bmsg").textContent="너무 빨라! 초록칸에서 쳐"; SFX.wrong(); BD.swing=now(); } };
@@ -1290,9 +1291,9 @@ RPEDS.forEach((p,i)=>addI({x:p.x,z:p.z,h:3.4,r:3,
     const id=S.rival[i]; S.rival[i]=null; syncSlots(rivalSlots,S.rival); const o=mkRot(id); o.scale.setScalar(.75); o.position.set(0,3.2,-1.3); player.add(o);
     carry={id,obj:o}; note("🤫",byId(ROTS,id).nm+" 업었다! 내 기지로 뛰어!","gold"); chime(700,900); guardFlip=Math.min(guardFlip,now()+3.5+Math.random()*3); save(); }}));
 addI({x:CHEST.x,z:CHEST.z,h:CHEST.y+2,r:3,text:()=>now()>=S.chestAt?"🎁 보물상자 열기":"다시 열기까지 "+Math.ceil((S.chestAt-now())/60)+"분",ok:()=>now()>=S.chestAt,act:()=>{
-  const c=300+S.lvl*60; earn(c); gainXp(60); S.chestAt=now()+300; note("🎁","보물상자! +"+num(c)+" 코인 +60 XP","gold"); SFX.fanfare(); burst(CHEST.x,CHEST.y+1.5,CHEST.z,0xffd166,30,7,1); quest("chest"); save(); }});
+  const c=80+S.lvl*15; earn(c); gainXp(60); S.chestAt=now()+600; note("🎁","보물상자! +"+num(c)+" 코인 +60 XP","gold"); SFX.fanfare(); burst(CHEST.x,CHEST.y+1.5,CHEST.z,0xffd166,30,7,1); quest("chest"); save(); }});
 addI({x:CHEST2.x,z:CHEST2.z,h:CHEST2.y+2,r:3,text:()=>now()>=S.chest2At?"🎁 산꼭대기 보물상자 열기":"다시 열기까지 "+Math.ceil((S.chest2At-now())/60)+"분",ok:()=>now()>=S.chest2At,act:()=>{
-  const c=800+S.lvl*100; earn(c); gainXp(120); S.chest2At=now()+600; note("⛰️","산 정복! +"+num(c)+" 코인 +120 XP","gold"); SFX.fanfare(); burst(CHEST2.x,CHEST2.y+1.5,CHEST2.z,0xffd166,40,8,1.1); quest("chest"); save(); }});
+  const c=200+S.lvl*30; earn(c); gainXp(120); S.chest2At=now()+900; note("⛰️","산 정복! +"+num(c)+" 코인 +120 XP","gold"); SFX.fanfare(); burst(CHEST2.x,CHEST2.y+1.5,CHEST2.z,0xffd166,40,8,1.1); quest("chest"); save(); }});
 addI({get x(){return thief.x;},get z(){return thief.z;},h:6.5,r:4,text:()=>thief.st==="off"?null:"🚨 쫓아내기",act:()=>{
   if(thief.st==="off") return;
   if(thief.loot){ const i=freeSlot(); if(i>=0) S.base[i]=thief.loot; else earn(byId(ROTS,thief.loot).cost); syncSlots(baseSlots,S.base); note("🎉",byId(ROTS,thief.loot).nm+" 되찾았어! +60 코인","gold"); earn(60); gainXp(30); thiefDropLoot(); }
@@ -1342,7 +1343,7 @@ function drawRod(){
     if(i<=S.rod){ b.textContent=i===S.rod?"사용 중":"✓"; b.disabled=true; } else if(i===S.rod+1){ b.innerHTML=coinSvg+num(RODS[S.rod].up); b.onclick=()=>{ if(!pay(RODS[S.rod].up)) return; S.rod++; drawRod(); note(r.e,r.nm+" 획득!","gold"); chime(620,820,1100); gainXp(30); save(); }; } else { b.textContent="잠김"; b.disabled=true; }
     rw.appendChild(b); L.appendChild(rw); });
 }
-function hot(it){ const m=S.market.id; return (m===it.k||m===it.id)?2:1; }
+function hot(it){ const m=S.market.id; return (m===it.k||m===it.id)?1.5:1; }
 function priceOf(it){ return Math.round(it.val*(1+bonus("sell"))*hot(it)); }
 function sellGoods(filter){
   const keep=[],sold=[]; for(const it of S.goods) (filter(it)?sold:keep).push(it);
@@ -1441,7 +1442,7 @@ function drawBuild(){
 }
 function afterBuild(e,msg){
   const h=S.house; buildHouse(); note(e,msg); beep(700,.08); gainXp(10);
-  if(!h.done&&h.walls.F&&h.walls.B&&h.walls.L&&h.walls.R&&h.roof&&h.door){ h.done=true; earn(5000,true); gainXp(300); note("🏡","집 완성! 문으로 들어가 볼 수 있어요 · +5,000 코인","gold"); SFX.fanfare(); buildHouse(); }
+  if(!h.done&&h.walls.F&&h.walls.B&&h.walls.L&&h.walls.R&&h.roof&&h.door){ h.done=true; earn(1000,true); gainXp(300); note("🏡","집 완성! 문으로 들어가 볼 수 있어요 · +5,000 코인","gold"); SFX.fanfare(); buildHouse(); }
   const hv=houseValue();
   while((h.mile||0)<HMILE.length&&hv>=HMILE[h.mile||0].v){ const m=HMILE[h.mile||0]; h.mile=(h.mile||0)+1; earn(m.r,true); gainXp(150); note("🏆","집 가치 "+num(m.v)+" 달성! +"+num(m.r)+" 코인","gold"); SFX.fanfare(); }
   drawBuild(); drawLB(); save();
@@ -1455,7 +1456,7 @@ $("avBtn").onclick=()=>{ if(fishing) return; drawAv(); editYaw=player.rotation.y
 
 /* ======================= 수학 퀴즈 ======================= */
 const MQ={diff:0,q:null,left:0,right:0,answered:false};
-const MDIFF=[{nm:"쉬움",e:"🌱",coin:40,xp:10},{nm:"보통",e:"🌟",coin:100,xp:25},{nm:"어려움",e:"🔥",coin:250,xp:50}];
+const MDIFF=[{nm:"쉬움",e:"🌱",coin:50,xp:10},{nm:"보통",e:"🌟",coin:120,xp:25},{nm:"어려움",e:"🔥",coin:300,xp:50}];
 function mkQ(){ const d=MQ.diff; let a,b,op;
   if(d===0){ a=1+Math.floor(Math.random()*9); b=1+Math.floor(Math.random()*(10-a)); op="+"; }
   else if(d===1){ op=Math.random()<.5?"+":"-"; if(op==="+"){ a=1+Math.floor(Math.random()*15); b=1+Math.floor(Math.random()*(20-a)); } else { a=2+Math.floor(Math.random()*19); b=1+Math.floor(Math.random()*(a-1)); } }
@@ -1466,7 +1467,7 @@ function mkQ(){ const d=MQ.diff; let a,b,op;
 function startMath(){ MQ.left=5; MQ.right=0; MQ.q=null; drawMath(); openGui("g-math"); }
 function drawMath(){
   const B=$("mathBody"); B.innerHTML=""; $("mqLeft").textContent=MQ.q?"남은 문제 "+MQ.left:"";
-  if(!MQ.q){ const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>민지:</b> 안녕! 문제 5개를 풀어보자. 다른 어떤 일보다 코인을 <b>훨씬 많이</b> 줘. 다 맞히면 보너스 2배 + <b>⚡ 3분 동안 모든 코인 2배!</b>"; B.appendChild(h);
+  if(!MQ.q){ const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>민지:</b> 안녕! 문제 5개를 풀어보자. 섬에서 코인을 제일 빨리 버는 방법이야 — 다른 일의 <b>10배</b>쯤! 다 맞히면 보너스 2배 + <b>⚡ 3분 동안 모든 코인 2배!</b>"; B.appendChild(h);
     const s=document.createElement("div"); s.className="sec"; s.textContent="난이도 고르기"; B.appendChild(s); const g=document.createElement("div"); g.className="menu-grid";
     MDIFF.forEach((d,i)=>{ const b=btn("<span>"+d.e+"</span>"+d.nm+" · "+d.coin+"코인/문제"); b.setAttribute("aria-pressed",MQ.diff===i?"true":"false"); b.onclick=()=>{ MQ.diff=i; MQ.q=mkQ(); MQ.answered=false; drawMath(); beep(600,.05); }; g.appendChild(b); }); B.appendChild(g); return; }
   const q=MQ.q, box=document.createElement("div"); box.className="mq"; box.id="mqBox"; box.textContent=q.a+" "+q.op+" "+q.b+" = ?"; B.appendChild(box);
@@ -1483,7 +1484,7 @@ function answerMath(o,btnEl){
     if(MQ.left>0){ MQ.q=mkQ(); MQ.answered=false; drawMath(); return; }
     let bonusC=0; if(MQ.right===5){ bonusC=d.coin*5; earn(bonusC,true); S.boostUntil=now()+180; note("🏆","만점! 보너스 +"+num(bonusC)+" 코인","gold"); setTimeout(()=>note("⚡","3분 동안 모든 코인 2배!","lv"),600); chime(700,900,1300); gainXp(d.xp*3); }
     else note("➕",MQ.right+"개 맞혔어! "+num(d.coin*MQ.right)+" 코인"); if(MQ.right>S.mathBest) S.mathBest=MQ.right;
-    S.mathRest=now()+30; save(); closeGui(); },1100);
+    S.mathRest=now()+20; save(); closeGui(); },1100);
 }
 
 /* ======================= 낚시 ======================= */
@@ -1648,7 +1649,7 @@ function tick(){
   for(let i=beltItems.length-1;i>=0;i--){ const b=beltItems[i]; b.x+=BELT_SPEED*dt; b.obj.position.x=b.x; b.obj.rotation.y=Math.sin(t*2)*.1; if(b.x>BELT.x2){ scene.remove(b.obj); beltItems.splice(i,1); } }
 
   /* 수입 / 보호막 */
-  S.cash+=ips()*dt; relabel(cashSign,"💰 "+num(S.cash)+(ips()?"  (+"+num(ips())+"/초)":""));
+  S.cash+=ips()*dt; relabel(cashSign,"💰 "+num(S.cash)+(ips()?"  (+"+fips(ips())+"/초)":""));
   baseSlots.forEach((s,i)=>{ if(s.obj) s.obj.position.y=.9+Math.sin(t*2+i)*.1; const L=S.baseLv[i]||0; s.lv.visible=!!s.obj&&L>0; if(s.lv.visible) relabel(s.lv,"⬆ Lv."+L); });
   shieldObj.visible=t<S.shieldUntil; if(shieldObj.visible) shieldObj.material.opacity=.15+Math.sin(t*4)*.05;
 
@@ -1672,7 +1673,7 @@ function tick(){
 
   /* 월드 코인 */
   for(const c of wcoins){ if(c.at){ if(t>=c.at){ c.at=0; c.g.visible=true; } continue; } c.g.rotation.y=t*3; c.g.position.y=c.y+Math.sin(t*2+c.x)*.15;
-    if(Math.hypot(P.x-c.x,P.z-c.z)<1.7&&Math.abs(P.y-c.g.position.y)<3){ c.at=t+75; c.g.visible=false; const v=5+S.lvl*2; earn(v); gainXp(2); quest("pick"); SFX.coin(); burst(c.x,c.g.position.y,c.z,0xffc83d,10,4,.6); } }
+    if(Math.hypot(P.x-c.x,P.z-c.z)<1.7&&Math.abs(P.y-c.g.position.y)<3){ c.at=t+180; c.g.visible=false; const v=2+S.lvl; earn(v); gainXp(2); quest("pick"); SFX.coin(); burst(c.x,c.g.position.y,c.z,0xffc83d,10,4,.6); } }
 
   /* 날씨 */
   if(!weather.kind&&t>=weather.next){ weather.kind=Math.random()<.6?"rain":"rainbow"; weather.until=t+50; drawGoal(); chime(500,700,900); }
