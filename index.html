@@ -123,6 +123,7 @@
   .track .bob{position:absolute;top:-2px;bottom:-2px;width:8px;margin-left:-4px;border-radius:99px;background:#fff;box-shadow:0 0 12px #fff}
   .fishbtns{display:flex;gap:8px}.fishbtns .buy{flex:1;height:60px;font-size:1.2rem}
   .fishmsg{text-align:center;padding:8px 14px;border-radius:10px;background:rgba(27,29,33,.85);font-size:1.05rem;transition:background .15s}
+  #ridewin{bottom:18px;width:min(360px,80vw)}#ridewin .buy{height:48px;font-size:1.05rem}
   .fishmsg.bite{font-size:1.7rem;background:#0b5c3c;animation:bitepulse .35s ease infinite alternate}
   @keyframes bitepulse{from{transform:scale(1)}to{transform:scale(1.06)}}
   .fishbtns #fgo{font-size:1.3rem}
@@ -216,6 +217,7 @@
   <div class="gui" id="g-surv"><div class="win"><div class="hd">🎯 서바이벌 게임장 <button class="x" data-close>✕</button></div><div class="bd" id="survBody"></div></div></div>
   <div class="fishwin" id="survwin"><div class="fishmsg" id="svmsg"></div><div class="fishbtns"><button class="buy blue" id="svquit">그만하기</button></div></div>
   <div class="fishwin" id="fpwin"><div class="fishmsg" id="fpmsg"></div><div class="fishbtns"><button class="buy blue" id="fpquit">그만하기</button></div></div>
+  <div class="fishwin" id="ridewin"><div class="fishmsg" id="rmsg"></div><div class="fishbtns"><button class="buy blue" id="rquit">내리기</button></div></div>
   <div id="cross" class="cross" hidden><i></i><i></i></div>
   <button id="fireBtn" class="fire" hidden aria-label="발사">💦</button>
   <div class="gui side" id="g-build"><div class="win"><div class="hd">🧱 수지의 자재 가게 <small id="hval"></small><button class="x" data-close>✕</button></div><div class="bd" id="buildBody"></div></div></div>
@@ -231,7 +233,7 @@
     <div class="namerow"><input id="nameIn" maxlength="10" placeholder="이름 입력"><button class="buy" id="nameBtn">이름 바꾸기</button></div>
     <div class="two"><button class="buy blue" id="sndBtn" style="height:54px">🔊 소리 켜짐</button><button class="buy blue" id="musBtn" style="height:54px">🎵 음악 켜짐</button></div>
     <div class="help"><b>조작법</b><br>왼쪽 화면 드래그 = 걷기 · 오른쪽 드래그 = 카메라 · ⬆ = 점프<br>물건 근처에 가면 <b>E 버튼</b>이 떠요. 누르면 돼요!<br>
-    <b>할 수 있는 것</b><br>🌱 농사 · 🎣 낚시 · 🦈 브레인롯 모으기 · 🥚 펫 키우기 · ➕ 수학 퀴즈 · 🏡 집 짓고 꾸미기 · 👻 귀신의 집(난이도 3) · 🏸 배드민턴 · 🎯 서바이벌(입장료) · ⛰️ 산 · 🏗️ 오비 · 🪙 코인 줍기 · 🚨 도둑 쫓아내기<br>
+    <b>할 수 있는 것</b><br>🌱 농사 · 🎣 낚시 · 🦈 브레인롯 모으기 · 🥚 펫 키우기 · ➕ 수학 퀴즈 · 🏡 집 짓고 꾸미기 · 👻 귀신의 집(난이도 3) · 🏸 배드민턴 · 🎯 서바이벌·💦 물총 · 🎢 놀이공원(롤러코스터·대관람차·회전목마) · ⛰️ 산 · 🏗️ 오비 · 🪙 코인 줍기 · 🚨 도둑 쫓아내기<br>
     <span style="color:#8a8f99">PC: WASD 이동, 스페이스 점프, E 상호작용</span></div>
     <div class="sec">💾 저장</div>
     <div class="help" id="saveInfo"></div>
@@ -298,7 +300,8 @@ const QUESTS=[
   {k:"water",nm:"물주기",e:"💧",n:[3,5],r:20},{k:"chest",nm:"보물상자 열기",e:"🎁",n:[1],r:50},
   {k:"math",nm:"수학 퀴즈 맞히기",e:"➕",n:[5,10],r:150},{k:"feed",nm:"펫 먹이 주기",e:"🍖",n:[2,5],r:30},
   {k:"haunt",nm:"귀신의 집 촛불 모으기",e:"🕯️",n:[12,24],r:100},{k:"badminton",nm:"배드민턴 랠리",e:"🏸",n:[10,25],r:60},
-  {k:"survive",nm:"서바이벌 버티기(초)",e:"🎯",n:[20,45],r:90},{k:"shoot",nm:"풍선 터뜨리기",e:"💦",n:[15,40],r:80}
+  {k:"survive",nm:"서바이벌 버티기(초)",e:"🎯",n:[20,45],r:90},{k:"shoot",nm:"풍선 터뜨리기",e:"💦",n:[15,40],r:80},
+  {k:"ride",nm:"놀이기구 타기",e:"🎢",n:[2,5],r:60}
 ];
 const UPGRADES=[
   {id:"shoes",nm:"스피드 신발",e:"👟",cost:3000,sub:"걷기 30% 빨라져요 (영구)"},
@@ -314,6 +317,7 @@ const UPGRADES=[
 ];
 const COURT={x:44,z:62,w:12,d:24};
 const SURV={x:-78,z:-26,w:34,d:34};
+const PARK={x:70,z:104}, WHEEL={x:36,z:116,cy:17,r:14}, CARO={x:44,z:136,r:5.2};
 const SDIFF=[
   {nm:"쉬움",e:"🟢",fee:100,hp:5,sp:9,max:4,pay:3,sub:"하트 5개 · 공이 느려요"},
   {nm:"보통",e:"🟡",fee:200,hp:3,sp:13,max:6,pay:6,sub:"하트 3개 · 조금 빨라요"},
@@ -509,7 +513,8 @@ function zoneTrack(){
   if(H.zone==="haunt") return "haunt";
   if(BD.on) return "sport";
   if(H.zone==="home") return "town";
-  if(SV.on||FP.on) return "sport";
+  if(SV.on||FP.on||(RIDE.on&&RIDE.type==="coaster")) return "sport";
+  if(RIDE.on) return "town";
   if(fishing||weather.kind==="rain") return "calm";
   if(guiOpen==="g-shop"||guiOpen==="g-rod"||guiOpen==="g-sell"||guiOpen==="g-pet"||guiOpen==="g-up"||guiOpen==="g-build") return "town";
   if(Math.hypot(P.x-TOWN.x,P.z-TOWN.z)<36) return "town";
@@ -577,6 +582,7 @@ QUESTS.forEach(q=>q.id=q.k);
 
 const GOALS=["🌱 샘의 씨앗 가게(왼쪽)로 가서 씨앗을 사자!","🟫 내 밭(왼쪽 위)의 흙 옆에서 E를 눌러 심자!","⏳ 다 자라면 반짝여요. 다시 가서 수확!","💰 스티븐(가운데)에게 가서 팔자!","🦈 컨베이어(아래)에서 브레인롯을 사면 기지에서 1초마다 코인이 생겨요. 초록 패드에서 수금!","➕ 민지 선생님 퀴즈 · 🎣 낚시 · 🥚 펫 · ⛰️ 산꼭대기 보물상자도 있어요!",""];
 function drawGoal(){ const g=$("goal");
+  if(RIDE.on){ g.className="goal wx"; const s=Math.floor(now()-RIDE.t0); g.textContent=RIDE.type==="coaster"?"🎢 롤러코스터 · "+(RIDE.lap+1)+"바퀴째 · "+Math.round(RIDE.v*3.6)+"km/h":RIDE.type==="wheel"?"🎡 대관람차 · "+s+"초":"🎠 회전목마 · "+s+"초"; return; }
   if(FP.on){ const d=FDIFF[FP.diff]; g.className="goal wx"; g.textContent="💦 "+d.nm+" · 🎈 "+FP.score+"개 · 남은 시간 "+Math.max(0,Math.ceil(FP.end-now()))+"초"; return; }
   if(SV.on){ const d=SDIFF[SV.diff],sec=Math.floor(now()-SV.t0); g.className="goal wx"; g.textContent=d.e+" "+d.nm+" · "+"❤️".repeat(Math.max(0,SV.hp))+" · "+sec+"초 버팀 (초당 "+d.pay+"코인)"; return; }
   if(H.zone==="home"){ g.className="goal"; g.textContent="🏡 우리 집 · 가구를 눌러서 써보세요 · 🚪 문으로 나가기"; return; }
@@ -740,7 +746,7 @@ function tree(x,z,s){ s=s||1; at(box(1,3.2*s,1,0x7a4b2a),x,1.6*s,z); const c1=bo
 const TREES=[[-58,-58],[-40,-62],[-64,-30],[-62,4],[-60,36],[-56,58],[-30,62],[0,64],[30,62],[56,58],[62,30],[64,-14],[60,-32],[48,-58],[20,-62],[-6,-60],[-18,-40],[8,-30],[-48,-8],[-48,20],[34,34],[-36,44],[6,52],[-2,26],[-34,22],
   [-90,-20],[-100,12],[-112,-60],[-70,-92],[-20,-104],[30,-108],[-40,-80],[112,32],[100,72],[60,104],[20,112],[-30,108],[-116,104],[-124,40],[-100,-100],[110,-20],[80,50],[-60,100],[0,-128],[40,-90],[-80,-40],[126,-60],[-128,-10],[90,110],[-110,70],[10,90],[-40,124],[60,-118],[124,112]];
 for(let i=0;i<44;i++){ const a=i/44*Math.PI*2,r=132+(i%3)*6; TREES.push([Math.cos(a)*r,Math.sin(a)*r]); }
-TREES.forEach((p,i)=>{ if(Math.abs(p[0]-MTN.x)<26&&Math.abs(p[1]-MTN.z)<26) return; if(Math.abs(p[0]-TOWN.x)<26&&Math.abs(p[1]-TOWN.z)<26) return; if(Math.abs(p[0]-HOUSE.x)<22&&Math.abs(p[1]-HOUSE.z)<22) return; if(Math.abs(p[0]-SURV.x)<24&&Math.abs(p[1]-SURV.z)<24) return; if(Math.abs(p[0]-LOT.x)<14&&Math.abs(p[1]-LOT.z)<14) return; tree(p[0],p[1],.9+((i*7)%5)*.12); });
+TREES.forEach((p,i)=>{ if(Math.abs(p[0]-MTN.x)<26&&Math.abs(p[1]-MTN.z)<26) return; if(Math.abs(p[0]-TOWN.x)<26&&Math.abs(p[1]-TOWN.z)<26) return; if(Math.abs(p[0]-HOUSE.x)<22&&Math.abs(p[1]-HOUSE.z)<22) return; if(Math.abs(p[0]-SURV.x)<24&&Math.abs(p[1]-SURV.z)<24) return; if(Math.abs(p[0]-LOT.x)<14&&Math.abs(p[1]-LOT.z)<14) return; if(p[0]>16&&p[0]<142&&p[1]>92) return; tree(p[0],p[1],.9+((i*7)%5)*.12); });
 for(const [x,z] of [[-52,-45],[50,-40],[-45,50],[52,48],[-100,-70],[110,-40],[30,-120],[-120,110],[100,90]]){ const r=box(3,2,2.4,0x9aa0a6); r.rotation.y=x*.3; at(r,x,1,z); solids.push({x,z,r:1.6}); }
 for(let i=0;i<60;i++){ const a=i*2.399,r=25+(i*13)%110,x=Math.cos(a)*r,z=Math.sin(a)*r; if(inWater(x,z)||(Math.abs(x-MTN.x)<24&&Math.abs(z-MTN.z)<24)) continue; const f=box(.5,.5,.5,[0xff69b4,0xfff176,0xffffff,0xff8c1a][i%4]); at(f,x,.6,z); at(box(.15,.5,.15,0x3f9b3f),x,.25,z); }
 
@@ -923,6 +929,51 @@ const FP={on:false,diff:1,t0:0,end:0,score:0,pitch:0,targets:[],shots:[],lastSec
   const sm=new T.MeshBasicMaterial({color:0x4cc9f0});
   for(let i=0;i<8;i++){ const m=new T.Mesh(new T.SphereGeometry(.22,8,6),sm); m.visible=false; scene.add(m); FP.shots.push({m,on:false,t:0,dir:new T.Vector3()}); }
 })();
+/* ---- 놀이공원: 롤러코스터 · 대관람차 · 회전목마 ---- */
+const RIDE={on:false,type:null,t0:0,u:0,v:0,up:new T.Vector3(0,1,0),lap:0,yaw:0,tick:0,ret:null,dur:0};
+const coaster={curve:null,len:0,car:null,frames:null};
+(function park(){
+  const P0=PARK; const rel=[[0,1.2,0],[12,1.2,0],[24,17,0],[31,18.5,2],[38,4,8],[46,12,14],[54,3,22],[58,2.5,24],[66,10,26],[62,20,28],[54,12,30],[56,2.5,32],[46,6,40],[32,12,44],[18,4,40],[6,8,30],[-8,3,18],[-7,1.2,6]];
+  const pts=rel.map(p=>new T.Vector3(P0.x+p[0],p[1],P0.z+p[2]));
+  const curve=new T.CatmullRomCurve3(pts,true,"catmullrom",.6); coaster.curve=curve; coaster.len=curve.getLength(); { let best=0,bu=0; for(let u=0;u<.3;u+=.002){ const y=curve.getPointAt(u).y; if(y>best){ best=y; bu=u; } } coaster.peakU=bu; }
+  const N=360, up=new T.Vector3(0,1,0), l=[],r=[],ties=[]; const cu=new T.Vector3(0,1,0);
+  for(let i=0;i<=N;i++){ const u=(i%N)/N, p=curve.getPointAt(u), t=curve.getTangentAt(u); cu.sub(t.clone().multiplyScalar(cu.dot(t))).normalize(); const side=new T.Vector3().crossVectors(t,cu).normalize();
+    l.push(p.clone().addScaledVector(side,.85)); r.push(p.clone().addScaledVector(side,-.85)); if(i%3===0) ties.push({p,t,side,cu:cu.clone()}); }
+  l.pop(); r.pop();
+  const rail=c=>{ const m=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(c,true),N,.14,6,true),mat(0xf4443c)); m.castShadow=true; scene.add(m); };
+  rail(l); rail(r);
+  const tieGeo=new T.BoxGeometry(2.3,.14,.5), tieMat=mat(0x5b3d2b);
+  ties.forEach(o=>{ const m=new T.Mesh(tieGeo,tieMat); m.position.copy(o.p); const mx=new T.Matrix4().makeBasis(o.side,o.cu,o.t); m.setRotationFromMatrix(mx); scene.add(m);
+    if(o.p.y>2.2&&Math.random()<.5){ const under=ties.some(q=>q!==o&&q.p.y<o.p.y-1&&Math.hypot(q.p.x-o.p.x,q.p.z-o.p.z)<3); if(!under){ const h=o.p.y-.2; const post=box(.35,h,.35,0xcfd8dc); post.position.set(o.p.x,h/2,o.p.z); scene.add(post); } } });
+  const st=box(14,.6,6,0x9aa0a6); at(st,P0.x+2,.3,P0.z); at(box(14,.3,7,0xf4443c),P0.x+2,6.2,P0.z); for(const dx of [-4,8]) for(const dz of [-3,3]) at(box(.3,6,.3,0xf1f1f1),P0.x+dx,3,P0.z+dz);
+  at(label("🎢 롤러코스터",{size:46,h:1.5}),P0.x+2,8.5,P0.z); at(label("무서우면 언제든 내릴 수 있어요",{size:28,h:.8,color:"#bdbebe"}),P0.x+2,7.3,P0.z);
+  const car=new T.Group(); const body=box(2.2,.9,3,0xffc83d); body.position.y=.55; car.add(body); const nose=box(1.6,.5,.8,0xf4443c); nose.position.set(0,.85,1.6); car.add(nose); const seat=box(1.6,.4,1.2,0x1b1b1b); seat.position.set(0,1.05,-.2); car.add(seat); scene.add(car); coaster.car=car;
+  /* 대관람차 */ const W=WHEEL; const ring=new T.Mesh(new T.TorusGeometry(W.r,.35,8,48),mat(0x00a2ff)); ring.position.set(W.x,W.cy,W.z); scene.add(ring); const hub=new T.Mesh(new T.CylinderGeometry(.9,.9,2,12),mat(0xffc83d)); hub.rotation.x=Math.PI/2; hub.position.set(W.x,W.cy,W.z); scene.add(hub);
+  const spokes=new T.Group(); for(let i=0;i<8;i++){ const s=box(.25,W.r*2,.25,0xbfe6ff); s.rotation.z=i*Math.PI/8; spokes.add(s); } spokes.position.set(W.x,W.cy,W.z); scene.add(spokes); ring.userData.spokes=spokes;
+  for(const dx of [-3.5,3.5]){ const leg=box(.7,W.cy+1,.7,0x9aa0a6); leg.position.set(W.x+dx,(W.cy+1)/2,W.z-1.6); leg.rotation.z=dx>0?-.19:.19; scene.add(leg); }
+  const cabins=[]; for(let i=0;i<8;i++){ const c=new T.Group(); const b=box(2.2,2,2.2,[0xff5252,0xffb300,0x69f0ae,0x40c4ff,0xe040fb,0xff6e40,0xeeff41,0xffffff][i]); b.position.y=-1.3; c.add(b); const arm=box(.15,1.2,.15,0x333333); arm.position.y=-.4; c.add(arm); scene.add(c); cabins.push(c); }
+  ring.userData.cabins=cabins; WHEEL.ring=ring;
+  at(box(6,.5,5,0x9aa0a6),W.x,.25,W.z+3.5); at(label("🎡 대관람차",{size:46,h:1.5}),W.x,W.cy+W.r+3,W.z);
+  /* 회전목마 */ const C=CARO; const base=new T.Mesh(new T.CylinderGeometry(C.r+1.2,C.r+1.6,.8,24),mat(0xff8c1a)); base.position.set(C.x,.4,C.z); base.receiveShadow=true; scene.add(base);
+  const pole=box(.5,7,.5,0xffc83d); pole.position.set(C.x,4.3,C.z); scene.add(pole); const roof=new T.Mesh(new T.ConeGeometry(C.r+2,3,12),mat(0xff5252)); roof.position.set(C.x,9,C.z); roof.castShadow=true; scene.add(roof);
+  const spin=new T.Group(); spin.position.set(C.x,.8,C.z); for(let i=0;i<6;i++){ const a=i*Math.PI/3, h=new T.Group(); const hb2=box(2.2,1,.8,[0xffffff,0xff9ad5,0x40c4ff,0xffe082,0xb9f6ca,0xe1bee7][i]); hb2.position.y=1.9; h.add(hb2); const hd=box(.8,.8,.6,0xc98f5a); hd.position.set(0,2.5,.9); h.add(hd); for(const [x,z] of [[-.6,.25],[.6,.25],[-.6,-.25],[.6,-.25]]){ const lg=box(.22,1.4,.22,0x8b5a2b); lg.position.set(x,.7,z); h.add(lg); } const pl=box(.14,4.2,.14,0xffc83d); pl.position.y=2.8; h.add(pl); h.position.set(Math.cos(a)*C.r,0,Math.sin(a)*C.r); h.rotation.y=-a; spin.add(h); h.userData.ph=i; }
+  scene.add(spin); CARO.spin=spin; PLATS.push({x:C.x,z:C.z,w:C.r*2+2.4,d:C.r*2+2.4,y:.8,h:.8,noDraw:true});
+  at(label("🎠 회전목마",{size:46,h:1.5}),C.x,11,C.z); at(label("🎡 놀이공원",{size:52,h:1.9,color:"#ffe08a"}),52,14,100); beacon(52,100,0xff9ad5);
+  for(let i=0;i<10;i++){ const x=26+i*11,z=98; at(box(.3,3,.3,0xffffff),x,1.5,z); at(box(11,.2,.2,0xffffff),x+5.5,2.6,z); }
+})();
+function startRide(type){
+  const fee={coaster:30,wheel:20,caro:10}[type]; if(!pay(fee)) return;
+  RIDE.on=true; RIDE.type=type; RIDE.t0=now(); RIDE.u=0; RIDE.v=4; RIDE.lap=0; RIDE.yaw=0; RIDE.tick=0; RIDE.up.set(0,1,0); RIDE.ret={x:P.x,z:P.z}; RIDE.dur=type==="coaster"?0:type==="wheel"?50:30;
+  if(type!=="caro"){ player.visible=false; nameTag.visible=false; }
+  $("ridewin").classList.add("on"); $("rmsg").textContent=type==="coaster"?"🎢 출발! 손잡이 꽉 잡아!":type==="wheel"?"🎡 천천히 올라가요. 섬 전체가 보여요!":"🎠 말을 타고 빙글빙글~";
+  drawGoal(); SFX.open(); if(type==="coaster") SFX.alarm(); save();
+}
+function endRide(){
+  if(!RIDE.on) return; const type=RIDE.type; RIDE.on=false; player.visible=true; nameTag.visible=true; $("ridewin").classList.remove("on");
+  const ret={coaster:[PARK.x+2,PARK.z+5],wheel:[WHEEL.x,WHEEL.z+7],caro:[CARO.x,CARO.z+CARO.r+4]}[type]; teleport(ret[0],ret[1]); camYaw=0; camera.up.set(0,1,0);
+  gainXp(type==="coaster"?40:20); note("🎉",type==="coaster"?"롤러코스터 완주! 최고였어":type==="wheel"?"대관람차 한 바퀴 완료!":"회전목마 끝! 또 타자"); SFX.fanfare(); quest("ride"); drawGoal(); save();
+}
+$("rquit").onclick=()=>endRide();
 const svHost=mkChar({skin:0xd9a066,shirt:0xff8c1a,pants:0x1b1b1b,hairCol:0x111111,hair:"spiky",face:"cool",hat:"cap"});
 svHost.position.set(SURV.x+SURV.w/2-4,0,SURV.z+SURV.d/2+2.5); scene.add(svHost); solids.push({x:svHost.position.x,z:svHost.position.z,r:1});
 at(label("대장 리호",{size:30,h:.8,color:"#ffe9a8"}),svHost.position.x,6.4,svHost.position.z);
@@ -982,8 +1033,9 @@ function buildHouse(){
 /* ---- 집 안 (별도 공간, 문으로 드나들어요) ---- */
 const roomGrp=new T.Group(); scene.add(roomGrp);
 const FS=2.1;
+const roomShellGrp=new T.Group(); scene.add(roomShellGrp);
 (function roomShell(){
-  const R=ROOM, hw=R.w/2, hd=R.d/2, WH=9.5;
+  const R=ROOM, hw=R.w/2, hd=R.d/2, WH=9.5; const at=(m,x,y,z)=>{ m.position.set(x,y,z); roomShellGrp.add(m); return m; };
   const fl=box(R.w,.5,R.d,0xc08a58); fl.receiveShadow=true; at(fl,R.x,-.25,R.z);
   for(let i=-hw+2;i<hw;i+=4) for(let j=-hd+2;j<hd;j+=4) if((i+j)%8===0) at(box(3.9,.06,3.9,0xa87445),R.x+i,.04,R.z+j);
   for(const [dx,dz,w,d] of [[0,-hd,R.w,1],[-hw,0,1,R.d],[hw,0,1,R.d]]){ at(box(w,WH,d,0xfaf0dc),R.x+dx,WH/2,R.z+dz); at(box(w,.5,d+.08,0xd9c4a3),R.x+dx,.25,R.z+dz); PLATS.push({x:R.x+dx,z:R.z+dz,w,d,y:WH,h:WH,noDraw:true}); }
@@ -1104,18 +1156,18 @@ addEventListener("keydown",e=>{ keys[e.code]=true; if(e.code==="Space"){ if(FP.o
 addEventListener("keyup",e=>{ keys[e.code]=false; });
 let lastGround=0,jumpReq=0,stepT=0,chirpT=0;
 function doJump(){ P.vy=JUMP_V*(S.up.boots?1.12:1); SFX.jump(); burst(P.x,P.y+.2,P.z,0xdddddd,5,2.5,.4); quest("jump"); }
-function jump(){ if(guiOpen||fishing||BD.on) return; const on=P.y<=groundY(P.x,P.z)+.01||now()-lastGround<.12; if(on&&P.vy<=.01) doJump(); else jumpReq=now(); }
+function jump(){ if(guiOpen||fishing||BD.on||RIDE.on) return; const on=P.y<=groundY(P.x,P.z)+.01||now()-lastGround<.12; if(on&&P.vy<=.01) doJump(); else jumpReq=now(); }
 $("jumpBtn").addEventListener("touchstart",e=>{ e.preventDefault(); if(FP.on) fireFP(); else jump(); },{passive:false}); $("jumpBtn").addEventListener("mousedown",()=>{ if(FP.on) fireFP(); else jump(); });
 cv.addEventListener("touchstart",e=>{ e.preventDefault(); for(const t of e.changedTouches){
   if(t.clientX<innerWidth*.5&&joy.id===null){ joy.id=t.identifier; joy.cx=t.clientX; joy.cy=t.clientY; joy.dx=joy.dy=0; const j=$("joy"); j.style.left=joy.cx+"px"; j.style.top=joy.cy+"px"; j.classList.add("on"); $("knob").style.transform="translate(-50%,-50%)"; }
   else if(cam.id===null){ cam.id=t.identifier; cam.lx=cam.sx=t.clientX; cam.ly=cam.sy=t.clientY; cam.moved=false; } } },{passive:false});
 cv.addEventListener("touchmove",e=>{ e.preventDefault(); for(const t of e.changedTouches){
   if(t.identifier===joy.id){ let dx=t.clientX-joy.cx,dy=t.clientY-joy.cy; const d=Math.hypot(dx,dy),R=55; if(d>R){ dx*=R/d; dy*=R/d; } joy.dx=dx/R; joy.dy=dy/R; $("knob").style.transform="translate(calc(-50% + "+dx+"px),calc(-50% + "+dy+"px))"; }
-  else if(t.identifier===cam.id){ camYaw-=(t.clientX-cam.lx)*(FP.on?.005:.007); if(FP.on) FP.pitch=Math.max(-.9,Math.min(.9,FP.pitch-(t.clientY-cam.ly)*.004)); cam.lx=t.clientX; cam.ly=t.clientY; if(Math.hypot(t.clientX-cam.sx,t.clientY-cam.sy)>10) cam.moved=true; } } },{passive:false});
+  else if(t.identifier===cam.id){ if(RIDE.on&&RIDE.type!=="caro") RIDE.yaw=Math.max(-1.4,Math.min(1.4,RIDE.yaw-(t.clientX-cam.lx)*.005)); else camYaw-=(t.clientX-cam.lx)*(FP.on?.005:.007); if(FP.on) FP.pitch=Math.max(-.9,Math.min(.9,FP.pitch-(t.clientY-cam.ly)*.004)); cam.lx=t.clientX; cam.ly=t.clientY; if(Math.hypot(t.clientX-cam.sx,t.clientY-cam.sy)>10) cam.moved=true; } } },{passive:false});
 function tEnd(e){ for(const t of e.changedTouches){ if(t.identifier===joy.id){ joy.id=null; joy.dx=joy.dy=0; $("joy").classList.remove("on"); } if(t.identifier===cam.id){ cam.id=null; if(FP.on&&!cam.moved) fireFP(); } } }
 cv.addEventListener("touchend",tEnd); cv.addEventListener("touchcancel",tEnd);
 let mdown=false,mlx=0,mly=0,mmoved=false; cv.addEventListener("mousedown",e=>{ mdown=true; mmoved=false; mlx=e.clientX; mly=e.clientY; });
-addEventListener("mousemove",e=>{ if(mdown){ camYaw-=(e.clientX-mlx)*(FP.on?.004:.006); if(FP.on) FP.pitch=Math.max(-.9,Math.min(.9,FP.pitch-(e.clientY-mly)*.003)); if(Math.abs(e.clientX-mlx)+Math.abs(e.clientY-mly)>3) mmoved=true; mlx=e.clientX; mly=e.clientY; } });
+addEventListener("mousemove",e=>{ if(mdown){ if(RIDE.on&&RIDE.type!=="caro") RIDE.yaw=Math.max(-1.4,Math.min(1.4,RIDE.yaw-(e.clientX-mlx)*.004)); else camYaw-=(e.clientX-mlx)*(FP.on?.004:.006); if(FP.on) FP.pitch=Math.max(-.9,Math.min(.9,FP.pitch-(e.clientY-mly)*.003)); if(Math.abs(e.clientX-mlx)+Math.abs(e.clientY-mly)>3) mmoved=true; mlx=e.clientX; mly=e.clientY; } });
 addEventListener("mouseup",e=>{ if(mdown&&FP.on&&!mmoved&&e.target===cv) fireFP(); mdown=false; });
 document.addEventListener("touchmove",e=>{ if(e.target===cv) return; if(!e.target.closest(".bd,.hotbar")) e.preventDefault(); },{passive:false});
 document.addEventListener("gesturestart",e=>e.preventDefault());
@@ -1163,6 +1215,9 @@ FURN.filter(f=>f.act).forEach(f=>addI({x:ROOM.x+f.x*FS,z:ROOM.z+f.z*FS,h:3.4,r:3
     if(f.id==="toy"){ note("🧸","포옹! 기분이 좋아졌어"); tone(700,.14,"sine",.05,900); burst(ROOM.x+f.x*FS,2.4,ROOM.z+f.z*FS,0xff6b8a,12,3,.8); return; }
   }}));
 addI({x:SURV.x,z:SURV.z+SURV.d/2+2,h:4.4,r:4.5,text:()=>SV.on?null:"🎯 서바이벌 게임장 (입장료 필요)",act:()=>openSurv()});
+addI({x:PARK.x+2,z:PARK.z+4,h:5,r:5,text:()=>RIDE.on?null:"🎢 롤러코스터 타기 · 30코인",ok:()=>S.coins>=30,act:()=>startRide("coaster")});
+addI({x:WHEEL.x,z:WHEEL.z+4.5,h:4.5,r:4.5,text:()=>RIDE.on?null:"🎡 대관람차 타기 · 20코인",ok:()=>S.coins>=20,act:()=>startRide("wheel")});
+addI({x:CARO.x,z:CARO.z+CARO.r+2.5,h:4,r:4.5,text:()=>RIDE.on?null:"🎠 회전목마 타기 · 10코인",ok:()=>S.coins>=10,act:()=>startRide("caro")});
 function openSurv(){
   const B=$("survBody"); B.innerHTML="";
   const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>리호:</b> 굴러오는 공을 피해서 오래 버티면 코인을 줄게! <b>점프로 넘을 수도</b> 있어. 하트가 다 없어지면 끝!<br>최고 기록 "+S.svBest+"초"; B.appendChild(h);
@@ -1311,7 +1366,7 @@ function placeInBase(id){
 function thiefDropLoot(){ if(thief.lootObj){ thief.obj.remove(thief.lootObj); thief.lootObj=null; } thief.loot=null; }
 
 function findPrompt(){
-  if(guiOpen||fishing||BD.on||FP.on){ curI=null; $("prompt").classList.remove("on"); return; }
+  if(guiOpen||fishing||BD.on||FP.on||RIDE.on){ curI=null; $("prompt").classList.remove("on"); return; }
   let best=null,bd=1e9;
   for(const it of inter){ const d=Math.hypot(P.x-it.x,P.z-it.z); if(d<it.r&&d<bd&&it.text()!==null){ bd=d; best=it; } }
   for(const b of beltItems){ const d=Math.hypot(P.x-b.x,P.z-BELT.z); if(d<3.6&&d<bd){ bd=d; best=b.it; } }
@@ -1518,16 +1573,16 @@ function tick(){
 
   /* 이동 */
   let mx=0,mz=0;
-  if(!guiOpen&&!fishing&&!BD.on){ let fx=0,fy=0; if(joy.id!==null){ fx=joy.dx; fy=-joy.dy; }
+  if(!guiOpen&&!fishing&&!BD.on&&!RIDE.on){ let fx=0,fy=0; if(joy.id!==null){ fx=joy.dx; fy=-joy.dy; }
     if(keys.KeyW||keys.ArrowUp) fy=1; if(keys.KeyS||keys.ArrowDown) fy=-1; if(keys.KeyA||keys.ArrowLeft) fx=-1; if(keys.KeyD||keys.ArrowRight) fx=1;
     const l=Math.hypot(fx,fy); if(l>1){ fx/=l; fy/=l; } const f=[-Math.sin(camYaw),-Math.cos(camYaw)],r=[-f[1],f[0]]; mx=f[0]*fy+r[0]*fx; mz=f[1]*fy+r[1]*fx; }
   P.moving=Math.hypot(mx,mz)>.05;
   if(P.moving){ const air=P.y>groundY(P.x,P.z)+.05&&P.vy>-50; const sp=(carry?9:16)*(1+bonus("speed")+(S.up.shoes?.3:0)+(t<S.cakeUntil?.5:0))*(air?.6:1); tryMove(P.x+mx*sp*dt,P.z+mz*sp*dt); P.ry=Math.atan2(mx,mz); }
-  const gy=groundY(P.x,P.z); P.vy-=GRAV*dt; P.y+=P.vy*dt;
-  if(P.y<=gy){ if(P.vy<-9){ SFX.land(); burst(P.x,gy+.2,P.z,0xdddddd,8,3,.5); if(P.vy<-22) shake(.35,.25); } P.y=gy; P.vy=0; lastGround=t; if(t-jumpReq<.15){ jumpReq=0; doJump(); } }
+  const gy=groundY(P.x,P.z); if(!RIDE.on){ P.vy-=GRAV*dt; P.y+=P.vy*dt; }
+  if(!RIDE.on&&P.y<=gy){ if(P.vy<-9){ SFX.land(); burst(P.x,gy+.2,P.z,0xdddddd,8,3,.5); if(P.vy<-22) shake(.35,.25); } P.y=gy; P.vy=0; lastGround=t; if(t-jumpReq<.15){ jumpReq=0; doJump(); } }
   if(P.y<=gy+.01&&!guiOpen) for(const l of LPADS) if(Math.abs(P.x-l.x)<1.9&&Math.abs(P.z-l.z)<1.9){ P.vy=34; SFX.whoosh(); burst(l.x,.6,l.z,0xff8c1a,24,7,.9); break; }
   if(P.moving&&P.y<=gy+.01){ stepT+=dt; if(stepT>.27){ stepT=0; SFX.step(); burst(P.x,P.y+.15,P.z,H.zone==="haunt"?0x444455:0xa8d97a,2,1.5,.35); } }
-  player.position.set(P.x,P.y,P.z); nameTag.position.set(P.x,P.y+6.7,P.z); nameTag.visible=guiOpen!=="g-av"&&!FP.on;
+  player.position.set(P.x,P.y,P.z); nameTag.position.set(P.x,P.y+6.7,P.z); nameTag.visible=guiOpen!=="g-av"&&!FP.on&&!(RIDE.on&&RIDE.type!=="caro");
   sun.position.set(P.x+40,P.y+70,P.z+30); sun.target.position.set(P.x,P.y,P.z);
   { let ry=player.rotation.y,d=P.ry-ry; d=Math.atan2(Math.sin(d),Math.cos(d)); if(P.moving) player.rotation.y=ry+d*Math.min(1,dt*14); }
   swing(player,t,P.moving); if(fishing) player.userData.aR.rotation.x=-2.2;
@@ -1557,6 +1612,13 @@ function tick(){
   }
   swing(svHost,t*.6,false);
 
+  /* 놀이공원 장식 회전 */
+  roomShellGrp.visible=roomGrp.visible=(H.zone==="home");
+  { const W=WHEEL, a=(RIDE.on&&RIDE.type==="wheel")?(t-RIDE.t0)*.28:t*.12; W.ring.rotation.z=a; W.ring.userData.spokes.rotation.z=a;
+    W.ring.userData.cabins.forEach((c,i)=>{ const b=a-Math.PI/2+i*Math.PI/4; c.position.set(W.x+Math.cos(b)*W.r,W.cy+Math.sin(b)*W.r,W.z); });
+    const C=CARO; C.spin.rotation.y=-((RIDE.on&&RIDE.type==="caro")?(t-RIDE.t0)*.9:t*.35); C.spin.children.forEach(h=>{ h.position.y=Math.sin(t*4+h.userData.ph*1.1)*.35; });
+    if(!(RIDE.on&&RIDE.type==="coaster")){ const cv=coaster.curve; const u=(t*.02)%1, p=cv.getPointAt(u), tg=cv.getTangentAt(u); coaster.car.position.copy(p); coaster.car.lookAt(p.clone().add(tg)); } }
+
   /* 물총 사격 */
   if(FP.on){
     const d=FDIFF[FP.diff],A=SURV;
@@ -1574,7 +1636,30 @@ function tick(){
     const sy=Math.sin(player.rotation.y),cy=Math.cos(player.rotation.y); if(petObj) follow(petObj,P.x-sy*2.4+cy*1.2,P.z-cy*2.4-sy*1.2); if(petObj2) follow(petObj2,P.x-sy*2.4-cy*1.2,P.z-cy*2.4+sy*1.2); }
 
   /* 카메라 */
-  if(FP.on){ const dir=fpDir(); camera.position.set(P.x,P.y+4.6,P.z); camera.lookAt(P.x+dir.x,P.y+4.6+dir.y,P.z+dir.z); player.rotation.y=camYaw+Math.PI; P.ry=player.rotation.y; }
+  if(RIDE.on){
+    if(RIDE.type==="coaster"){
+      const cv=coaster.curve, L=coaster.len; const p0=cv.getPointAt(RIDE.u);
+      const lift=RIDE.u<coaster.peakU; if(lift){ RIDE.v=4; if(t-RIDE.tick>.18){ RIDE.tick=t; tone(160,.05,"square",.03); } }
+      else { const target=Math.max(6,Math.min(36,Math.sqrt(Math.max(1,2*20*(21-p0.y))))); RIDE.v+=(target-RIDE.v)*Math.min(1,dt*3); if(t-RIDE.tick>.25){ RIDE.tick=t; noise(.25,.02+RIDE.v/36*.06,2500); } }
+      const prevU=RIDE.u; RIDE.u+=RIDE.v*dt/L; if(RIDE.u>=1){ RIDE.u-=1; RIDE.lap++; if(RIDE.lap>=2){ endRide(); } else { note("🎢","한 바퀴 더!","gold"); SFX.whoosh(); } }
+      if(RIDE.on){ const p=cv.getPointAt(RIDE.u), tg=cv.getTangentAt(RIDE.u); RIDE.up.sub(tg.clone().multiplyScalar(RIDE.up.dot(tg))).normalize(); if(RIDE.up.lengthSq()<.5) RIDE.up.set(0,1,0);
+        { const nat=new T.Vector3(0,1,0); nat.sub(tg.clone().multiplyScalar(nat.dot(tg))); if(nat.lengthSq()>.09){ nat.normalize(); if(RIDE.up.dot(nat)>-.2) RIDE.up.lerp(nat,Math.min(1,dt*7)).normalize(); } }
+        const side=new T.Vector3().crossVectors(tg,RIDE.up).normalize(); const car=coaster.car; car.position.copy(p); car.setRotationFromMatrix(new T.Matrix4().makeBasis(side,RIDE.up,tg));
+        const eye=p.clone().addScaledVector(RIDE.up,2.1).addScaledVector(tg,-.6); const look=eye.clone().addScaledVector(tg.clone().applyAxisAngle(RIDE.up,RIDE.yaw),6).addScaledVector(RIDE.up,.6);
+        camera.up.copy(RIDE.up); camera.position.copy(eye); camera.lookAt(look); P.x=p.x; P.z=p.z; P.y=p.y;
+        if(prevU<coaster.peakU&&RIDE.u>=coaster.peakU){ SFX.whoosh(); shake(.3,.5); floatText("와아아!","#ffe08a"); } if(RIDE.v>28) shake(.08,.05); }
+    } else if(RIDE.type==="wheel"){
+      const W=WHEEL, a=(t-RIDE.t0)*.28-Math.PI/2; const cx=W.x+Math.cos(a)*W.r, cy=W.cy+Math.sin(a)*W.r; const eye=new T.Vector3(cx,cy-.3,W.z-1.3);
+      camera.up.set(0,1,0); camera.position.copy(eye); const yaw=RIDE.yaw+Math.PI; camera.lookAt(cx+Math.sin(yaw)*8,cy-1.2,W.z-1.3+Math.cos(yaw)*8); P.x=cx; P.z=W.z; P.y=cy-1;
+      if(t-RIDE.t0>=RIDE.dur) endRide();
+    } else {
+      const C=CARO, a=(t-RIDE.t0)*.9; const hx=C.x+Math.cos(a)*C.r, hz=C.z+Math.sin(a)*C.r; P.x=hx; P.z=hz; P.y=.8+1.5+Math.sin(t*4)*.35; player.rotation.y=-a; P.ry=player.rotation.y;
+      camera.up.set(0,1,0); camPos.set(C.x+Math.cos(a+.35)*(C.r+9),5.2,C.z+Math.sin(a+.35)*(C.r+9)); camera.position.lerp(camPos,Math.min(1,dt*6)); camera.lookAt(hx,P.y+2.4,hz);
+      if(t-RIDE.tick>.6){ RIDE.tick=t; tone(SCALE[Math.floor(Math.random()*SCALE.length)],.3,"triangle",.035); } if(t-RIDE.t0>=RIDE.dur) endRide(); }
+    if(RIDE.on&&Math.floor(t*4)!==Math.floor((t-dt)*4)) drawGoal();
+  }
+  if(RIDE.on){ }
+  else if(FP.on){ const dir=fpDir(); camera.position.set(P.x,P.y+4.6,P.z); camera.lookAt(P.x+dir.x,P.y+4.6+dir.y,P.z+dir.z); player.rotation.y=camYaw+Math.PI; P.ry=player.rotation.y; }
   else if(guiOpen==="g-av"){ player.rotation.y+=dt*.9; const fx=Math.sin(editYaw),fz=Math.cos(editYaw); camPos.set(P.x+fx*9,P.y+3.6,P.z+fz*9); camera.position.lerp(camPos,Math.min(1,dt*6)); camera.lookAt(P.x-fz*1.6,P.y+2.9,P.z+fx*1.6); }
   else { const hz=H.zone==="haunt",hm=H.zone==="home",D=hz?9.5:hm?16:13,Hy=hz?5:hm?8.5:7.5;
     camPos.set(P.x+Math.sin(camYaw)*D,P.y+Hy,P.z+Math.cos(camYaw)*D);
@@ -1697,7 +1782,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+window.BRA={get S(){return S;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
