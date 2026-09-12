@@ -122,7 +122,10 @@
   .track .core{position:absolute;top:0;bottom:0;background:rgba(255,200,61,.6)}
   .track .bob{position:absolute;top:-2px;bottom:-2px;width:8px;margin-left:-4px;border-radius:99px;background:#fff;box-shadow:0 0 12px #fff}
   .fishbtns{display:flex;gap:8px}.fishbtns .buy{flex:1;height:60px;font-size:1.2rem}
-  .fishmsg{text-align:center;padding:8px 14px;border-radius:10px;background:rgba(27,29,33,.85);font-size:1.05rem}
+  .fishmsg{text-align:center;padding:8px 14px;border-radius:10px;background:rgba(27,29,33,.85);font-size:1.05rem;transition:background .15s}
+  .fishmsg.bite{font-size:1.7rem;background:#0b5c3c;animation:bitepulse .35s ease infinite alternate}
+  @keyframes bitepulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+  .fishbtns #fgo{font-size:1.3rem}
 
   .menu-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
   .menu-grid .buy{height:64px;flex-direction:column;gap:2px;background:var(--ui-3);font-size:.95rem}
@@ -194,7 +197,7 @@
   <div class="notes" id="notes"></div>
 
   <div class="fishwin" id="fishwin">
-    <div class="fishmsg" id="fmsg">던지기를 누르고, 흰 막대가 초록칸에 오면 잡기!</div>
+    <div class="fishmsg" id="fmsg">던지기를 누르고 기다려요. 찌가 쑥 들어가면 ❗ 잡기!</div>
     <div class="track"><div class="z" id="fz"></div><div class="core" id="fcore"></div><div class="bob" id="fbob" style="left:0"></div></div>
     <div class="fishbtns"><button class="buy" id="fgo">🎣 던지기</button><button class="buy" id="fsell" style="background:var(--gold);color:#141033">💰 물고기 팔기</button><button class="buy blue" id="fquit">그만하기</button></div>
   </div>
@@ -1266,7 +1269,7 @@ PLOTS.forEach((p,i)=>addI({x:p.x,z:p.z,h:2.6,r:2.4,
       gainXp(s.xp*mult); quest("harvest"); advance(3); save(); }
     else if(S.sel==="can"&&S.can>0){ S.can--; pl.ripe=Math.max(now(),pl.ripe-8); drawHotbar(); note("💧","쑥쑥! 8초 빨라졌어"); SFX.water(); burst(p.x,1.5,p.z,0x4cc9f0,16,4,.7); quest("water"); save(); }
   }}));
-addI({x:DOCK.x,z:DOCK.z2+2.5,h:3.5,r:3,text:()=>"낚시하기",act:()=>startFish()});
+addI({x:DOCK.x,z:DOCK.z2+4.5,h:3.5,r:6,text:()=>"🎣 낚시하기",act:()=>startFish()});
 addI({x:PAD.x,z:PAD.z,h:3,r:2.6,text:()=>carry?"기지에 넣기":"수금 "+num(S.cash),ok:()=>carry?true:S.cash>=1,act:()=>{
   if(carry){ placeInBase(carry.id); dropCarry(); return; }
   const c=Math.floor(S.cash); if(c<1) return; S.cash-=c; earn(c); note("💰",num(c)+" 코인 수금!"); chime(600,800,1000); gainXp(Math.min(40,Math.ceil(c/20))); save(); }});
@@ -1327,7 +1330,7 @@ function drawShop(){
 }
 function drawRod(){
   const L=$("rodList"); L.innerHTML="";
-  RODS.forEach((r,i)=>{ const st=i<S.rod?"가지고 있음":i===S.rod?"지금 쓰는 중":""; const rw=row(r.e,r.nm,'초록칸 '+Math.round(r.zone*100)+'% · 희귀 확률 ×'+r.luck+(st?' · '+st:'')); const b=btn("");
+  RODS.forEach((r,i)=>{ const st=i<S.rod?"가지고 있음":i===S.rod?"지금 쓰는 중":""; const rw=row(r.e,r.nm,'희귀 물고기 확률 ×'+r.luck+' · 입질이 더 빨리 와요'+(st?' · '+st:'')); const b=btn("");
     if(i<=S.rod){ b.textContent=i===S.rod?"사용 중":"✓"; b.disabled=true; } else if(i===S.rod+1){ b.innerHTML=coinSvg+num(RODS[S.rod].up); b.onclick=()=>{ if(!pay(RODS[S.rod].up)) return; S.rod++; drawRod(); note(r.e,r.nm+" 획득!","gold"); chime(620,820,1100); gainXp(30); save(); }; } else { b.textContent="잠김"; b.disabled=true; }
     rw.appendChild(b); L.appendChild(rw); });
 }
@@ -1470,20 +1473,24 @@ function answerMath(o,btnEl){
 }
 
 /* ======================= 낚시 ======================= */
-let fishing=false,cast={on:false,start:0,zone:.3,zl:.3,pos:0};
-function startFish(){ fishing=true; drawFishSell(); $("fishwin").classList.add("on"); $("fmsg").textContent="던지기를 누르고, 흰 막대가 초록칸에 오면 잡기!"; $("fgo").textContent="🎣 던지기"; cast.on=false; player.rotation.y=Math.PI; beep(500,.06); }
-$("fquit").onclick=()=>{ fishing=false; cast.on=false; bobber.visible=false; player.userData.aR.rotation.x=0; $("fishwin").classList.remove("on"); };
+/* 낚시: 찌가 쑥 들어가면(❗) 2.4초 안에 잡기 — 6살도 되는 반응 게임 */
+let fishing=false,cast={on:false,phase:"idle",t0:0,biteAt:0,endAt:0,pos:0};
+const BITE_WIN=2.4, BITE_PERF=.8;
+function fishReset(){ cast.on=false; cast.phase="idle"; $("fgo").textContent="🎣 던지기"; $("fmsg").classList.remove("bite"); $("fz").style.left="0%"; $("fz").style.width="0%"; $("fcore").style.width="0%"; $("fbob").style.display="none"; }
+function startFish(){ fishing=true; drawFishSell(); $("fishwin").classList.add("on"); fishReset(); $("fmsg").textContent="던지기를 누르고 기다려요. 찌가 쑥 들어가면 ❗ 잡기!"; player.rotation.y=Math.PI; beep(500,.06); }
+$("fquit").onclick=()=>{ fishing=false; fishReset(); bobber.visible=false; player.userData.aR.rotation.x=0; $("fishwin").classList.remove("on"); };
 $("fgo").onclick=()=>{
-  if(!cast.on){ if(bagFull()) return; cast.on=true; cast.start=now(); cast.zone=RODS[S.rod].zone; cast.zl=Math.min(Math.max(.5-cast.zone/2+(Math.random()-.5)*(.9-cast.zone),.02),.98-cast.zone);
-    $("fz").style.left=cast.zl*100+"%"; $("fz").style.width=cast.zone*100+"%"; $("fcore").style.left=(cast.zl+cast.zone*.35)*100+"%"; $("fcore").style.width=cast.zone*.3*100+"%";
-    $("fgo").textContent="✋ 잡기!"; $("fmsg").textContent="지금이야! 초록칸에서 잡기!"; bobber.visible=true; SFX.cast(); setTimeout(()=>{ SFX.splash(); burst(bobber.position.x,.4,bobber.position.z,0x4cc9f0,10,3,.6); },350); return; }
-  cast.on=false; $("fgo").textContent="🎣 다시 던지기"; bobber.visible=false;
-  const pos=cast.pos,inZ=pos>=cast.zl&&pos<=cast.zl+cast.zone,cl=cast.zl+cast.zone*.35,perfect=pos>=cl&&pos<=cl+cast.zone*.3;
-  if(!inZ){ $("fmsg").textContent="🥾 앗, 헌 신발… 다시!"; bad(); return; }
-  const luck=RODS[S.rod].luck*(perfect?3:1)*(1+bonus("luck"))*(weather.kind==="rainbow"?2:1);
+  if(!cast.on){ if(bagFull()) return; cast.on=true; cast.phase="wait"; cast.t0=now(); cast.biteAt=now()+1.2+Math.random()*(3.2-Math.min(2,S.rod*.4));
+    $("fgo").textContent="⏳ 기다리는 중…"; $("fmsg").textContent="찌를 잘 봐… 쑥 들어가면 잡기!"; $("fmsg").classList.remove("bite"); $("fz").style.width="0%"; $("fcore").style.width="0%";
+    bobber.visible=true; SFX.cast(); setTimeout(()=>{ if(cast.on){ SFX.splash(); burst(bobber.position.x,.4,bobber.position.z,0x4cc9f0,10,3,.6); } },350); return; }
+  if(cast.phase==="wait"){ $("fmsg").textContent="아직이야! 찌가 쑥 들어갈 때까지 기다려"; tone(300,.1,"sine",.03); return; }
+  if(cast.phase!=="bite") return;
+  const react=now()-cast.biteAt, perfect=react<=BITE_PERF;
+  fishReset(); $("fgo").textContent="🎣 다시 던지기"; bobber.visible=false;
+  const luck=RODS[S.rod].luck*(perfect?2:1)*(1+bonus("luck"))*(weather.kind==="rainbow"?2:1);
   let tot=0; const ws=FISH.map((f,i)=>{ const w=i>=5?f.w*luck:f.w; tot+=w; return w; }); let r=Math.random()*tot,f=FISH[0]; for(let i=0;i<FISH.length;i++){ r-=ws[i]; if(r<=0){ f=FISH[i]; break; } }
   const val=Math.round(f.val*(perfect?1.5:1)); S.goods.push({e:f.e,nm:(perfect?"⭐ ":"")+f.nm,val,k:"fish",id:f.id}); S.book[f.id]=(S.book[f.id]||0)+1; drawHotbar();
-  $("fmsg").textContent=(perfect?"완벽! ×1.5 ":"")+f.e+" "+f.nm+" 잡았다! (팔면 "+num(val)+")"; note(f.e,f.nm+" 잡았어! '물고기 팔기'로 바로 팔 수 있어",f.val>=1900?"gold":""); drawFishSell();
+  $("fmsg").textContent=(perfect?"빨랐다! ×1.5 ":"")+f.e+" "+f.nm+" 잡았다! (팔면 "+num(val)+")"; note(f.e,f.nm+" 잡았어! '물고기 팔기'로 바로 팔 수 있어",f.val>=1900?"gold":""); drawFishSell();
   SFX.splash(); burst(bobber.position.x,.6,bobber.position.z,0x4cc9f0,18,5,.8); if(f.val>=1900){ SFX.fanfare(); burst(P.x,P.y+4,P.z,0xffd166,30,7,1); } else if(perfect) chime(680,900); else SFX.pop();
   gainXp(4+FISH.indexOf(f)*4); quest("fish"); save();
 };
@@ -1664,7 +1671,11 @@ function tick(){
   sun.intensity+=((haunt?.06:(weather.kind==="rain"?.45:.85))-sun.intensity)*Math.min(1,dt*2); hemi.intensity+=((haunt?.3:.75)-hemi.intensity)*Math.min(1,dt*2);
 
   /* 낚시 막대 */
-  if(cast.on){ const sp=1.05+S.rod*.22,x=(t-cast.start)*sp; cast.pos=.5-Math.cos(x*Math.PI)*.49; $("fbob").style.left=cast.pos*100+"%"; bobber.position.y=.3+Math.sin(t*6)*.08; }
+  if(cast.on){
+    if(cast.phase==="wait"){ bobber.position.y=.3+Math.sin(t*4)*.06; const k=Math.min(1,(t-cast.t0)/(cast.biteAt-cast.t0)); $("fz").style.left="0%"; $("fz").style.width=(k*100).toFixed(0)+"%"; $("fz").style.background="rgba(76,201,240,.35)";
+      if(t>=cast.biteAt){ cast.phase="bite"; cast.endAt=t+BITE_WIN; $("fgo").textContent="✋ 잡기!!"; $("fmsg").textContent="❗ 지금 잡기!"; $("fmsg").classList.add("bite"); $("fz").style.background="rgba(0,176,111,.6)"; $("fcore").style.left="0%"; $("fcore").style.width=(BITE_PERF/BITE_WIN*100).toFixed(0)+"%"; SFX.splash(); tone(1200,.12,"square",.06); tone(1500,.15,"square",.06,null,.12); burst(bobber.position.x,.5,bobber.position.z,0x4cc9f0,16,4,.6); shake(.2,.25); } }
+    else if(cast.phase==="bite"){ bobber.position.y=-.2+Math.sin(t*14)*.12; const left=Math.max(0,(cast.endAt-t)/BITE_WIN); $("fz").style.width=(left*100).toFixed(0)+"%";
+      if(t>=cast.endAt){ fishReset(); $("fgo").textContent="🎣 다시 던지기"; $("fmsg").textContent="앗, 물고기가 도망갔어! 다시 던져보자"; bobber.visible=false; bad(); } } }
 
   findPrompt();
   if(t-lastSave>4){ lastSave=t; S.tick=t; save(); } if(t-lastLB>3){ lastLB=t; drawLB(); }
