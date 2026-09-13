@@ -233,7 +233,7 @@
     <div class="namerow"><input id="nameIn" maxlength="10" placeholder="이름 입력"><button class="buy" id="nameBtn">이름 바꾸기</button></div>
     <div class="two"><button class="buy blue" id="sndBtn" style="height:54px">🔊 소리 켜짐</button><button class="buy blue" id="musBtn" style="height:54px">🎵 음악 켜짐</button></div>
     <div class="help"><b>조작법</b><br>왼쪽 화면 드래그 = 걷기 · 오른쪽 드래그 = 카메라 · ⬆ = 점프<br>물건 근처에 가면 <b>E 버튼</b>이 떠요. 누르면 돼요!<br>
-    <b>할 수 있는 것</b><br>🌱 농사 · 🎣 낚시 · 🦈 브레인롯 모으기 · 🥚 펫 키우기 · ➕ 수학 퀴즈 · 🏡 집 짓고 꾸미기 · 👻 귀신의 집(난이도 3) · 🏸 배드민턴 · 🎯 서바이벌·💦 물총 · 🎢 놀이공원(롤러코스터·대관람차·회전목마) · ⛰️ 산 · 🏗️ 오비 · 🪙 코인 줍기 · 🚨 도둑 쫓아내기<br>
+    <b>할 수 있는 것</b><br>🌱 농사 · 🎣 낚시 · 🦈 브레인롯 모으기 · 🥚 펫 키우기 · ➕ 수학 퀴즈 · 🏡 집 짓고 꾸미기 · 👻 귀신의 집(난이도 3) · 🏸 배드민턴 · 🎯 서바이벌·💦 물총 · 🎢 놀이공원(롤러코스터·자이로드롭·대관람차·회전목마) · ⛰️ 산 · 🏗️ 오비 · 🪙 코인 줍기 · 🚨 도둑 쫓아내기<br>
     <span style="color:#8a8f99">PC: WASD 이동, 스페이스 점프, E 상호작용</span></div>
     <div class="sec">💾 저장</div>
     <div class="help" id="saveInfo"></div>
@@ -317,7 +317,7 @@ const UPGRADES=[
 ];
 const COURT={x:44,z:62,w:12,d:24};
 const SURV={x:-78,z:-26,w:34,d:34};
-const PARK={x:70,z:104}, WHEEL={x:36,z:116,cy:17,r:14}, CARO={x:44,z:136,r:5.2};
+const PARK={x:70,z:104}, WHEEL={x:30,z:124,cy:17,r:14}, CARO={x:46,z:134,r:5.2};
 const SDIFF=[
   {nm:"쉬움",e:"🟢",fee:100,hp:5,sp:9,max:4,pay:3,sub:"하트 5개 · 공이 느려요"},
   {nm:"보통",e:"🟡",fee:200,hp:3,sp:13,max:6,pay:6,sub:"하트 3개 · 조금 빨라요"},
@@ -513,7 +513,7 @@ function zoneTrack(){
   if(H.zone==="haunt") return "haunt";
   if(BD.on) return "sport";
   if(H.zone==="home") return "town";
-  if(SV.on||FP.on||(RIDE.on&&RIDE.type==="coaster")) return "sport";
+  if(SV.on||FP.on||(RIDE.on&&(RIDE.type==="coaster"||RIDE.type==="drop"))) return "sport";
   if(RIDE.on) return "town";
   if(fishing||weather.kind==="rain") return "calm";
   if(guiOpen==="g-shop"||guiOpen==="g-rod"||guiOpen==="g-sell"||guiOpen==="g-pet"||guiOpen==="g-up"||guiOpen==="g-build") return "town";
@@ -582,7 +582,10 @@ QUESTS.forEach(q=>q.id=q.k);
 
 const GOALS=["🌱 샘의 씨앗 가게(왼쪽)로 가서 씨앗을 사자!","🟫 내 밭(왼쪽 위)의 흙 옆에서 E를 눌러 심자!","⏳ 다 자라면 반짝여요. 다시 가서 수확!","💰 스티븐(가운데)에게 가서 팔자!","🦈 컨베이어(아래)에서 브레인롯을 사면 기지에서 1초마다 코인이 생겨요. 초록 패드에서 수금!","➕ 민지 선생님 퀴즈 · 🎣 낚시 · 🥚 펫 · ⛰️ 산꼭대기 보물상자도 있어요!",""];
 function drawGoal(){ const g=$("goal");
-  if(RIDE.on){ g.className="goal wx"; const s=Math.floor(now()-RIDE.t0); g.textContent=RIDE.type==="coaster"?"🎢 롤러코스터 · "+(RIDE.lap+1)+"바퀴째 · "+Math.round(RIDE.v*3.6)+"km/h":RIDE.type==="wheel"?"🎡 대관람차 · "+s+"초":"🎠 회전목마 · "+s+"초"; return; }
+  if(RIDE.on){ g.className="goal wx"; const s=Math.floor(now()-RIDE.t0);
+    g.textContent=RIDE.type==="coaster"?"🎢 "+Math.round(RIDE.v*1.22)+"km/h · 높이 "+Math.round(RIDE.hy*.34)+"m · "+RIDE.gf.toFixed(1)+"G"
+      :RIDE.type==="drop"?"🗼 "+Math.round(RIDE.hy*.34)+"m · "+Math.round(RIDE.v*1.22)+"km/h · "+RIDE.gf.toFixed(1)+"G"
+      :RIDE.type==="wheel"?"🎡 대관람차 · "+s+"초":"🎠 회전목마 · "+s+"초"; return; }
   if(FP.on){ const d=FDIFF[FP.diff]; g.className="goal wx"; g.textContent="💦 "+d.nm+" · 🎈 "+FP.score+"개 · 남은 시간 "+Math.max(0,Math.ceil(FP.end-now()))+"초"; return; }
   if(SV.on){ const d=SDIFF[SV.diff],sec=Math.floor(now()-SV.t0); g.className="goal wx"; g.textContent=d.e+" "+d.nm+" · "+"❤️".repeat(Math.max(0,SV.hp))+" · "+sec+"초 버팀 (초당 "+d.pay+"코인)"; return; }
   if(H.zone==="home"){ g.className="goal"; g.textContent="🏡 우리 집 · 가구를 눌러서 써보세요 · 🚪 문으로 나가기"; return; }
@@ -930,24 +933,146 @@ const FP={on:false,diff:1,t0:0,end:0,score:0,pitch:0,targets:[],shots:[],lastSec
   for(let i=0;i<8;i++){ const m=new T.Mesh(new T.SphereGeometry(.22,8,6),sm); m.visible=false; scene.add(m); FP.shots.push({m,on:false,t:0,dir:new T.Vector3()}); }
 })();
 /* ---- 놀이공원: 롤러코스터 · 대관람차 · 회전목마 ---- */
-const RIDE={on:false,type:null,t0:0,u:0,v:0,up:new T.Vector3(0,1,0),lap:0,yaw:0,tick:0,ret:null,dur:0};
-const coaster={curve:null,len:0,car:null,frames:null};
+const RIDE={on:false,type:null,t0:0,u:0,v:0,yaw:0,tick:0,ret:null,dur:0,ph:"",phT:0,gf:1,hy:0,clack:0,rum:0,air:false,hig:false,top:0,dy:0,dv:0,dr:0,ba:0,msg:""};
+const coaster={curve:null,len:0,N:640,P:[],TG:[],UP:[],SD:[],V:[],G:[],train:[],iLift:0,iCrest:0,iBrake:0,au:0,vmax:0,drop:0};
+const DROP={x:100,z:96,bot:2.4,top:44,brk:19,gon:null,seat:null};
+const CG=30, FOV0=camera.fov;
+/* ===== 롤러코스터: 실제 코스터 방식(체인 리프트 → 위치에너지 주행 → 뱅킹 → 브레이크런) ===== */
+(function coasterBuild(){
+  const O=PARK, pts=[], add=(x,y,z)=>pts.push(new T.Vector3(O.x+x,y,O.z+z));
+  /* 승강장(+z 방향 출발) */ add(-2,1.7,-12); add(-2,1.75,-6);
+  /* 체인 리프트 (22m, 약 45°) */ add(-2,4.4,0); add(-2,8.8,4.5); add(-2,13.4,9); add(-2,17.8,13.5); add(-2,21,18); add(-1.2,22.2,22);
+  /* 정상 90° 선회 — 저속이라 급선회 가능 */ add(2,22.3,25.6); add(6.5,22.2,27.2); add(11,22,26.8);
+  /* 1차 대낙하 + 긴 풀아웃(바닥 반경을 크게 — 4G 이하) */
+  add(15.5,20.6,26.2); add(20,17.4,26); add(24,13,26); add(28,8.4,26); add(32,4.8,26.2); add(36,2.8,26.6); add(40,2.3,27.2);
+  /* 수직 루프(아래가 넓은 클로소이드): +x 진행, +z 로 비껴 나감 */
+  const BX=40,BY=2.3,BZ=27.2,Rb=15,Rt=7.5,FWD=5,LAT=8;
+  for(let i=1;i<=19;i++){ const th=i/19*Math.PI*2, R=Rt+(Rb-Rt)*(Math.cos(th)+1)/2, f=th/(Math.PI*2);
+    add(BX+R*Math.sin(th)+FWD*f, BY+R*(1-Math.cos(th)), BZ+LAT*f); }
+  /* 카멜백(완만한 정상 → 무중력) */ add(50,5,35.6); add(56,9.2,35.6);
+  /* 고가 뱅크 180° */ add(62,11.6,34.2); add(66,11,29); add(66.5,10.1,23); add(63,9.5,18); add(57,9.6,15);
+  /* 완만한 하강 직선 → 리프트 언덕 아래 통과 */ add(50,7.8,14); add(43,5.8,13); add(36,4.6,12); add(28,4,11); add(20,3.7,10.5); add(12,3.5,10); add(4,3.3,9.6);
+  /* 브레이크런 후 U턴 */ add(-4,3.1,9); add(-11,2.9,7); add(-15,2.7,2); add(-15.5,2.4,-4); add(-13,2.1,-9); add(-8,1.85,-12);
+
+  const cv=new T.CatmullRomCurve3(pts,true,"centripetal"); cv.arcLengthDivisions=3000;
+  coaster.curve=cv; const L=coaster.len=cv.getLength(), N=coaster.N, ds=L/N;
+  const P=coaster.P, TG=coaster.TG;
+  for(let i=0;i<N;i++){ const u=i/N; P.push(cv.getPointAt(u)); TG.push(cv.getTangentAt(u).normalize()); }
+  /* 곡률: 열차 길이(약 12m)만큼 평균 — 실제 승객이 느끼는 값 */
+  const KR=[]; for(let i=0;i<N;i++) KR.push(TG[(i+1)%N].clone().sub(TG[(i+N-1)%N]).multiplyScalar(1/(2*ds)));
+  const KV=[]; const W=Math.round(6/ds); for(let i=0;i<N;i++){ const a=new T.Vector3(); for(let k=-W;k<=W;k++) a.add(KR[(i+k+N)%N]); KV.push(a.multiplyScalar(1/(2*W+1))); }
+  const near=(x,y,z)=>{ const q=new T.Vector3(O.x+x,y,O.z+z); let bi=0,bd=1e9; for(let i=0;i<N;i++){ const d=P[i].distanceToSquared(q); if(d<bd){ bd=d; bi=i; } } return bi; };
+  const iLift=coaster.iLift=near(-2,4.4,0), iCrest=coaster.iCrest=near(-1.2,22.2,22), iBrake=coaster.iBrake=near(36,4.6,12), iSlow=near(-11,2.9,7);
+  /* 속도 프로파일: 리프트 등속 → 위치에너지 주행(마찰 포함) → 브레이크런 → 역 진입 */
+  const V=coaster.V, VL=5.8, VS=5.2, VMIN=3;
+  for(let i=0;i<N;i++) V.push(i<iLift?VS:VL);
+  { let v=VL, E=CG*P[iCrest].y+.5*v*v;
+    for(let i=iCrest;i<N;i++){
+      if(i<iBrake){ let v2=2*(E-CG*P[i].y); if(v2<VMIN*VMIN) v2=VMIN*VMIN; v=Math.sqrt(v2); E-=(.013*CG*v+.00009*v*v*v)*(ds/v); }
+      else if(i<iSlow) v=Math.sqrt(Math.max(144,v*v-2*22*ds));
+      else v=Math.max(VS,v-11*ds/Math.max(1,v));
+      V[i]=v; if(v>coaster.vmax) coaster.vmax=v; } }
+  coaster.drop=P[iCrest].y-P[near(40,2.3,27.2)].y;
+  /* 기준 프레임(닫힌 곡선 보정) → 역 구간에서 위를 향하도록 전체 롤 정렬 */
+  const FR=cv.computeFrenetFrames(N,true), Y=new T.Vector3(0,1,0);
+  let ang=0; for(let i=0;i<iLift;i++) ang+=Math.atan2(Y.dot(FR.binormals[i]),Y.dot(FR.normals[i])); ang/=Math.max(1,iLift);
+  const ca=Math.cos(ang), sa=Math.sin(ang), UPB=[],SDB=[],TH=[];
+  for(let i=0;i<N;i++){ const ub=FR.normals[i].clone().multiplyScalar(ca).addScaledVector(FR.binormals[i],sa).normalize();
+    const sb=new T.Vector3().crossVectors(TG[i],ub).normalize(); UPB.push(ub); SDB.push(sb);
+    /* 뱅킹: 가속도(원심+중력)가 좌석 바닥을 향하도록 롤 — 옆으로 쏠리지 않게 */
+    const acc=KV[i].clone().multiplyScalar(V[i]*V[i]).addScaledVector(Y,CG);
+    TH.push(Math.atan2(acc.dot(sb),Math.max(acc.dot(ub),.4*acc.length()+1e-6))); }
+  for(let pass=0;pass<4;pass++){ const s=TH.slice(); for(let i=0;i<N;i++){ let a=0; for(let k=-5;k<=5;k++) a+=s[(i+k+N)%N]; TH[i]=a/11; } }
+  const UP=coaster.UP, SD=coaster.SD, G=coaster.G;
+  for(let i=0;i<N;i++){ const c=Math.cos(TH[i]),s=Math.sin(TH[i]);
+    const up=UPB[i].clone().multiplyScalar(c).addScaledVector(SDB[i],s).normalize();
+    UP.push(up); SD.push(new T.Vector3().crossVectors(TG[i],up).normalize());
+    G.push(KV[i].clone().multiplyScalar(V[i]*V[i]).addScaledVector(Y,CG).dot(up)/CG); }
+
+  /* --- 선로: 레일 2 + 스파인 + 침목 + 기둥 --- */
+  const ra=[],rb=[],sp=[];
+  for(let i=0;i<N;i++){ ra.push(P[i].clone().addScaledVector(SD[i],.95).addScaledVector(UP[i],.3));
+    rb.push(P[i].clone().addScaledVector(SD[i],-.95).addScaledVector(UP[i],.3)); sp.push(P[i].clone().addScaledVector(UP[i],-.75)); }
+  const tube=(arr,r,c)=>{ const m=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(arr,true,"centripetal"),N,r,6,true),mat(c)); m.castShadow=true; scene.add(m); };
+  tube(ra,.16,0xf4443c); tube(rb,.16,0xf4443c); tube(sp,.34,0xffc83d);
+  const M=new T.Matrix4(), Q=new T.Quaternion(), SC=new T.Vector3();
+  { const n=Math.floor(N/8), im=new T.InstancedMesh(new T.BoxGeometry(2.3,.18,.36),mat(0x8d959c),n); im.castShadow=true;
+    for(let k=0;k<n;k++){ const i=k*8; M.makeBasis(SD[i],UP[i],TG[i]); M.setPosition(P[i].clone().addScaledVector(UP[i],-.22)); im.setMatrixAt(k,M); }
+    im.instanceMatrix.needsUpdate=true; scene.add(im); }
+  { const col=[]; for(let i=0;i<N;i+=18){ const p=P[i]; if(p.y<3.4) continue; let under=false;
+      for(let j=0;j<N;j+=2){ const dd=Math.abs(j-i); if(Math.min(dd,N-dd)<34) continue; const q=P[j];
+        if(q.y<p.y-2.6&&Math.abs(q.x-p.x)<3.2&&Math.abs(q.z-p.z)<3.2){ under=true; break; } }
+      if(!under) col.push(p); }
+    const im=new T.InstancedMesh(new T.BoxGeometry(1,1,1),mat(0xbcc3c9),col.length*2); im.castShadow=true;
+    col.forEach((p,k)=>{ const h=p.y-.6; M.compose(new T.Vector3(p.x,h/2,p.z),Q.identity(),SC.set(.5,h,.5)); im.setMatrixAt(k*2,M);
+      M.compose(new T.Vector3(p.x,.2,p.z),Q.identity(),SC.set(1.9,.4,1.9)); im.setMatrixAt(k*2+1,M); });
+    im.instanceMatrix.needsUpdate=true; scene.add(im); }
+  /* 리프트 체인 + 정비 계단 */
+  { const ch=[]; for(let i=iLift;i<=iCrest;i++) ch.push(P[i].clone().addScaledVector(UP[i],-.05));
+    const m=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(ch,false,"centripetal"),120,.1,5,false),mat(0x50565c)); scene.add(m);
+    const n=Math.floor((iCrest-iLift)/5), im=new T.InstancedMesh(new T.BoxGeometry(1.3,.14,.55),mat(0x9aa0a6),n);
+    for(let k=0;k<n;k++){ const i=iLift+k*5; M.makeBasis(SD[i],UP[i],TG[i]); M.setPosition(P[i].clone().addScaledVector(SD[i],2).addScaledVector(UP[i],-.15)); im.setMatrixAt(k,M); }
+    im.instanceMatrix.needsUpdate=true; scene.add(im); }
+  /* 승강장 */
+  const SX=O.x+2.2, SZ=O.z-8;
+  at(box(4,1.2,13,0x9aa0a6),SX,.6,SZ); at(box(4.4,.25,13.6,0xf4443c),SX,1.3,SZ);
+  PLATS.push({x:SX,z:SZ,w:4,d:13,y:1.2,h:1.2,noDraw:true});
+  for(const dz of [-5.5,0,5.5]){ at(box(.32,5,.32,0xf1f1f1),SX+1.6,3.6,SZ+dz); }
+  at(box(5.4,.35,14,0x00a2ff),SX+.6,6.3,SZ);
+  at(label("🎢 롤러코스터",{size:46,h:1.6}),SX,8.4,SZ);
+  at(label("낙하 "+Math.round(coaster.drop*.34)+"m · 수직 루프 · 최고 "+Math.round(coaster.vmax*1.22)+"km/h",{size:26,h:.75,color:"#bdbebe"}),SX,7.2,SZ);
+  /* --- 열차 3량 --- */
+  const rider=()=>{ const g=new T.Group(); const b=box(.7,.8,.5,[0x40c4ff,0xff9ad5,0xb9f6ca,0xffe082][Math.floor(Math.random()*4)]); b.position.y=.4; g.add(b);
+    const h=box(.62,.62,.62,0xf2c48d); h.position.y=1.1; g.add(h);
+    for(const s of [-1,1]){ const a=box(.2,.8,.2,0xf2c48d); a.position.set(s*.5,.95,0); a.rotation.z=s*.5; g.add(a); } return g; };
+  for(let k=0;k<3;k++){ const g=new T.Group(), lead=k===0;
+    const ch=box(2.5,.32,3.5,0x2b2f33); ch.position.y=.28; g.add(ch);
+    const bd=box(2.3,1,3.2,lead?0xf4443c:0xffc83d); bd.position.y=.88; g.add(bd);
+    if(lead){ const no=box(1.8,.42,1.1,0xffc83d); no.position.set(0,.6,2.1); g.add(no); }
+    for(const dz of [.75,-.75]){ const s=box(2.05,.7,.3,0x1b1b1b); s.position.set(0,1.6,dz-.5); g.add(s);
+      const bar=box(1.8,.14,.14,0x50565c); bar.position.set(0,1.75,dz+.52); g.add(bar);
+      for(const sx of [-.85,.85]){ const v=box(.14,.7,.14,0x50565c); v.position.set(sx,1.45,dz+.52); g.add(v); } }
+    if(!lead) for(const dz of [.6,-.9]) for(const sx of [-.55,.55]){ const r=rider(); r.position.set(sx,1.6,dz); g.add(r); }
+    for(const sx of [-1.28,1.28]) for(const dz of [1.25,-1.25]){ const w=new T.Mesh(new T.CylinderGeometry(.34,.34,.24,8),mat(0x2b2f33)); w.rotation.z=Math.PI/2; w.position.set(sx,.3,dz); g.add(w); }
+    g.traverse(o=>{ if(o.isMesh) o.castShadow=true; }); scene.add(g); coaster.train.push(g); }
+})();
+function frameAt(u){ const N=coaster.N; const x=((u%1)+1)%1*N, i0=Math.floor(x)%N, f=x-Math.floor(x), i1=(i0+1)%N;
+  const p=coaster.P[i0].clone().lerp(coaster.P[i1],f), up=coaster.UP[i0].clone().lerp(coaster.UP[i1],f).normalize(), tg=coaster.TG[i0].clone().lerp(coaster.TG[i1],f).normalize();
+  const sd=new T.Vector3().crossVectors(tg,up).normalize(); up.crossVectors(sd,tg).normalize();
+  return {p,up,tg,sd,v:coaster.V[i0]+(coaster.V[i1]-coaster.V[i0])*f,g:coaster.G[i0]+(coaster.G[i1]-coaster.G[i0])*f};
+}
+function coasterStep(u,dt){ const N=coaster.N; return u+coaster.V[Math.floor(((u%1)+1)%1*N)%N]*dt/coaster.len; }
+function placeTrain(u){ const M=new T.Matrix4();
+  for(let k=0;k<coaster.train.length;k++){ const fr=frameAt(u-k*3.9/coaster.len), c=coaster.train[k];
+    c.position.copy(fr.p).addScaledVector(fr.up,.45); M.makeBasis(fr.sd,fr.up,fr.tg); c.setRotationFromMatrix(M); } }
+/* ===== 자이로드롭 ===== */
+(function dropBuild(){
+  const D=DROP, H=D.top+5;
+  at(new T.Mesh(new T.CylinderGeometry(7,8,1,16),mat(0x9aa0a6)),D.x,.5,D.z);
+  PLATS.push({x:D.x,z:D.z,w:13,d:13,y:1,h:1,noDraw:true});
+  const M=new T.Matrix4(),Q=new T.Quaternion(),SC=new T.Vector3();
+  const corners=[[-2.2,-2.2],[2.2,-2.2],[-2.2,2.2],[2.2,2.2]];
+  for(const [dx,dz] of corners) at(box(.75,H,.75,0x00a2ff),D.x+dx,H/2,D.z+dz);
+  { const n=Math.floor(H/3)*4, im=new T.InstancedMesh(new T.BoxGeometry(4.4,.3,.3),mat(0xbfe6ff),n); let k=0;
+    for(let y=3;y<H&&k<n;y+=3) for(let s=0;s<4&&k<n;s++){ const a=s*Math.PI/2;
+      Q.setFromAxisAngle(new T.Vector3(0,1,0),a); M.compose(new T.Vector3(D.x+Math.sin(a)*2.2,y,D.z+Math.cos(a)*2.2),Q,SC.set(1,1,1)); im.setMatrixAt(k++,M); }
+    im.instanceMatrix.needsUpdate=true; scene.add(im); }
+  at(new T.Mesh(new T.ConeGeometry(4.2,4,4),mat(0xf4443c)),D.x,H+2,D.z);
+  const gon=new T.Group(); const ring=new T.Mesh(new T.TorusGeometry(3.5,.4,8,20),mat(0xffc83d)); ring.rotation.x=Math.PI/2; gon.add(ring);
+  const top=new T.Mesh(new T.CylinderGeometry(4.2,4.2,.4,16),mat(0xf4443c)); top.position.y=2.6; gon.add(top);
+  for(let i=0;i<8;i++){ const a=i*Math.PI/4, sx=Math.cos(a)*3.4, sz=Math.sin(a)*3.4, s=new T.Group();
+    const bk=box(1.5,1.8,.4,0x2b2f33); bk.position.y=.9; s.add(bk); const st=box(1.5,.35,1.2,0x2b2f33); st.position.set(0,.1,.7); s.add(st);
+    const hn=box(1.3,.9,.25,0x50565c); hn.position.set(0,1.4,.75); s.add(hn);
+    const pl=box(.2,2.6,.2,0xbcc3c9); pl.position.y=1.8; s.add(pl);
+    s.position.set(sx,0,sz); s.rotation.y=-a+Math.PI/2; gon.add(s);
+    if(i){ const r=new T.Group(); const b=box(.7,.8,.5,[0x40c4ff,0xff9ad5,0xb9f6ca][i%3]); b.position.y=.45; r.add(b);
+      const h=box(.62,.62,.62,0xf2c48d); h.position.y=1.15; r.add(h); r.position.set(sx*.92,.25,sz*.92); r.rotation.y=-a+Math.PI/2; gon.add(r); } }
+  gon.traverse(o=>{ if(o.isMesh) o.castShadow=true; }); gon.position.set(D.x,D.bot,D.z); scene.add(gon); D.gon=gon;
+  at(label("🗼 자이로드롭",{size:46,h:1.7}),D.x,H+7,D.z);
+  at(label(Math.round(D.top*.34)+"m 높이에서 자유낙하!",{size:28,h:.9,color:"#ffd7d7"}),D.x,H+5.4,D.z);
+  beacon(D.x,D.z,0x00a2ff);
+})();
 (function park(){
-  const P0=PARK; const rel=[[0,1.2,0],[12,1.2,0],[24,17,0],[31,18.5,2],[38,4,8],[46,12,14],[54,3,22],[58,2.5,24],[66,10,26],[62,20,28],[54,12,30],[56,2.5,32],[46,6,40],[32,12,44],[18,4,40],[6,8,30],[-8,3,18],[-7,1.2,6]];
-  const pts=rel.map(p=>new T.Vector3(P0.x+p[0],p[1],P0.z+p[2]));
-  const curve=new T.CatmullRomCurve3(pts,true,"catmullrom",.6); coaster.curve=curve; coaster.len=curve.getLength(); { let best=0,bu=0; for(let u=0;u<.3;u+=.002){ const y=curve.getPointAt(u).y; if(y>best){ best=y; bu=u; } } coaster.peakU=bu; }
-  const N=360, up=new T.Vector3(0,1,0), l=[],r=[],ties=[]; const cu=new T.Vector3(0,1,0);
-  for(let i=0;i<=N;i++){ const u=(i%N)/N, p=curve.getPointAt(u), t=curve.getTangentAt(u); cu.sub(t.clone().multiplyScalar(cu.dot(t))).normalize(); const side=new T.Vector3().crossVectors(t,cu).normalize();
-    l.push(p.clone().addScaledVector(side,.85)); r.push(p.clone().addScaledVector(side,-.85)); if(i%3===0) ties.push({p,t,side,cu:cu.clone()}); }
-  l.pop(); r.pop();
-  const rail=c=>{ const m=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(c,true),N,.14,6,true),mat(0xf4443c)); m.castShadow=true; scene.add(m); };
-  rail(l); rail(r);
-  const tieGeo=new T.BoxGeometry(2.3,.14,.5), tieMat=mat(0x5b3d2b);
-  ties.forEach(o=>{ const m=new T.Mesh(tieGeo,tieMat); m.position.copy(o.p); const mx=new T.Matrix4().makeBasis(o.side,o.cu,o.t); m.setRotationFromMatrix(mx); scene.add(m);
-    if(o.p.y>2.2&&Math.random()<.5){ const under=ties.some(q=>q!==o&&q.p.y<o.p.y-1&&Math.hypot(q.p.x-o.p.x,q.p.z-o.p.z)<3); if(!under){ const h=o.p.y-.2; const post=box(.35,h,.35,0xcfd8dc); post.position.set(o.p.x,h/2,o.p.z); scene.add(post); } } });
-  const st=box(14,.6,6,0x9aa0a6); at(st,P0.x+2,.3,P0.z); at(box(14,.3,7,0xf4443c),P0.x+2,6.2,P0.z); for(const dx of [-4,8]) for(const dz of [-3,3]) at(box(.3,6,.3,0xf1f1f1),P0.x+dx,3,P0.z+dz);
-  at(label("🎢 롤러코스터",{size:46,h:1.5}),P0.x+2,8.5,P0.z); at(label("무서우면 언제든 내릴 수 있어요",{size:28,h:.8,color:"#bdbebe"}),P0.x+2,7.3,P0.z);
-  const car=new T.Group(); const body=box(2.2,.9,3,0xffc83d); body.position.y=.55; car.add(body); const nose=box(1.6,.5,.8,0xf4443c); nose.position.set(0,.85,1.6); car.add(nose); const seat=box(1.6,.4,1.2,0x1b1b1b); seat.position.set(0,1.05,-.2); car.add(seat); scene.add(car); coaster.car=car;
   /* 대관람차 */ const W=WHEEL; const ring=new T.Mesh(new T.TorusGeometry(W.r,.35,8,48),mat(0x00a2ff)); ring.position.set(W.x,W.cy,W.z); scene.add(ring); const hub=new T.Mesh(new T.CylinderGeometry(.9,.9,2,12),mat(0xffc83d)); hub.rotation.x=Math.PI/2; hub.position.set(W.x,W.cy,W.z); scene.add(hub);
   const spokes=new T.Group(); for(let i=0;i<8;i++){ const s=box(.25,W.r*2,.25,0xbfe6ff); s.rotation.z=i*Math.PI/8; spokes.add(s); } spokes.position.set(W.x,W.cy,W.z); scene.add(spokes); ring.userData.spokes=spokes;
   for(const dx of [-3.5,3.5]){ const leg=box(.7,W.cy+1,.7,0x9aa0a6); leg.position.set(W.x+dx,(W.cy+1)/2,W.z-1.6); leg.rotation.z=dx>0?-.19:.19; scene.add(leg); }
@@ -959,19 +1084,26 @@ const coaster={curve:null,len:0,car:null,frames:null};
   const spin=new T.Group(); spin.position.set(C.x,.8,C.z); for(let i=0;i<6;i++){ const a=i*Math.PI/3, h=new T.Group(); const hb2=box(2.2,1,.8,[0xffffff,0xff9ad5,0x40c4ff,0xffe082,0xb9f6ca,0xe1bee7][i]); hb2.position.y=1.9; h.add(hb2); const hd=box(.8,.8,.6,0xc98f5a); hd.position.set(0,2.5,.9); h.add(hd); for(const [x,z] of [[-.6,.25],[.6,.25],[-.6,-.25],[.6,-.25]]){ const lg=box(.22,1.4,.22,0x8b5a2b); lg.position.set(x,.7,z); h.add(lg); } const pl=box(.14,4.2,.14,0xffc83d); pl.position.y=2.8; h.add(pl); h.position.set(Math.cos(a)*C.r,0,Math.sin(a)*C.r); h.rotation.y=-a; spin.add(h); h.userData.ph=i; }
   scene.add(spin); CARO.spin=spin; PLATS.push({x:C.x,z:C.z,w:C.r*2+2.4,d:C.r*2+2.4,y:.8,h:.8,noDraw:true});
   at(label("🎠 회전목마",{size:46,h:1.5}),C.x,11,C.z); at(label("🎡 놀이공원",{size:52,h:1.9,color:"#ffe08a"}),52,14,100); beacon(52,100,0xff9ad5);
-  for(let i=0;i<10;i++){ const x=26+i*11,z=98; at(box(.3,3,.3,0xffffff),x,1.5,z); at(box(11,.2,.2,0xffffff),x+5.5,2.6,z); }
+  for(let i=0;i<5;i++){ const x=26+i*11,z=92.5; at(box(.3,3,.3,0xffffff),x,1.5,z); at(box(11,.2,.2,0xffffff),x+5.5,2.6,z); }
 })();
+function rideMsg(m){ if(RIDE.msg===m) return; RIDE.msg=m; $("rmsg").textContent=m; }
 function startRide(type){
-  const fee={coaster:30,wheel:20,caro:10}[type]; if(!pay(fee)) return;
-  RIDE.on=true; RIDE.type=type; RIDE.t0=now(); RIDE.u=0; RIDE.v=4; RIDE.lap=0; RIDE.yaw=0; RIDE.tick=0; RIDE.up.set(0,1,0); RIDE.ret={x:P.x,z:P.z}; RIDE.dur=type==="coaster"?0:type==="wheel"?50:30;
+  const fee={coaster:30,wheel:20,caro:10,drop:25}[type]; if(!pay(fee)) return;
+  RIDE.on=true; RIDE.type=type; RIDE.t0=now(); RIDE.u=0; RIDE.v=0; RIDE.yaw=0; RIDE.tick=0; RIDE.clack=0; RIDE.rum=0; RIDE.air=false; RIDE.hig=false; RIDE.top=0; RIDE.gf=1; RIDE.msg="";
+  RIDE.ret={x:P.x,z:P.z}; RIDE.dur=type==="wheel"?50:type==="caro"?30:0; RIDE.ph=type==="coaster"?"load":type==="drop"?"up":""; RIDE.phT=now();
+  RIDE.dy=DROP.bot; RIDE.dv=0; RIDE.dr=0; RIDE.ba=0;
   if(type!=="caro"){ player.visible=false; nameTag.visible=false; }
-  $("ridewin").classList.add("on"); $("rmsg").textContent=type==="coaster"?"🎢 출발! 손잡이 꽉 잡아!":type==="wheel"?"🎡 천천히 올라가요. 섬 전체가 보여요!":"🎠 말을 타고 빙글빙글~";
-  drawGoal(); SFX.open(); if(type==="coaster") SFX.alarm(); save();
+  $("ridewin").classList.add("on");
+  rideMsg(type==="coaster"?"🔒 안전바 내리고 출발 준비!":type==="drop"?"🗼 천천히 올라갑니다…":type==="wheel"?"🎡 천천히 올라가요. 섬 전체가 보여요!":"🎠 말을 타고 빙글빙글~");
+  drawGoal(); SFX.open(); if(type==="coaster"||type==="drop") SFX.alarm(); save();
 }
 function endRide(){
   if(!RIDE.on) return; const type=RIDE.type; RIDE.on=false; player.visible=true; nameTag.visible=true; $("ridewin").classList.remove("on");
-  const ret={coaster:[PARK.x+2,PARK.z+5],wheel:[WHEEL.x,WHEEL.z+7],caro:[CARO.x,CARO.z+CARO.r+4]}[type]; teleport(ret[0],ret[1]); camYaw=0; camera.up.set(0,1,0);
-  gainXp(type==="coaster"?40:20); note("🎉",type==="coaster"?"롤러코스터 완주! 최고였어":type==="wheel"?"대관람차 한 바퀴 완료!":"회전목마 끝! 또 타자"); SFX.fanfare(); quest("ride"); drawGoal(); save();
+  const ret={coaster:[PARK.x+6,PARK.z-8],wheel:[WHEEL.x,WHEEL.z+7],caro:[CARO.x,CARO.z+CARO.r+4],drop:[DROP.x,DROP.z+9]}[type]; teleport(ret[0],ret[1]); camYaw=0; camera.up.set(0,1,0);
+  if(camera.fov!==FOV0){ camera.fov=FOV0; camera.updateProjectionMatrix(); }
+  gainXp(type==="coaster"?40:type==="drop"?30:20);
+  note("🎉",type==="coaster"?"롤러코스터 완주! 최고 "+Math.round(RIDE.top*1.22)+"km/h":type==="drop"?"자이로드롭 성공! 무서웠지?":type==="wheel"?"대관람차 한 바퀴 완료!":"회전목마 끝! 또 타자");
+  SFX.fanfare(); quest("ride"); drawGoal(); save();
 }
 $("rquit").onclick=()=>endRide();
 const svHost=mkChar({skin:0xd9a066,shirt:0xff8c1a,pants:0x1b1b1b,hairCol:0x111111,hair:"spiky",face:"cool",hat:"cap"});
@@ -1215,7 +1347,8 @@ FURN.filter(f=>f.act).forEach(f=>addI({x:ROOM.x+f.x*FS,z:ROOM.z+f.z*FS,h:3.4,r:3
     if(f.id==="toy"){ note("🧸","포옹! 기분이 좋아졌어"); tone(700,.14,"sine",.05,900); burst(ROOM.x+f.x*FS,2.4,ROOM.z+f.z*FS,0xff6b8a,12,3,.8); return; }
   }}));
 addI({x:SURV.x,z:SURV.z+SURV.d/2+2,h:4.4,r:4.5,text:()=>SV.on?null:"🎯 서바이벌 게임장 (입장료 필요)",act:()=>openSurv()});
-addI({x:PARK.x+2,z:PARK.z+4,h:5,r:5,text:()=>RIDE.on?null:"🎢 롤러코스터 타기 · 30코인",ok:()=>S.coins>=30,act:()=>startRide("coaster")});
+addI({x:PARK.x+6,z:PARK.z-8,h:5,r:5.5,text:()=>RIDE.on?null:"🎢 롤러코스터 타기 · 30코인",ok:()=>S.coins>=30,act:()=>startRide("coaster")});
+addI({x:DROP.x,z:DROP.z+7.5,h:4.5,r:5,text:()=>RIDE.on?null:"🗼 자이로드롭 타기 · 25코인",ok:()=>S.coins>=25,act:()=>startRide("drop")});
 addI({x:WHEEL.x,z:WHEEL.z+4.5,h:4.5,r:4.5,text:()=>RIDE.on?null:"🎡 대관람차 타기 · 20코인",ok:()=>S.coins>=20,act:()=>startRide("wheel")});
 addI({x:CARO.x,z:CARO.z+CARO.r+2.5,h:4,r:4.5,text:()=>RIDE.on?null:"🎠 회전목마 타기 · 10코인",ok:()=>S.coins>=10,act:()=>startRide("caro")});
 function openSurv(){
@@ -1621,7 +1754,9 @@ function tick(){
   { const W=WHEEL, a=(RIDE.on&&RIDE.type==="wheel")?(t-RIDE.t0)*.28:t*.12; W.ring.rotation.z=a; W.ring.userData.spokes.rotation.z=a;
     W.ring.userData.cabins.forEach((c,i)=>{ const b=a-Math.PI/2+i*Math.PI/4; c.position.set(W.x+Math.cos(b)*W.r,W.cy+Math.sin(b)*W.r,W.z); });
     const C=CARO; C.spin.rotation.y=-((RIDE.on&&RIDE.type==="caro")?(t-RIDE.t0)*.9:t*.35); C.spin.children.forEach(h=>{ h.position.y=Math.sin(t*4+h.userData.ph*1.1)*.35; });
-    if(!(RIDE.on&&RIDE.type==="coaster")){ const cv=coaster.curve; const u=(t*.02)%1, p=cv.getPointAt(u), tg=cv.getTangentAt(u); coaster.car.position.copy(p); coaster.car.lookAt(p.clone().add(tg)); } }
+    if(!(RIDE.on&&RIDE.type==="coaster")){ coaster.au=coasterStep(coaster.au,dt)%1; placeTrain(coaster.au); }
+    if(!(RIDE.on&&RIDE.type==="drop")){ const cy=(t*.13)%1, e=cy<.55?1-Math.cos(cy/.55*Math.PI)*.5-.5:1-((cy-.55)/.45)**2;
+      DROP.gon.position.y=DROP.bot+(DROP.top-DROP.bot)*Math.max(0,Math.min(1,e)); DROP.gon.rotation.y=t*.25; } }
 
   /* 물총 사격 */
   if(FP.on){
@@ -1642,16 +1777,65 @@ function tick(){
   /* 카메라 */
   if(RIDE.on){
     if(RIDE.type==="coaster"){
-      const cv=coaster.curve, L=coaster.len; const p0=cv.getPointAt(RIDE.u);
-      const lift=RIDE.u<coaster.peakU; if(lift){ RIDE.v=4; if(t-RIDE.tick>.18){ RIDE.tick=t; tone(160,.05,"square",.03); } }
-      else { const target=Math.max(6,Math.min(36,Math.sqrt(Math.max(1,2*20*(21-p0.y))))); RIDE.v+=(target-RIDE.v)*Math.min(1,dt*3); if(t-RIDE.tick>.25){ RIDE.tick=t; noise(.25,.02+RIDE.v/36*.06,2500); } }
-      const prevU=RIDE.u; RIDE.u+=RIDE.v*dt/L; if(RIDE.u>=1){ RIDE.u-=1; RIDE.lap++; if(RIDE.lap>=2){ endRide(); } else { note("🎢","한 바퀴 더!","gold"); SFX.whoosh(); } }
-      if(RIDE.on){ const p=cv.getPointAt(RIDE.u), tg=cv.getTangentAt(RIDE.u); RIDE.up.sub(tg.clone().multiplyScalar(RIDE.up.dot(tg))).normalize(); if(RIDE.up.lengthSq()<.5) RIDE.up.set(0,1,0);
-        { const nat=new T.Vector3(0,1,0); nat.sub(tg.clone().multiplyScalar(nat.dot(tg))); if(nat.lengthSq()>.09){ nat.normalize(); if(RIDE.up.dot(nat)>-.2) RIDE.up.lerp(nat,Math.min(1,dt*7)).normalize(); } }
-        const side=new T.Vector3().crossVectors(tg,RIDE.up).normalize(); const car=coaster.car; car.position.copy(p); car.setRotationFromMatrix(new T.Matrix4().makeBasis(side,RIDE.up,tg));
-        const eye=p.clone().addScaledVector(RIDE.up,2.1).addScaledVector(tg,-.6); const look=eye.clone().addScaledVector(tg.clone().applyAxisAngle(RIDE.up,RIDE.yaw),6).addScaledVector(RIDE.up,.6);
-        camera.up.copy(RIDE.up); camera.position.copy(eye); camera.lookAt(look); P.x=p.x; P.z=p.z; P.y=p.y;
-        if(prevU<coaster.peakU&&RIDE.u>=coaster.peakU){ SFX.whoosh(); shake(.3,.5); floatText("와아아!","#ffe08a"); } if(RIDE.v>28) shake(.08,.05); }
+      const N=coaster.N, iu=RIDE.u*N;
+      if(RIDE.ph==="load"){ if(t-RIDE.phT>2.4){ RIDE.ph="out"; SFX.alarm(); rideMsg("⛓️ 체인 리프트 — 꼭대기까지 올라갑니다"); } }
+      else { RIDE.u=coasterStep(RIDE.u,dt); if(RIDE.u>=1){ endRide(); } }
+      if(RIDE.on){
+        const fr=frameAt(RIDE.u); RIDE.v=RIDE.ph==="load"?0:fr.v; RIDE.gf=fr.g; RIDE.hy=fr.p.y; if(fr.v>RIDE.top) RIDE.top=fr.v;
+        const nph=RIDE.ph==="load"?"load":iu<coaster.iLift?"out":iu<coaster.iCrest?"lift":iu<coaster.iBrake?"run":"brake";
+        if(nph!==RIDE.ph){ RIDE.ph=nph;
+          if(nph==="lift") rideMsg("⛓️ 체인 리프트 — 꼭대기까지 올라갑니다");
+          else if(nph==="run"){ rideMsg("🎢 떨어진다아아아!"); SFX.whoosh(); shake(.35,.6); floatText("와아아!","#ffe08a"); }
+          else if(nph==="brake"){ rideMsg("🛑 브레이크 — 곧 도착합니다"); noise(.7,.05,1500); tone(320,.5,"sine",.03,180); } }
+        placeTrain(RIDE.u);
+        /* 소리: 리프트 체인 딸깍 / 레일 이음새 / 주행 럼블 / 바람 */
+        if(RIDE.ph==="lift"||RIDE.ph==="out"){ if(t-RIDE.clack>.22){ RIDE.clack=t; tone(150,.05,"square",.03); tone(95,.05,"square",.02,null,.03); } }
+        else if(RIDE.ph!=="load"){
+          if(t-RIDE.clack>Math.max(.06,8/Math.max(5,fr.v))){ RIDE.clack=t; noise(.03,.012+fr.v*.0015,900+fr.v*45); }
+          if(t-RIDE.rum>.12){ RIDE.rum=t; noise(.16,.008+fr.v*.002,240+fr.v*22); if(fr.v>18) noise(.2,(fr.v-18)*.0022,2800); } }
+        /* 무중력 / 고중력 연출 */
+        if(fr.g<.2&&!RIDE.air&&RIDE.ph==="run"){ RIDE.air=true; floatText("🪽 무중력!","#bfe6ff"); tone(900,.3,"sine",.03,1400); }
+        if(fr.g>.6) RIDE.air=false;
+        if(fr.g>3.2&&!RIDE.hig){ RIDE.hig=true; floatText("💪 "+fr.g.toFixed(1)+"G!","#ffb3b3"); shake(.3,.35); }
+        if(fr.g<2.6) RIDE.hig=false;
+        if(fr.up.y<-.35&&RIDE.ph==="run") rideMsg("🔄 거꾸로!! 꽉 잡아!");
+        else if(RIDE.ph==="run"&&fr.v>coaster.vmax*.8) rideMsg("🎢 최고 속도!");
+        /* 1인칭 시점 — 좌석 위치, 속도감(FOV), 레일 진동 */
+        const eye=fr.p.clone().addScaledVector(fr.up,2.5).addScaledVector(fr.tg,.55);
+        /* 시선은 앞쪽 선로를 따라간다(마루·낙하·루프에서 자연스럽게) */
+        const ah=frameAt(RIDE.u+11/coaster.len), rel=ah.p.clone().addScaledVector(ah.up,1.7).sub(eye);
+        if(rel.lengthSq()<1) rel.copy(fr.tg).multiplyScalar(10);
+        rel.applyAxisAngle(fr.up,RIDE.yaw);
+        camera.up.copy(fr.up); camera.position.copy(eye); camera.lookAt(eye.clone().add(rel));
+        const fv=FOV0+Math.min(26,Math.max(0,fr.v-6)*.85); if(Math.abs(camera.fov-fv)>.2){ camera.fov=fv; camera.updateProjectionMatrix(); }
+        if(fr.v>8) shake(.012+fr.v*.0022,.06);
+        P.x=fr.p.x; P.z=fr.p.z; P.y=fr.p.y; }
+    } else if(RIDE.type==="drop"){
+      const D=DROP;
+      if(RIDE.ph==="up"){ RIDE.dy+=6.8*dt; RIDE.dr+=dt*.42; RIDE.gf=1;
+        if(t-RIDE.clack>.3){ RIDE.clack=t; tone(110,.22,"sawtooth",.022); }
+        if(RIDE.dy>=D.top){ RIDE.dy=D.top; RIDE.ph="hold"; RIDE.phT=t; rideMsg("😱 아래를 보세요… 곧 떨어집니다!"); } }
+      else if(RIDE.ph==="hold"){ RIDE.gf=1;
+        if(t-RIDE.clack>.62){ RIDE.clack=t; tone(70,.12,"sine",.05); tone(70,.1,"sine",.04,null,.16); }
+        if(t-RIDE.phT>2.9){ RIDE.ph="fall"; RIDE.dv=0; rideMsg("🪽 무중력 낙하!!"); SFX.whoosh(); floatText("🪽 0G!","#bfe6ff"); } }
+      else if(RIDE.ph==="fall"){ RIDE.dv+=CG*dt; RIDE.dy-=RIDE.dv*dt; RIDE.gf=0;
+        if(t-RIDE.rum>.08){ RIDE.rum=t; noise(.14,.01+RIDE.dv*.0018,1200+RIDE.dv*60); }
+        shake(.02+RIDE.dv*.004,.06);
+        if(RIDE.dy<=D.brk){ RIDE.ph="brake"; RIDE.phT=t; RIDE.ba=RIDE.dv*RIDE.dv/(2*Math.max(1,RIDE.dy-D.bot)); rideMsg("🧲 자기 브레이크!"); noise(.9,.06,900); } }
+      else if(RIDE.ph==="brake"){ RIDE.dv-=RIDE.ba*dt; RIDE.dy-=RIDE.dv*dt; RIDE.gf=1+RIDE.ba/CG;
+        shake(.25,.08);
+        if(RIDE.dv<=0||RIDE.dy<=D.bot){ RIDE.dy=D.bot; RIDE.dv=0; RIDE.ph="done"; RIDE.phT=t; RIDE.gf=1; rideMsg("🎉 도착! 살아남았다"); chime(600,800,1100); } }
+      else if(t-RIDE.phT>1.6){ endRide(); }
+      if(RIDE.on){
+        RIDE.v=Math.abs(RIDE.dv); RIDE.hy=RIDE.dy; if(RIDE.v>RIDE.top) RIDE.top=RIDE.v;
+        D.gon.position.set(D.x,RIDE.dy,D.z); D.gon.rotation.y=RIDE.dr;
+        const a=RIDE.dr+Math.PI/2, ex=D.x+Math.cos(a)*3.9, ez=D.z+Math.sin(a)*3.9;
+        const pit=RIDE.ph==="hold"||RIDE.ph==="fall"?-.55:-.12;
+        camera.up.set(0,1,0); camera.position.set(ex,RIDE.dy+1.7,ez);
+        const yw=RIDE.yaw, dx=Math.cos(a+yw), dz=Math.sin(a+yw);
+        camera.lookAt(ex+dx*8,RIDE.dy+1.7+pit*8,ez+dz*8);
+        const fv=FOV0+Math.min(22,RIDE.v*.5); if(Math.abs(camera.fov-fv)>.2){ camera.fov=fv; camera.updateProjectionMatrix(); }
+        P.x=ex; P.z=ez; P.y=RIDE.dy; }
     } else if(RIDE.type==="wheel"){
       const W=WHEEL, a=(t-RIDE.t0)*.28-Math.PI/2; const cx=W.x+Math.cos(a)*W.r, cy=W.cy+Math.sin(a)*W.r; const eye=new T.Vector3(cx,cy-.3,W.z-1.3);
       camera.up.set(0,1,0); camera.position.copy(eye); const yaw=RIDE.yaw+Math.PI; camera.lookAt(cx+Math.sin(yaw)*8,cy-1.2,W.z-1.3+Math.cos(yaw)*8); P.x=cx; P.z=W.z; P.y=cy-1;
@@ -1786,7 +1970,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+window.BRA={get S(){return S;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
