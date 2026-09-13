@@ -206,6 +206,19 @@
   .bcell.lock{background:#f1e7cf;box-shadow:none;border-style:dashed}
   .bcell.lock span{filter:grayscale(1);opacity:.45}
   .bcell.lock b,.bcell.lock i{color:#b3a183}
+  /* 편지 */
+  .letter{padding:16px 18px;border-radius:20px;background:#fffdf3;border:2px solid var(--tan);box-shadow:0 4px 0 #e8d8b3;
+    background-image:repeating-linear-gradient(180deg,transparent,transparent 27px,rgba(120,95,50,.08) 27px,rgba(120,95,50,.08) 28px)}
+  .lhd{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+  .lhd .face{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;font-size:1.8rem;
+    background:linear-gradient(180deg,#ffe9a8,#f3cb70);box-shadow:inset 0 -3px 0 rgba(150,110,40,.18)}
+  .lhd b{display:block;font-size:1rem;color:var(--ink)}
+  .lhd i{font-style:normal;font-size:.72rem;color:var(--ink2);font-weight:800}
+  .letter h4{margin:0 0 6px;font-size:1.05rem;color:var(--ink)}
+  .letter p{margin:0;font-size:.93rem;line-height:1.75;color:var(--ink);font-weight:700}
+  .gift{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:13px;padding-top:11px;border-top:2px dashed #e0cfa6}
+  .gift b{font-size:.78rem;color:var(--ink2)}
+  .gift span{font-size:.82rem;font-weight:900;color:#0a7d4e;background:rgba(18,195,124,.14);padding:5px 10px;border-radius:99px}
   .buy{min-width:98px;height:46px;padding:0 14px;border-radius:13px;font-size:.95rem;display:flex;align-items:center;justify-content:center;gap:5px;font-variant-numeric:tabular-nums;
     background:linear-gradient(180deg,var(--green),var(--green-d));box-shadow:0 4px 0 #076140,0 5px 12px rgba(0,0,0,.3);transition:transform .08s,box-shadow .08s}
   .buy:active{transform:translateY(4px);box-shadow:0 0 0 #076140,0 2px 6px rgba(0,0,0,.3)}
@@ -381,6 +394,7 @@
   <div class="gui" id="g-cook"><div class="win"><div class="hd">🍳 요리 냄비 <button class="x" data-close>✕</button></div><div class="bd" id="cookList"></div></div></div>
   <div class="gui" id="g-book"><div class="win"><div class="hd">📖 도감 <button class="x" data-close>✕</button></div><div class="bd" id="bookBody"></div></div></div>
   <div class="gui" id="g-ach"><div class="win"><div class="hd">🏅 업적 <button class="x" data-close>✕</button></div><div class="bd" id="achBody"></div></div></div>
+  <div class="gui" id="g-mail"><div class="win"><div class="hd">📮 편지함 <button class="x" data-close>✕</button></div><div class="bd" id="mailBody"></div></div></div>
   <div class="gui" id="g-pet"><div class="win"><div class="hd">🥚 미아의 펫 가게 <button class="x" data-close>✕</button></div><div class="bd" id="petList"></div></div></div>
   <div class="gui" id="g-menu"><div class="win"><div class="hd">📱 브레인롯폰 <small id="phoneTime"></small><button class="x" data-close>✕</button></div><div class="bd">
     <div class="apps" id="menuApps">
@@ -395,6 +409,7 @@
       <button class="app" data-page="mp-save" style="--ac:#b9d4ff"><span>💾</span>저장</button>
       <button class="app" data-gui="g-book" style="--ac:#ffd9a8"><span>📖</span>도감</button>
       <button class="app" data-gui="g-ach" style="--ac:#ffe08a"><span>🏅</span>업적<i id="achN"></i></button>
+      <button class="app" data-gui="g-mail" style="--ac:#ffc2c2"><span>📮</span>편지함<i id="mailN"></i></button>
     </div>
     <div class="mpage" id="mp-name" hidden>
       <button class="back" data-back>← 뒤로</button>
@@ -438,23 +453,28 @@ const SEEDS=[
   {id:"rainbow",nm:"무지개 열매",e:"🌈",cost:7000,grow:600,sell:10500,tier:"신성",tc:"#ffffff",stock:1,col:0xffffff,size:.95,xp:80}
 ];
 /* 🦋 곤충 (밤에만 나오는 것도 있어요) */
+const HABNM={flower:"🌸 꽃밭",tree:"🌳 나무 근처",water:"💧 물가",grass:"🌿 풀밭"};
 const BUGS=[
-  {id:"g0",nm:"나비",e:"🦋",val:10,w:300,night:0},{id:"g1",nm:"무당벌레",e:"🐞",val:24,w:220,night:0},
-  {id:"g2",nm:"꿀벌",e:"🐝",val:52,w:150,night:0},{id:"g3",nm:"메뚜기",e:"🦗",val:105,w:110,night:0},
-  {id:"g4",nm:"달팽이",e:"🐌",val:190,w:80,night:0},{id:"g5",nm:"거미",e:"🕷️",val:360,w:55,night:1},
-  {id:"g6",nm:"반딧불이",e:"✨",val:780,w:40,night:1},{id:"g7",nm:"사슴벌레",e:"🪲",val:1600,w:18,night:1},
-  {id:"g8",nm:"전갈",e:"🦂",val:3400,w:7,night:1},{id:"g9",nm:"황금 풍뎅이",e:"🌟",val:9500,w:2,night:1}
+  {id:"g0",nm:"나비",e:"🦋",val:10,w:300,night:0,h:"flower"},{id:"g1",nm:"무당벌레",e:"🐞",val:24,w:220,night:0,h:"grass"},
+  {id:"g2",nm:"꿀벌",e:"🐝",val:52,w:150,night:0,h:"flower"},{id:"g3",nm:"메뚜기",e:"🦗",val:105,w:110,night:0,h:"grass"},
+  {id:"g4",nm:"달팽이",e:"🐌",val:190,w:80,night:0,h:"water"},{id:"g5",nm:"거미",e:"🕷️",val:360,w:55,night:1,h:"tree"},
+  {id:"g6",nm:"반딧불이",e:"✨",val:780,w:40,night:1,h:"water"},{id:"g7",nm:"사슴벌레",e:"🪲",val:1600,w:18,night:1,h:"tree"},
+  {id:"g8",nm:"전갈",e:"🦂",val:3400,w:7,night:1,h:"grass"},{id:"g9",nm:"황금 풍뎅이",e:"🌟",val:9500,w:2,night:1,h:"tree"}
 ];
-/* 🍳 요리 — 재료를 합치면 따로 파는 것보다 비싸요 (시세를 안 타서 값이 안정적) */
+/* 🍳 요리 — 도구(칼→냄비→오븐) + 레시피를 배워야 만들 수 있어요 */
+const TOOLS=[{id:"knife",nm:"도마와 칼",e:"🔪",cost:600,sub:"썰기만 하는 간단한 요리"},
+             {id:"pot",nm:"냄비",e:"🍲",cost:4000,sub:"끓이고 굽는 요리"},
+             {id:"oven",nm:"오븐",e:"🔥",cost:20000,sub:"굽는 요리 · 최고급 요리"}];
+function toolLv(){ return S.up.oven?3:S.up.pot?2:S.up.knife?1:0; }
 const DISHES=[
-  {id:"d0",nm:"당근 샐러드",e:"🥗",val:80,need:{carrot:3}},
-  {id:"d1",nm:"딸기잼",e:"🍯",val:330,need:{berry:3}},
-  {id:"d2",nm:"팝콘",e:"🍿",val:640,need:{corn:2}},
-  {id:"d3",nm:"곤충 꼬치",e:"🍢",val:900,need:{bug:3}},
-  {id:"d4",nm:"초밥",e:"🍣",val:1500,need:{fish:3}},
-  {id:"d5",nm:"수박 케이크",e:"🍰",val:2600,need:{melon:2,berry:2}},
-  {id:"d6",nm:"용과 스튜",e:"🍲",val:9000,need:{dragon:1,corn:3}},
-  {id:"d7",nm:"무지개 파르페",e:"🍨",val:34000,need:{rainbow:1,berry:4,melon:1}}
+  {id:"d0",nm:"당근 샐러드",e:"🥗",val:80,need:{carrot:3},t:1},
+  {id:"d1",nm:"딸기잼",e:"🍯",val:330,need:{berry:3},t:1},
+  {id:"d2",nm:"팝콘",e:"🍿",val:640,need:{corn:2},t:2},
+  {id:"d3",nm:"곤충 꼬치",e:"🍢",val:900,need:{bug:3},t:2},
+  {id:"d4",nm:"초밥",e:"🍣",val:1500,need:{fish:3},t:1},
+  {id:"d5",nm:"수박 케이크",e:"🍰",val:2600,need:{melon:2,berry:2},t:3},
+  {id:"d6",nm:"용과 스튜",e:"🍲",val:9000,need:{dragon:1,corn:3},t:2},
+  {id:"d7",nm:"무지개 파르페",e:"🍨",val:34000,need:{rainbow:1,berry:4,melon:1},t:3}
 ];
 /* 🏅 업적 */
 const ACHS=[
@@ -633,7 +653,7 @@ function fresh(){
     can:0,sprinkler:false,pets:[],pet:null,eggs:[],quests:[],qc:{},chestAt:0,chest2At:0,shieldUntil:0,shieldCd:0,
     av:Object.assign({},DEFAULT_AV),hats:["none","cap","bow"],baseSize:6,petXp:{},mkt:null,mathRest:0,mathBest:0,tkdBest:0,ropeBest:0,
     boostUntil:0,baseLv:PEDS.map(()=>0),up:{},pet2:null,hauntAt:0,hauntClears:0,name:"플레이어",store:[],shuttles:0,badBest:0,
-    bugs:{},dish:{},ach:{},mathClear:0,mailDay:"",mailStreak:0,
+    bugs:{},dish:{},ach:{},recipes:{d0:1},mathClear:0,mailDay:"",mailStreak:0,mail:null,
     house:{walls:{F:null,B:null,L:null,R:null},roof:null,door:0,windows:0,fence:0,pots:0,flag:0,pond:0,tree:0,lamp:0,mailbox:0,swing:0,wallCol:0xc19a6b,roofCol:0xb5533c,done:false,storage:0,furn:{},tv:0,mile:0},
     bedAt:0,cakeAt:0,cakeUntil:0,hdiff:1,svBest:0,svDiff:0,fpBest:0};
 }
@@ -657,7 +677,8 @@ function load(){
     S.house=Object.assign(fresh().house,raw.house||{}); S.house.walls=Object.assign({F:null,B:null,L:null,R:null},(raw.house&&raw.house.walls)||{}); S.house.furn=(raw.house&&raw.house.furn)||{};
     if(typeof S.name!=="string"||!S.name.trim()) S.name="플레이어";
   }
-  for(const k of ["bugs","dish","ach","qc"]) if(!S[k]||typeof S[k]!=="object") S[k]={};
+  for(const k of ["bugs","dish","ach","qc","recipes"]) if(!S[k]||typeof S[k]!=="object") S[k]={};
+  if(!Object.keys(S.recipes).length) S.recipes={d0:1};
   if(!S.mkt||!S.mkt.it||!S.mkt.it.carrot||!S.mkt.it.bug) mkInit(); else { S.mkt.t=Math.min(S.mkt.t,now()+MKSTEP); if(typeof S.mkt.n!=="number") S.mkt.n=0; }
   while(S.quests.length<3) S.quests.push(newQuest());
   const away=Math.min(now()-S.tick,7200);
@@ -699,6 +720,26 @@ const SFX={
   /* 신기록 — 짧은 팡파레 */
   record:()=>{ [784,784,784,1046].forEach((f,i)=>tone(f,i===3?.5:.13,"square",.055,null,i*.13));
     [392,392,392,523].forEach((f,i)=>tone(f,i===3?.5:.13,"triangle",.035,null,i*.13)); },
+  /* 🎢 놀이기구 비명 (롤러코스터 타이쿤풍 — 여러 명이 같이 지르는 느낌) */
+  scream:(len,hi,vol)=>{ if(!sndOn) return; len=len||1.8; vol=vol||1; try{ const ac=audio(),t0=ac.currentTime;
+    for(let k=0;k<4;k++){ const base=(hi?470:330)*(1+k*.13)*(.94+Math.random()*.12);
+      const o=ac.createOscillator(),g=ac.createGain(),f=ac.createBiquadFilter();
+      o.type=k%2?"sawtooth":"square";
+      o.frequency.setValueAtTime(base*.75,t0+k*.05);
+      o.frequency.linearRampToValueAtTime(base*1.3,t0+len*.2);
+      o.frequency.linearRampToValueAtTime(base*1.05,t0+len*.6);
+      o.frequency.linearRampToValueAtTime(base*.8,t0+len);
+      const lfo=ac.createOscillator(),lg=ac.createGain(); lfo.frequency.value=5.5+k*1.7; lg.gain.value=base*.06;
+      lfo.connect(lg); lg.connect(o.frequency); lfo.start(t0); lfo.stop(t0+len+.05);
+      f.type="bandpass"; f.frequency.value=base*2.6; f.Q.value=3.2;
+      g.gain.setValueAtTime(.0001,t0+k*.05); g.gain.exponentialRampToValueAtTime(.022*vol,t0+.15+k*.05);
+      g.gain.setValueAtTime(.022*vol,t0+len*.72); g.gain.exponentialRampToValueAtTime(.0001,t0+len);
+      o.connect(f); f.connect(g); g.connect(master); o.start(t0+k*.05); o.stop(t0+len+.08); }
+    noise(len*.8,.014*vol,2400);
+  }catch(e){} },
+  /* 도착 환호 */
+  cheer:()=>{ if(!sndOn) return; [0,.08,.17,.3].forEach((d,i)=>tone(620+i*110+Math.random()*40,.45,"triangle",.035,null,d));
+    noise(.7,.03,2600); [0,.1,.22].forEach((d,i)=>tone(300+i*70,.5,"sawtooth",.018,null,d)); },
   levelup:()=>{ [523,659,784,1046,1318].forEach((f,i)=>tone(f,.35,"triangle",.07,null,i*.09)); noise(.4,.04,3000,.45); },
   quest:()=>[784,988,1174,1568].forEach((f,i)=>tone(f,.2,"triangle",.06,null,i*.1)),
   creak:()=>{ tone(180,1,"sawtooth",.03,90); tone(60,1.2,"sine",.05,40); },
@@ -1004,12 +1045,40 @@ function mkPet(p){
   const plaza=box(14,.2,10,0xbfc4c9); plaza.receiveShadow=true; at(plaza,0,.02,4);
 })();
 const solids=[];
-function tree(x,z,s){ s=s||1; at(box(1,3.2*s,1,0x7a4b2a),x,1.6*s,z); const c1=box(4*s,3*s,4*s,0x3f9b3f); c1.rotation.y=Math.PI/4; at(c1,x,4.2*s,z); at(box(2.4*s,2*s,2.4*s,0x49b049),x,6.3*s,z); solids.push({x,z,r:1.1}); }
+/* 서식지 — 곤충은 아무 데나가 아니라 여기에서 나온다 */
+const HAB={tree:[],flower:[],water:[],grass:[]};
+function tree(x,z,s){ s=s||1; at(box(1,3.2*s,1,0x7a4b2a),x,1.6*s,z); const c1=box(4*s,3*s,4*s,0x3f9b3f); c1.rotation.y=Math.PI/4; at(c1,x,4.2*s,z); at(box(2.4*s,2*s,2.4*s,0x49b049),x,6.3*s,z); solids.push({x,z,r:1.1}); HAB.tree.push([x,z]); }
 const TREES=[[-58,-58],[-40,-62],[-64,-30],[-62,4],[-60,36],[-56,58],[-30,62],[0,64],[30,62],[56,58],[62,30],[64,-14],[60,-32],[48,-58],[20,-62],[-6,-60],[-18,-40],[8,-30],[-48,-8],[-48,20],[34,34],[-36,44],[6,52],[-2,26],[-34,22],
   [-90,-20],[-100,12],[-112,-60],[-70,-92],[-20,-104],[30,-108],[-40,-80],[112,32],[100,72],[60,104],[20,112],[-30,108],[-116,104],[-124,40],[-100,-100],[110,-20],[80,50],[-60,100],[0,-128],[40,-90],[-80,-40],[126,-60],[-128,-10],[90,110],[-110,70],[10,90],[-40,124],[60,-118],[124,112]];
 for(let i=0;i<44;i++){ const a=i/44*Math.PI*2,r=132+(i%3)*6; TREES.push([Math.cos(a)*r,Math.sin(a)*r]); }
 TREES.forEach((p,i)=>{ if(Math.abs(p[0]-MTN.x)<26&&Math.abs(p[1]-MTN.z)<26) return; if(Math.abs(p[0]-TOWN.x)<26&&Math.abs(p[1]-TOWN.z)<26) return; if(Math.abs(p[0]-HOUSE.x)<22&&Math.abs(p[1]-HOUSE.z)<22) return; if(Math.abs(p[0]-SURV.x)<24&&Math.abs(p[1]-SURV.z)<24) return; if(Math.abs(p[0]-LOT.x)<14&&Math.abs(p[1]-LOT.z)<14) return; if(p[0]>16&&p[0]<142&&p[1]>92) return; if(Math.abs(p[0]-72)<16&&Math.abs(p[1]-56)<14) return; if(Math.abs(p[0]-22)<12&&Math.abs(p[1]-70)<10) return; tree(p[0],p[1],.9+((i*7)%5)*.12); });
 for(const [x,z] of [[-52,-45],[50,-40],[-45,50],[52,48],[-100,-70],[110,-40],[30,-120],[-120,110],[100,90]]){ const r=box(3,2,2.4,0x9aa0a6); r.rotation.y=x*.3; at(r,x,1,z); solids.push({x,z,r:1.6}); }
+/* 🌸 꽃밭 — 나비·꿀벌이 모이는 곳 */
+(function flowers(){
+  const spots=[[-26,-34],[14,-46],[-48,-24],[42,10],[-8,-70],[62,-46],[-66,-64],[24,72],[-52,86],[86,20],[-92,44],[74,-84]];
+  const cols=[0xff6b9d,0xffd166,0xb57bff,0xffffff,0xff8c42,0x7fd1ff];
+  const petal=new T.BoxGeometry(.45,.12,.45), stem=new T.BoxGeometry(.12,.7,.12), sm=mat(0x3f9b3f);
+  for(const [cx,cz] of spots){
+    HAB.flower.push([cx,cz]);
+    const n=16, im=new T.InstancedMesh(petal,mat(0xffffff),n), im2=new T.InstancedMesh(stem,sm,n);
+    const M=new T.Matrix4(),Q=new T.Quaternion(),SC=new T.Vector3(1,1,1);
+    const colors=[];
+    for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2,r=Math.random()*5.2;
+      const x=cx+Math.cos(a)*r,z=cz+Math.sin(a)*r;
+      Q.setFromAxisAngle(new T.Vector3(0,1,0),Math.random()*3);
+      M.compose(new T.Vector3(x,.95,z),Q,SC); im.setMatrixAt(i,M);
+      M.compose(new T.Vector3(x,.35,z),Q,SC); im2.setMatrixAt(i,M);
+      colors.push(cols[Math.floor(Math.random()*cols.length)]); }
+    im.instanceMatrix.needsUpdate=true; im2.instanceMatrix.needsUpdate=true;
+    if(im.setColorAt){ colors.forEach((c,i)=>im.setColorAt(i,new T.Color(c))); if(im.instanceColor) im.instanceColor.needsUpdate=true; }
+    im.castShadow=true; scene.add(im); scene.add(im2);
+    at(label("🌸 꽃밭",{size:26,h:.8,color:"#ffd7ea",far:26}),cx,2.6,cz);
+  }
+})();
+/* 🌿 풀밭·물가 서식지 */
+for(const p of [[-20,10],[16,-16],[-40,4],[34,26],[-14,-24],[52,-16],[8,40],[-30,-50],[70,40],[-70,10],[96,-30],[-96,-8]]) HAB.grass.push(p);
+for(let i=0;i<8;i++) HAB.water.push([POND.x1+4+i*4.5,POND.z1+3+((i*7)%22)]);
+HAB.water.push([DOCK.x+3,DOCK.z2+2],[DOCK.x-3,DOCK.z1-2]);
 for(let i=0;i<60;i++){ const a=i*2.399,r=25+(i*13)%110,x=Math.cos(a)*r,z=Math.sin(a)*r; if(inWater(x,z)||(Math.abs(x-MTN.x)<24&&Math.abs(z-MTN.z)<24)) continue; const f=box(.5,.5,.5,[0xff69b4,0xfff176,0xffffff,0xff8c1a][i%4]); at(f,x,.6,z); at(box(.15,.5,.15,0x3f9b3f),x,.25,z); }
 
 function stall(pos,title,color,npcp,npcName){
@@ -1143,6 +1212,7 @@ const HDIFF=[
   {nm:"무서움",e:"💀",sub:"유령 3마리 · 빠르고 멀리서도 쫓아와요",gh:3,sp:7.2,see:22,cd:16,mult:2.8,pay:15}
 ];
 const H={zone:"field",candles:[],got:0,ghosts:[],inv:0,moan:0,diff:1,n:12,gn:2};
+const hauntGrp=new T.Group(); hauntGrp.visible=false; scene.add(hauntGrp);
 (function haunted(){
   const {x,z}=HOUSE;
   at(box(16,10,12,0x2a1f3d),x,5,z); at(box(17.5,1.4,13.5,0x1a1226),x,10.7,z); at(box(11,1.4,8,0x1a1226),x,12,z); at(box(5,1.6,3,0x1a1226),x,13.3,z);
@@ -1154,21 +1224,23 @@ const H={zone:"field",candles:[],got:0,ghosts:[],inv:0,moan:0,diff:1,n:12,gn:2};
   at(label("👻 귀신의 집",{size:46,h:1.5,color:"#d9b3ff"}),x,15.5,z);
   at(label("무서워도 문으로 언제든 나올 수 있어요",{size:28,h:.8,color:"#bdbebe"}),x,14,z+.5);
   beacon(x,z+9,0x9b6bff);
-  const A=ARENA, fl=box(A.w,.5,A.d,0x3a3150); fl.receiveShadow=true; at(fl,A.x,-.25,A.z);
-  for(let i=-A.w/2+5;i<A.w/2;i+=10) for(let j=-A.d/2+5;j<A.d/2;j+=10) if((i+j)%20===0) at(box(9.6,.06,9.6,0x2f2744),A.x+i,.03,A.z+j);
-  for(const [dx,dz,w,d] of [[0,-A.d/2,A.w,1],[0,A.d/2,A.w,1],[-A.w/2,0,1,A.d],[A.w/2,0,1,A.d]]){ at(box(w,9,d,0x4a3d66),A.x+dx,4.5,A.z+dz); PLATS.push({x:A.x+dx,z:A.z+dz,w,d,y:9,h:9,noDraw:true}); }
-  at(box(A.w,.5,A.d,0x0d0a14),A.x,9.2,A.z);
-  for(const [dx,dz] of [[-24,-24],[24,-24],[-24,24],[24,24],[0,-12],[-12,14],[14,6],[-6,-28],[20,-8],[-22,0],[8,22],[-14,-4]]){ at(box(2.2,6,2.2,0x3a2a4d),A.x+dx,3,A.z+dz); PLATS.push({x:A.x+dx,z:A.z+dz,w:2.2,d:2.2,y:6,h:6,noDraw:true}); }
-  for(const [dx,dz] of [[-28,6],[28,-10],[6,26],[-6,-30],[18,18],[-18,-18],[26,28],[-30,-26]]){ const g=box(1.6,2.2,.5,0x6b6f76); g.rotation.y=dx*.2; at(g,A.x+dx,1.1,A.z+dz); }
-  for(const [dx,dz] of [[-30,30],[30,-30],[30,30],[-30,-30]]){ at(box(1.5,1.5,1.5,0xff8c1a),A.x+dx,.75,A.z+dz); const l=new T.PointLight(0xff9a3c,1.2,26,1.6); l.position.set(A.x+dx,3,A.z+dz); scene.add(l); }
-  for(const [dx,dz] of [[0,-20],[-20,0],[20,0],[0,20],[0,0]]){ const l=new T.PointLight(0x9b6bff,1.6,44,1.4); l.position.set(A.x+dx,6,A.z+dz); scene.add(l); const c=new T.Mesh(new T.SphereGeometry(.5,8,6),new T.MeshBasicMaterial({color:0xb57bff})); c.position.set(A.x+dx,8.4,A.z+dz); scene.add(c); }
-  for(let i=0;i<10;i++){ const b=box(2.4,1.2,1.2,0x4a3a5d); at(b,A.x+(i%5-2)*12,.6,A.z+(i<5?-33:33)); }
-  at(box(3,4.5,.6,0x5b3d2b),A.x,2.25,A.z+A.d/2-1.2); at(label("🚪 나가기",{size:34,h:1,color:"#c8ffc8"}),A.x,5.5,A.z+A.d/2-1.5);
+  /* 맵 밖 실내는 따로 묶어서, 귀신의 집에 들어갔을 때만 보이게 (놀이기구 높은 곳에서 보이던 문제) */
+  const hAt=(m,X,Y,Z)=>{ m.position.set(X,Y,Z); hauntGrp.add(m); return m; };
+  const A=ARENA, fl=box(A.w,.5,A.d,0x3a3150); fl.receiveShadow=true; hAt(fl,A.x,-.25,A.z);
+  for(let i=-A.w/2+5;i<A.w/2;i+=10) for(let j=-A.d/2+5;j<A.d/2;j+=10) if((i+j)%20===0) hAt(box(9.6,.06,9.6,0x2f2744),A.x+i,.03,A.z+j);
+  for(const [dx,dz,w,d] of [[0,-A.d/2,A.w,1],[0,A.d/2,A.w,1],[-A.w/2,0,1,A.d],[A.w/2,0,1,A.d]]){ hAt(box(w,9,d,0x4a3d66),A.x+dx,4.5,A.z+dz); PLATS.push({x:A.x+dx,z:A.z+dz,w,d,y:9,h:9,noDraw:true}); }
+  hAt(box(A.w,.5,A.d,0x0d0a14),A.x,9.2,A.z);
+  for(const [dx,dz] of [[-24,-24],[24,-24],[-24,24],[24,24],[0,-12],[-12,14],[14,6],[-6,-28],[20,-8],[-22,0],[8,22],[-14,-4]]){ hAt(box(2.2,6,2.2,0x3a2a4d),A.x+dx,3,A.z+dz); PLATS.push({x:A.x+dx,z:A.z+dz,w:2.2,d:2.2,y:6,h:6,noDraw:true}); }
+  for(const [dx,dz] of [[-28,6],[28,-10],[6,26],[-6,-30],[18,18],[-18,-18],[26,28],[-30,-26]]){ const g=box(1.6,2.2,.5,0x6b6f76); g.rotation.y=dx*.2; hAt(g,A.x+dx,1.1,A.z+dz); }
+  for(const [dx,dz] of [[-30,30],[30,-30],[30,30],[-30,-30]]){ hAt(box(1.5,1.5,1.5,0xff8c1a),A.x+dx,.75,A.z+dz); const l=new T.PointLight(0xff9a3c,1.2,26,1.6); l.position.set(A.x+dx,3,A.z+dz); hauntGrp.add(l); }
+  for(const [dx,dz] of [[0,-20],[-20,0],[20,0],[0,20],[0,0]]){ const l=new T.PointLight(0x9b6bff,1.6,44,1.4); l.position.set(A.x+dx,6,A.z+dz); hauntGrp.add(l); const c=new T.Mesh(new T.SphereGeometry(.5,8,6),new T.MeshBasicMaterial({color:0xb57bff})); c.position.set(A.x+dx,8.4,A.z+dz); hauntGrp.add(c); }
+  for(let i=0;i<10;i++){ const b=box(2.4,1.2,1.2,0x4a3a5d); hAt(b,A.x+(i%5-2)*12,.6,A.z+(i<5?-33:33)); }
+  hAt(box(3,4.5,.6,0x5b3d2b),A.x,2.25,A.z+A.d/2-1.2); hAt(label("🚪 나가기",{size:34,h:1,color:"#c8ffc8",nofade:true}),A.x,5.5,A.z+A.d/2-1.5);
   let seed=11; const rnd=()=>{ seed=(seed*9301+49297)%233280; return seed/233280; };
   for(let i=0;i<16;i++){ const cx=A.x+(rnd()-.5)*(A.w-10), cz=A.z+(rnd()-.5)*(A.d-14); const g=new T.Group(); const s=box(.3,.9,.3,0xfff3d6); s.position.y=.45; g.add(s);
-    const f=new T.Mesh(new T.BoxGeometry(.3,.4,.3),new T.MeshLambertMaterial({color:0xffc233,emissive:0xff9900})); f.position.y=1.1; g.add(f); const lb=label("🕯️",{size:34,h:.9}); lb.position.y=2; g.add(lb);
-    g.position.set(cx,0,cz); scene.add(g); H.candles.push({x:cx,z:cz,obj:g,got:false}); }
-  for(let i=0;i<3;i++){ const sp=emojiSprite("👻",3.4); sp.position.set(A.x+(i-1)*12,3,A.z-10); scene.add(sp); H.ghosts.push({sp,x:sp.position.x,z:sp.position.z,tx:A.x,tz:A.z,ph:i*2}); }
+    const f=new T.Mesh(new T.BoxGeometry(.3,.4,.3),new T.MeshLambertMaterial({color:0xffc233,emissive:0xff9900})); f.position.y=1.1; g.add(f); const lb=label("🕯️",{size:34,h:.9,nofade:true}); lb.position.y=2; g.add(lb);
+    g.position.set(cx,0,cz); hauntGrp.add(g); H.candles.push({x:cx,z:cz,obj:g,got:false}); }
+  for(let i=0;i<3;i++){ const sp=emojiSprite("👻",3.4); sp.position.set(A.x+(i-1)*12,3,A.z-10); hauntGrp.add(sp); H.ghosts.push({sp,x:sp.position.x,z:sp.position.z,tx:A.x,tz:A.z,ph:i*2}); }
 })();
 const torch=new T.PointLight(0xffe0a0,0,22,1.5); scene.add(torch);
 const hauntAmb=new T.AmbientLight(0x8877bb,0); scene.add(hauntAmb);
@@ -1216,7 +1288,7 @@ const FP={on:false,diff:1,t0:0,end:0,score:0,pitch:0,targets:[],shots:[],lastSec
   for(let i=0;i<8;i++){ const m=new T.Mesh(new T.SphereGeometry(.22,8,6),sm); m.visible=false; scene.add(m); FP.shots.push({m,on:false,t:0,dir:new T.Vector3()}); }
 })();
 /* ---- 놀이공원: 롤러코스터 · 대관람차 · 회전목마 ---- */
-const RIDE={on:false,type:null,t0:0,u:0,v:0,yaw:0,tick:0,ret:null,dur:0,ph:"",phT:0,gf:1,hy:0,clack:0,rum:0,air:false,hig:false,top:0,dy:0,dv:0,dr:0,ba:0,msg:""};
+const RIDE={on:false,type:null,t0:0,u:0,v:0,yaw:0,tick:0,ret:null,dur:0,ph:"",phT:0,gf:1,hy:0,clack:0,rum:0,air:false,hig:false,inv:0,top:0,dy:0,dv:0,dr:0,ba:0,msg:""};
 const coaster={curve:null,len:0,N:640,P:[],TG:[],UP:[],SD:[],V:[],G:[],train:[],iLift:0,iCrest:0,iBrake:0,au:0,vmax:0,drop:0};
 const CG=30, FOV0=camera.fov;
 /* ===== 롤러코스터: 실제 코스터 방식(체인 리프트 → 위치에너지 주행 → 뱅킹 → 브레이크런) ===== */
@@ -1341,7 +1413,8 @@ function placeTrain(u){ const M=new T.Matrix4();
     im.instanceMatrix.needsUpdate=true; scene.add(im); }
   at(new T.Mesh(new T.ConeGeometry(4.2,4,4),mat(0xf4443c)),D.x,H+2,D.z);
   const gon=new T.Group(); const ring=new T.Mesh(new T.TorusGeometry(3.5,.4,8,20),mat(0xffc83d)); ring.rotation.x=Math.PI/2; gon.add(ring);
-  const top=new T.Mesh(new T.CylinderGeometry(4.2,4.2,.4,16),mat(0xf4443c)); top.position.y=2.6; gon.add(top);
+  /* 상단판이 좌석 시야를 가려서 가운데 기둥 쪽으로 작게 */
+  const top=new T.Mesh(new T.CylinderGeometry(2.5,2.5,.35,16),mat(0xf4443c)); top.position.y=3.2; gon.add(top);
   for(let i=0;i<8;i++){ const a=i*Math.PI/4, sx=Math.cos(a)*3.4, sz=Math.sin(a)*3.4, s=new T.Group();
     const bk=box(1.5,1.8,.4,0x2b2f33); bk.position.y=.9; s.add(bk); const st=box(1.5,.35,1.2,0x2b2f33); st.position.set(0,.1,.7); s.add(st);
     const hn=box(1.3,.9,.25,0x50565c); hn.position.set(0,1.4,.75); s.add(hn);
@@ -1353,6 +1426,15 @@ function placeTrain(u){ const M=new T.Matrix4();
   at(label("🗼 자이로드롭",{size:46,h:1.7}),D.x,H+7,D.z);
   at(label(Math.round(D.top*.34)+"m 높이에서 자유낙하!",{size:28,h:.9,color:"#ffd7d7"}),D.x,H+5.4,D.z);
   beacon(D.x,D.z,0x00a2ff);
+  /* 🚩 탑승구 — 여기서 타요 */
+  const bz=D.z+7.4;
+  at(box(6,1,4.4,0xffc83d),D.x,.5,bz); at(box(6.4,.25,4.8,0xf4443c),D.x,1.1,bz);
+  PLATS.push({x:D.x,z:bz,w:6,d:4.4,y:1,h:1,noDraw:true});
+  for(const dx of [-2.6,2.6]){ at(box(.3,3.4,.3,0xf1f1f1),D.x+dx,2.7,bz+1.9); }
+  at(box(6.4,.4,.4,0x00a2ff),D.x,4.4,bz+1.9);
+  for(const dx of [-.9,.9]) at(box(.9,.08,1.4,0xffffff),D.x+dx,1.25,bz-.4);
+  at(label("🚩 여기서 타요",{size:34,h:1.1,color:"#ffe08a"}),D.x,5.4,bz+1.9);
+  at(label("⬇",{size:60,h:1.6,color:"#ffffff"}),D.x,3.2,bz);
 })();
 (function park(){
   /* 대관람차 */ const W=WHEEL; const ring=new T.Mesh(new T.TorusGeometry(W.r,.35,8,48),mat(0x00a2ff)); ring.position.set(W.x,W.cy,W.z); scene.add(ring); const hub=new T.Mesh(new T.CylinderGeometry(.9,.9,2,12),mat(0xffc83d)); hub.rotation.x=Math.PI/2; hub.position.set(W.x,W.cy,W.z); scene.add(hub);
@@ -1494,17 +1576,28 @@ function ropeTick(t,dt){
 }
 /* ===================== 🦋 곤충채집 ===================== */
 const bugs=[];
-function bugPick(){ const night=isNight(); const pool=BUGS.filter(b=>night||!b.night);
-  let tot=0; for(const b of pool) tot+=b.w*(b.night&&night?2.2:1);
-  let r=Math.random()*tot; for(const b of pool){ r-=b.w*(b.night&&night?2.2:1); if(r<=0) return b; } return pool[0]; }
-function bugSpot(){ for(let i=0;i<24;i++){
-    const a=Math.random()*Math.PI*2, d=18+Math.random()*46, x=P.x+Math.cos(a)*d, z=P.z+Math.sin(a)*d;
-    if(Math.abs(x)>120||Math.abs(z)>120) continue; if(H.zone!=="field") continue;
-    if(Math.abs(x-FARM.cx)<16&&Math.abs(z-FARM.cz)<16) continue;
-    if(groundY(x,z)>.6) continue; return [x,z]; }
+/* 플레이어 주변 30칸 안에 있는 서식지 중 하나를 고르고, 그 서식지에 사는 곤충을 뽑는다 */
+function bugSpawnAt(){
+  if(H.zone!=="field") return null;
+  const night=isNight(), cand=[];
+  for(const k in HAB) for(const [x,z] of HAB[k]){
+    const d=Math.hypot(P.x-x,P.z-z); if(d<10||d>46) continue; cand.push([k,x,z]); }
+  if(!cand.length) return null;
+  for(let tries=0;tries<10;tries++){
+    const [k,hx,hz]=cand[Math.floor(Math.random()*cand.length)];
+    const pool=BUGS.filter(b=>b.h===k&&(night||!b.night)); if(!pool.length) continue;
+    let tot=0; for(const b of pool) tot+=b.w; let r=Math.random()*tot; let pick=pool[0];
+    for(const b of pool){ r-=b.w; if(r<=0){ pick=b; break; } }
+    const a=Math.random()*Math.PI*2, rr=1.5+Math.random()*(k==="tree"?3:5);
+    const x=hx+Math.cos(a)*rr, z=hz+Math.sin(a)*rr;
+    if(Math.abs(x)>140||Math.abs(z)>140) continue;
+    if(groundY(x,z)>.6) continue;
+    if(Math.abs(x-FARM.cx)<14&&Math.abs(z-FARM.cz)<14) continue;
+    return {t:pick,x,z,k};
+  }
   return null; }
-function bugSpawn(o){ const sp=bugSpot(); if(!sp){ o.on=false; o.sprite.visible=false; return; }
-  o.type=bugPick(); o.x=sp[0]; o.z=sp[1]; o.ph=Math.random()*6; o.on=true; o.fled=0;
+function bugSpawn(o){ const sp=bugSpawnAt(); if(!sp){ o.on=false; o.sprite.visible=false; o.next=now()+2.5; return; }
+  o.type=sp.t; o.x=sp.x; o.z=sp.z; o.ph=Math.random()*6; o.on=true; o.fled=0;
   o.sprite.visible=true; o.sprite.material.map=o.tex[o.type.id]||(o.tex[o.type.id]=emojiTex2(o.type.e)); o.sprite.material.needsUpdate=true; }
 function emojiTex2(e){ const c=document.createElement("canvas"); c.width=c.height=96; const x=c.getContext("2d");
   x.font="76px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif"; x.textAlign="center"; x.textBaseline="middle"; x.fillText(e,48,54);
@@ -1541,7 +1634,11 @@ function catchBug(){ const o=bugNear(); if(!o) return;
 /* ===================== 🍳 요리 ===================== */
 function haveCount(key){ if(key==="fish"||key==="bug") return S.goods.filter(it=>it.k===key).length;
   return S.goods.filter(it=>it.k==="crop"&&it.id===key).length; }
-function cookOk(d){ for(const k in d.need) if(haveCount(k)<d.need[k]) return false; return true; }
+function knowRecipe(d){ return !!S.recipes[d.id]; }
+function cookOk(d){ if(!knowRecipe(d)||toolLv()<d.t) return false;
+  for(const k in d.need) if(haveCount(k)<d.need[k]) return false; return true; }
+function learnRecipe(id,quiet){ const d=byId(DISHES,id); if(!d||S.recipes[id]) return false; S.recipes[id]=1;
+  if(!quiet){ note("📜","새 레시피! "+d.e+" "+d.nm,"gold"); SFX.record(); } save(); return true; }
 function cook(d){ if(!cookOk(d)) return;
   for(const k in d.need){ let n=d.need[k];
     for(let i=S.goods.length-1;i>=0&&n>0;i--){ const it=S.goods[i];
@@ -1551,12 +1648,34 @@ function cook(d){ if(!cookOk(d)) return;
   drawHotbar(); drawCook(); gainXp(12); quest("cook");
   note(d.e,(isNew?"새 요리! ":"")+d.nm+" 완성! ("+num(d.val)+")","gold"); chime(620,820,1100); burst(P.x,P.y+4,P.z,0xffc83d,14,5,.7);
   if(isNew) SFX.record(); save(); }
-function drawCook(){ const L=$("cookList"); L.innerHTML="";
+function drawCook(){ const L=$("cookList"); L.innerHTML=""; const lv=toolLv();
   const h=document.createElement("div"); h.className="talk";
-  h.innerHTML='<span class="face">🍳</span><div><b>요리 냄비</b><p>재료를 합치면 따로 파는 것보다 훨씬 비싸요! 요리는 시세를 안 타요.</p></div>'; L.appendChild(h);
-  for(const d of DISHES){ const need=Object.keys(d.need).map(k=>{ const nm=k==="fish"?"물고기":k==="bug"?"곤충":byId(SEEDS,k).nm;
-      const have=haveCount(k),n=d.need[k]; return '<span style="color:'+(have>=n?"#12c37c":"#c26a5a")+'">'+nm+" "+have+"/"+n+'</span>'; }).join(" · ");
-    const r=row(d.e,d.nm+(S.dish[d.id]?' '+rarTag("×"+S.dish[d.id],"#93795c"):""),need+" → "+num(d.val)+"코인",cookOk(d)?"#ffc83d":null);
+  h.innerHTML='<span class="face">👩‍🍳</span><div><b>요리사 하나</b><p>'+
+    (lv===0?"먼저 <b>도마와 칼</b>부터 사야 해요! 레시피는 우체통 편지나 여기서 배울 수 있어요."
+     :"도구는 <b>"+TOOLS[lv-1].e+" "+TOOLS[lv-1].nm+"</b>까지 갖췄어요. 재료를 합치면 훨씬 비싸게 팔려요!")+'</p></div>';
+  L.appendChild(h);
+  /* 도구 */
+  const s1=document.createElement("div"); s1.className="sec"; s1.textContent="🔧 요리 도구 (순서대로)"; L.appendChild(s1);
+  TOOLS.forEach((tl,i)=>{ const own=!!S.up[tl.id], prev=i===0||S.up[TOOLS[i-1].id];
+    const r=row(tl.e,tl.nm+(own?' '+rarTag("보유","#12c37c"):""),tl.sub,own?"#12c37c":prev?"#ffc83d":null);
+    const b=btn(own?"보유":coinSvg+num(tl.cost)); b.disabled=own||!prev;
+    b.onclick=()=>{ if(!pay(tl.cost)) return; S.up[tl.id]=true; note(tl.e,tl.nm+" 구입! 새 요리를 만들 수 있어요","gold"); chime(620,820,1100); gainXp(30); drawCook(); save(); };
+    r.appendChild(b); L.appendChild(r); });
+  /* 레시피 배우기 */
+  const un=DISHES.filter(d=>!knowRecipe(d)&&d.t<=Math.max(1,lv));
+  if(un.length){ const s2=document.createElement("div"); s2.className="sec"; s2.textContent="📜 레시피 배우기"; L.appendChild(s2);
+    for(const d of un.slice(0,3)){ const cost=Math.round(d.val*1.6);
+      const r=row("📜",d.nm+" 레시피","배우면 언제든 만들 수 있어요");
+      const b=btn(coinSvg+num(cost)); b.onclick=()=>{ if(!pay(cost)) return; learnRecipe(d.id); drawCook(); }; r.appendChild(b); L.appendChild(r); } }
+  /* 아는 요리 */
+  const s3=document.createElement("div"); s3.className="sec"; s3.textContent="🍳 만들 수 있는 요리"; L.appendChild(s3);
+  const known=DISHES.filter(knowRecipe);
+  if(!known.length) L.appendChild(emptyBox("📜","아직 아는 레시피가 없어요.<br>위에서 배우거나 우체통 편지를 받아보세요!"));
+  for(const d of known){ const need=Object.keys(d.need).map(k=>{ const nm=k==="fish"?"물고기":k==="bug"?"곤충":byId(SEEDS,k).nm;
+      const have=haveCount(k),n=d.need[k]; return '<span style="color:'+(have>=n?"#0a7d4e":"#c26a5a")+'">'+nm+" "+have+"/"+n+'</span>'; }).join(" · ");
+    const lack=toolLv()<d.t;
+    const r=row(d.e,d.nm+(S.dish[d.id]?' '+rarTag("×"+S.dish[d.id],"#93795c"):"")+(lack?' '+rarTag(TOOLS[d.t-1].e+" 필요","#c26a5a"):""),
+      need+" → "+num(d.val)+"코인",cookOk(d)?"#ffc83d":null);
     const b=btn("만들기"); b.disabled=!cookOk(d); b.onclick=()=>cook(d); r.appendChild(b); L.appendChild(r); }
 }
 /* ===================== 📖 도감 ===================== */
@@ -1574,7 +1693,7 @@ function drawBook(){ const B=$("bookBody"); B.innerHTML="";
     b.setAttribute("aria-pressed",bookTab===k?"true":"false"); b.onclick=()=>{ bookTab=k; drawBook(); beep(600,.05); }; tb.appendChild(b); });
   B.appendChild(tb);
   const list=bookTab==="fish"?FISH.map(f=>[f.id,f.e,f.nm,S.book[f.id]||0,"값 "+num(f.val)])
-    :bookTab==="bug"?BUGS.map(b=>[b.id,b.e,b.nm,S.bugs[b.id]||0,(b.night?"🌙 밤에만 · ":"")+"값 "+num(b.val)])
+    :bookTab==="bug"?BUGS.map(b=>[b.id,b.e,b.nm,S.bugs[b.id]||0,HABNM[b.h]+(b.night?" · 🌙밤":"")+"<br>값 "+num(b.val)])
     :bookTab==="dish"?DISHES.map(d=>[d.id,d.e,d.nm,S.dish[d.id]||0,"값 "+num(d.val)])
     :PETS.map(p=>[p.id,p.e,p.nm,S.pets.includes(p.id)?1:0,p.desc]);
   const got=list.filter(x=>x[3]).length;
@@ -1597,19 +1716,60 @@ function achDraw(){ const B=$("achBody"); B.innerHTML="";
       note(a.e,a.nm+" 달성! +"+num(a.r),"gold"); SFX.record(); burst(P.x,P.y+4,P.z,0xffc83d,20,7,.9); achDraw(); achBadge(); save(); };
     r.appendChild(b); B.appendChild(r); } }
 function achReady(){ let n=0; for(const a of ACHS) if(!S.ach[a.id]&&(a.get()||0)>=a.n) n++; return n; }
-function achBadge(){ const n=achReady(); const el=$("achN"); if(el){ el.textContent=n||""; } }
-/* ===================== 📮 우체통 ===================== */
+function achBadge(){ const n=achReady(); const el=$("achN"); if(el) el.textContent=n||"";
+  const m=$("mailN"); if(m) m.textContent=mailReady()?"!":""; }
+/* ===================== 📮 우체통 — 섬 친구들이 보내는 편지 ===================== */
+const LETTERS=[
+  {id:"L1",f:"🧑‍🌾",nm:"샘",ti:"씨앗 조금 보내요",
+   tx:"밭이 비어 있으면 심심하잖아요! 남은 씨앗을 보냅니다.<br>비싼 씨앗일수록 오래 걸리니 물뿌리개도 챙기세요.",g:{seed:2}},
+  {id:"L2",f:"🧔",nm:"스티븐",ti:"장사 잘 되나요?",
+   tx:"같은 걸 계속 팔면 값이 내려가요. <b>번갈아</b> 파는 게 요령입니다!<br>시세판을 꼭 보고 오세요.",g:{coin:1.4}},
+  {id:"L3",f:"🎣",nm:"루크",ti:"바다가 잔잔해요",
+   tx:"오늘은 입질이 좋을 것 같아요.<br>찌가 <b>쑥</b> 들어가면 바로 당기세요!",g:{coin:1}},
+  {id:"L4",f:"👧",nm:"미아",ti:"알 하나 보내요",
+   tx:"이 알에서 뭐가 나올지 저도 몰라요!<br>가방에서 저절로 부화하니까 기다려 보세요.",g:{egg:1}},
+  {id:"L5",f:"👩‍🍳",nm:"요리사 하나",ti:"레시피 선물",
+   tx:"제가 아끼는 레시피예요. 재료를 합치면 따로 파는 것보다 훨씬 비싸답니다!",g:{recipe:1}},
+  {id:"L6",f:"👩‍🏫",nm:"민지 선생님",ti:"공부는 잘 하고 있나요?",
+   tx:"구구단을 외우면 섬에서 제일 빨리 부자가 될 수 있어요.<br>오늘은 <b>2배 부스트</b>를 선물할게요!",g:{boost:1}},
+  {id:"L7",f:"👩‍🎨",nm:"수지",ti:"집은 잘 짓고 있어요?",
+   tx:"벽 4개랑 문이 있어야 들어갈 수 있어요.<br>가구를 놓으면 집 가치가 쑥쑥 올라간답니다.",g:{coin:1.2}},
+  {id:"L8",f:"🧑‍🔧",nm:"준호",ti:"장비 점검하세요",
+   tx:"잠자리채 있으세요? 들판에 곤충이 꽤 많던데요.<br>밤에는 더 귀한 녀석들이 나온대요!",g:{coin:1.1}},
+  {id:"L9",f:"🥋",nm:"사범 도준",ti:"수련은 게을리 말 것",
+   tx:"동작을 외우는 건 머리 운동이에요.<br>오늘도 한 단계만 더 올라가 봅시다!",g:{coin:1.1}}
+];
 function today(){ return new Date().toDateString(); }
 function mailReady(){ return S.mailDay!==today(); }
-function openMail(){ if(!mailReady()){ note("📮","오늘 편지는 이미 받았어요. 내일 또 와요!"); return; }
+function openMail(){ if(!mailReady()){ drawMail(); openGui("g-mail"); return; }
   const yest=new Date(Date.now()-864e5).toDateString();
   S.mailStreak=(S.mailDay===yest?S.mailStreak:0)+1; S.mailDay=today();
-  const coins=200+S.lvl*60+Math.min(7,S.mailStreak)*150;
-  earn(coins,true); gainXp(25);
-  const s=SEEDS[Math.min(SEEDS.length-1,Math.floor(Math.random()*Math.min(4,1+Math.floor(S.lvl/4))))];
-  S.seeds[s.id]=(S.seeds[s.id]||0)+2; drawHotbar();
-  note("📮",S.mailStreak+"일째 출석! +"+num(coins)+" 코인 · "+s.e+" "+s.nm+" 씨앗 2개","gold");
-  SFX.fanfare(); burst(P.x,P.y+4,P.z,0xffc83d,26,8,1); save(); }
+  /* 아직 안 배운 레시피가 있으면 레시피 편지를 우선 */
+  const needRec=DISHES.some(d=>!knowRecipe(d));
+  let pool=LETTERS.filter(l=>l.g.recipe?needRec:true);
+  const L=pool[Math.floor(Math.random()*pool.length)];
+  const base=200+S.lvl*60+Math.min(7,S.mailStreak)*150;
+  const got=[];
+  const coins=Math.round(base*(L.g.coin||1)); earn(coins,true); got.push(num(coins)+" 코인");
+  if(L.g.seed){ const s=SEEDS[Math.min(SEEDS.length-1,Math.floor(Math.random()*Math.min(4,1+Math.floor(S.lvl/4))))];
+    S.seeds[s.id]=(S.seeds[s.id]||0)+L.g.seed; got.push(s.e+" "+s.nm+" 씨앗 "+L.g.seed+"개"); drawHotbar(); }
+  if(L.g.egg&&S.eggs.length<4){ const e=EGGS[0]; S.eggs.push({id:e.id,at:now()+e.time}); got.push(e.e+" "+e.nm); drawHotbar(); }
+  if(L.g.recipe){ const un=DISHES.filter(d=>!knowRecipe(d)); if(un.length){ const d=un[0]; learnRecipe(d.id,true); got.push("📜 "+d.nm+" 레시피"); } }
+  if(L.g.boost){ S.boostUntil=now()+180; got.push("⚡ 3분 코인 2배"); }
+  gainXp(25);
+  S.mail={id:L.id,day:S.mailStreak,got:got,when:today()};
+  drawMail(); openGui("g-mail"); SFX.fanfare(); burst(P.x,P.y+4,P.z,0xffc83d,26,8,1); save(); }
+function drawMail(){ const B=$("mailBody"); B.innerHTML="";
+  const m=S.mail, L=m&&byId(LETTERS,m.id);
+  if(!L){ B.appendChild(emptyBox("📭","아직 온 편지가 없어요.")); return; }
+  const d=document.createElement("div"); d.className="letter";
+  d.innerHTML='<div class="lhd"><span class="face">'+L.f+'</span><div><b>'+L.nm+'</b><i>'+m.day+'일째 편지</i></div></div>'+
+    '<h4>'+L.ti+'</h4><p>'+L.tx+'</p>'+
+    '<div class="gift"><b>🎁 동봉</b>'+m.got.map(g=>'<span>'+g+'</span>').join("")+'</div>';
+  B.appendChild(d);
+  const n=document.createElement("div"); n.className="help";
+  n.innerHTML=mailReady()?"오늘 편지가 아직 안 왔어요! 우체통에서 받아보세요.":"오늘 편지는 받았어요. <b>내일</b> 또 와요 — 연속으로 받을수록 선물이 커져요!";
+  B.appendChild(n); }
 function rideMsg(m){ if(RIDE.msg===m) return; RIDE.msg=m; $("rmsg").textContent=m; }
 function startRide(type){
   const fee={coaster:30,wheel:20,caro:10,drop:25}[type]; if(!pay(fee)) return;
@@ -1623,7 +1783,7 @@ function startRide(type){
 }
 function endRide(){
   if(!RIDE.on) return; const type=RIDE.type; RIDE.on=false; player.visible=true; nameTag.visible=true; $("ridewin").classList.remove("on");
-  const ret={coaster:[PARK.x+6,PARK.z-8],wheel:[WHEEL.x,WHEEL.z+7],caro:[CARO.x,CARO.z+CARO.r+4],drop:[DROP.x,DROP.z+9]}[type]; teleport(ret[0],ret[1]); camYaw=0; camera.up.set(0,1,0);
+  const ret={coaster:[PARK.x+6,PARK.z-8],wheel:[WHEEL.x,WHEEL.z+7],caro:[CARO.x,CARO.z+CARO.r+4],drop:[DROP.x,DROP.z+10.6]}[type]; teleport(ret[0],ret[1]); camYaw=0; camera.up.set(0,1,0);
   if(camera.fov!==FOV0){ camera.fov=FOV0; camera.updateProjectionMatrix(); }
   gainXp(type==="coaster"?40:type==="drop"?30:20);
   note("🎉",type==="coaster"?"롤러코스터 완주! 최고 "+Math.round(RIDE.top*1.22)+"km/h":type==="drop"?"자이로드롭 성공! 무서웠지?":type==="wheel"?"대관람차 한 바퀴 완료!":"회전목마 끝! 또 타자");
@@ -1901,7 +2061,7 @@ FURN.filter(f=>f.act).forEach(f=>addI({x:ROOM.x+f.x*FS,z:ROOM.z+f.z*FS,h:3.4,r:3
   }}));
 addI({x:SURV.x,z:SURV.z+SURV.d/2+2,h:4.4,r:4.5,text:()=>SV.on?null:"🎯 서바이벌 게임장 (입장료 필요)",act:()=>openSurv()});
 addI({x:PARK.x+6,z:PARK.z-8,h:5,r:5.5,text:()=>RIDE.on?null:"🎢 롤러코스터 타기 · 30코인",ok:()=>S.coins>=30,act:()=>startRide("coaster")});
-addI({x:DROP.x,z:DROP.z+7.5,h:4.5,r:5,text:()=>RIDE.on?null:"🗼 자이로드롭 타기 · 25코인",ok:()=>S.coins>=25,act:()=>startRide("drop")});
+addI({x:DROP.x,z:DROP.z+7.4,h:5.8,r:4.2,text:()=>RIDE.on?null:"🗼 자이로드롭 타기 · 25코인",ok:()=>S.coins>=25,act:()=>startRide("drop")});
 addI({x:DOJO.x,z:DOJO.z+10.5,h:4.5,r:5,text:()=>TK.on?null:"🥋 태권도 배우기 · 30코인 (최고 "+S.tkdBest+"단계)",ok:()=>S.coins>=30,act:()=>startTkd()});
 addI({x:ROPE.x,z:ROPE.z+7,h:4.5,r:4.5,text:()=>RP.on?null:"🪢 줄넘기 하기 · 20코인 (최고 "+S.ropeBest+"번)",ok:()=>S.coins>=20,act:()=>startRope()});
 addI({x:WHEEL.x,z:WHEEL.z+4.5,h:4.5,r:4.5,text:()=>RIDE.on?null:"🎡 대관람차 타기 · 20코인",ok:()=>S.coins>=20,act:()=>startRide("wheel")});
@@ -2259,6 +2419,7 @@ $("menuApps").addEventListener("click",e=>{ const b=e.target.closest(".app"); if
     else if(g==="g-inv"){ $("invBtn").click(); }
     else if(g==="g-book"){ drawBook(); openGui("g-book"); }
     else if(g==="g-ach"){ achDraw(); openGui("g-ach"); }
+    else if(g==="g-mail"){ drawMail(); openGui("g-mail"); }
     else { drawMarket(); openGui("g-market"); } return; }
   if(b.dataset.page){ menuPage(b.dataset.page); return; }
   if(b.dataset.act==="snd") toggleSnd();
@@ -2473,7 +2634,7 @@ function tick(){
   if(TK.on) tkTick(t); if(RP.on) ropeTick(t,dt); else if(RP.rope) RP.rope.rotation.x=t*.9;
 
   /* 놀이공원 장식 회전 */
-  roomShellGrp.visible=roomGrp.visible=(H.zone==="home");
+  roomShellGrp.visible=roomGrp.visible=(H.zone==="home"); hauntGrp.visible=(H.zone==="haunt");
   { const W=WHEEL, a=(RIDE.on&&RIDE.type==="wheel")?(t-RIDE.t0)*.28:t*.12; W.ring.rotation.z=a; W.ring.userData.spokes.rotation.z=a;
     W.ring.userData.cabins.forEach((c,i)=>{ const b=a-Math.PI/2+i*Math.PI/4; c.position.set(W.x+Math.cos(b)*W.r,W.cy+Math.sin(b)*W.r,W.z); });
     const C=CARO; C.spin.rotation.y=-((RIDE.on&&RIDE.type==="caro")?(t-RIDE.t0)*.9:t*.35); C.spin.children.forEach(h=>{ h.position.y=Math.sin(t*4+h.userData.ph*1.1)*.35; });
@@ -2508,8 +2669,8 @@ function tick(){
         const nph=RIDE.ph==="load"?"load":iu<coaster.iLift?"out":iu<coaster.iCrest?"lift":iu<coaster.iBrake?"run":"brake";
         if(nph!==RIDE.ph){ RIDE.ph=nph;
           if(nph==="lift") rideMsg("⛓️ 체인 리프트 — 꼭대기까지 올라갑니다");
-          else if(nph==="run"){ rideMsg("🎢 떨어진다아아아!"); SFX.whoosh(); shake(.35,.6); floatText("와아아!","#ffe08a"); }
-          else if(nph==="brake"){ rideMsg("🛑 브레이크 — 곧 도착합니다"); noise(.7,.05,1500); tone(320,.5,"sine",.03,180); } }
+          else if(nph==="run"){ rideMsg("🎢 떨어진다아아아!"); SFX.whoosh(); SFX.scream(2.6); shake(.35,.6); floatText("와아아!","#ffe08a"); }
+          else if(nph==="brake"){ rideMsg("🛑 브레이크 — 곧 도착합니다"); noise(.7,.05,1500); tone(320,.5,"sine",.03,180); SFX.cheer(); } }
         placeTrain(RIDE.u);
         /* 소리: 리프트 체인 딸깍 / 레일 이음새 / 주행 럼블 / 바람 */
         if(RIDE.ph==="lift"||RIDE.ph==="out"){ if(t-RIDE.clack>.22){ RIDE.clack=t; tone(150,.05,"square",.03); tone(95,.05,"square",.02,null,.03); } }
@@ -2517,7 +2678,8 @@ function tick(){
           if(t-RIDE.clack>Math.max(.06,8/Math.max(5,fr.v))){ RIDE.clack=t; noise(.03,.012+fr.v*.0015,900+fr.v*45); }
           if(t-RIDE.rum>.12){ RIDE.rum=t; noise(.16,.008+fr.v*.002,240+fr.v*22); if(fr.v>18) noise(.2,(fr.v-18)*.0022,2800); } }
         /* 무중력 / 고중력 연출 */
-        if(fr.g<.2&&!RIDE.air&&RIDE.ph==="run"){ RIDE.air=true; floatText("🪽 무중력!","#bfe6ff"); tone(900,.3,"sine",.03,1400); }
+        if(fr.up.y<-.55&&!RIDE.inv){ RIDE.inv=1; SFX.scream(1.6,true); } if(fr.up.y>0&&RIDE.inv) RIDE.inv=0;
+        if(fr.g<.2&&!RIDE.air&&RIDE.ph==="run"){ RIDE.air=true; floatText("🪽 무중력!","#bfe6ff"); tone(900,.3,"sine",.03,1400); SFX.scream(1.1,true,.8); }
         if(fr.g>.6) RIDE.air=false;
         if(fr.g>3.2&&!RIDE.hig){ RIDE.hig=true; floatText("💪 "+fr.g.toFixed(1)+"G!","#ffb3b3"); shake(.3,.35); }
         if(fr.g<2.6) RIDE.hig=false;
@@ -2535,24 +2697,25 @@ function tick(){
         P.x=fr.p.x; P.z=fr.p.z; P.y=fr.p.y; }
     } else if(RIDE.type==="drop"){
       const D=DROP;
-      if(RIDE.ph==="up"){ RIDE.dy+=6.8*dt; RIDE.dr+=dt*.42; RIDE.gf=1;
+      if(RIDE.ph==="up"){ RIDE.dy+=6.8*dt; RIDE.dr+=dt*.2; RIDE.gf=1;
         if(t-RIDE.clack>.3){ RIDE.clack=t; tone(110,.22,"sawtooth",.022); }
         if(RIDE.dy>=D.top){ RIDE.dy=D.top; RIDE.ph="hold"; RIDE.phT=t; rideMsg("😱 아래를 보세요… 곧 떨어집니다!"); } }
       else if(RIDE.ph==="hold"){ RIDE.gf=1;
         if(t-RIDE.clack>.62){ RIDE.clack=t; tone(70,.12,"sine",.05); tone(70,.1,"sine",.04,null,.16); }
-        if(t-RIDE.phT>2.9){ RIDE.ph="fall"; RIDE.dv=0; rideMsg("🪽 무중력 낙하!!"); SFX.whoosh(); floatText("🪽 0G!","#bfe6ff"); } }
+        if(t-RIDE.phT>2.9){ RIDE.ph="fall"; RIDE.dv=0; rideMsg("🪽 무중력 낙하!!"); SFX.whoosh(); SFX.scream(2.2,true); floatText("🪽 0G!","#bfe6ff"); } }
       else if(RIDE.ph==="fall"){ RIDE.dv+=CG*dt; RIDE.dy-=RIDE.dv*dt; RIDE.gf=0;
         if(t-RIDE.rum>.08){ RIDE.rum=t; noise(.14,.01+RIDE.dv*.0018,1200+RIDE.dv*60); }
         shake(.02+RIDE.dv*.004,.06);
         if(RIDE.dy<=D.brk){ RIDE.ph="brake"; RIDE.phT=t; RIDE.ba=RIDE.dv*RIDE.dv/(2*Math.max(1,RIDE.dy-D.bot)); rideMsg("🧲 자기 브레이크!"); noise(.9,.06,900); } }
       else if(RIDE.ph==="brake"){ RIDE.dv-=RIDE.ba*dt; RIDE.dy-=RIDE.dv*dt; RIDE.gf=1+RIDE.ba/CG;
         shake(.25,.08);
-        if(RIDE.dv<=0||RIDE.dy<=D.bot){ RIDE.dy=D.bot; RIDE.dv=0; RIDE.ph="done"; RIDE.phT=t; RIDE.gf=1; rideMsg("🎉 도착! 살아남았다"); chime(600,800,1100); } }
+        if(RIDE.dv<=0||RIDE.dy<=D.bot){ RIDE.dy=D.bot; RIDE.dv=0; RIDE.ph="done"; RIDE.phT=t; RIDE.gf=1; rideMsg("🎉 도착! 살아남았다"); chime(600,800,1100); SFX.cheer(); } }
       else if(t-RIDE.phT>1.6){ endRide(); }
       if(RIDE.on){
         RIDE.v=Math.abs(RIDE.dv); RIDE.hy=RIDE.dy; if(RIDE.v>RIDE.top) RIDE.top=RIDE.v;
         D.gon.position.set(D.x,RIDE.dy,D.z); D.gon.rotation.y=RIDE.dr;
-        const a=RIDE.dr+Math.PI/2, ex=D.x+Math.cos(a)*3.9, ez=D.z+Math.sin(a)*3.9;
+        /* 기둥(반경 3.6)을 스치지 않도록 바깥쪽 좌석에서 본다 */
+        const a=RIDE.dr+Math.PI/2, ex=D.x+Math.cos(a)*5.8, ez=D.z+Math.sin(a)*5.8;
         const pit=RIDE.ph==="hold"||RIDE.ph==="fall"?-.55:-.12;
         camera.up.set(0,1,0); camera.position.set(ex,RIDE.dy+1.7,ez);
         const yw=RIDE.yaw, dx=Math.cos(a+yw), dz=Math.sin(a+yw);
