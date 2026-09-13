@@ -84,7 +84,7 @@
   .quests .q i::after{content:"";display:block;height:100%;width:var(--p,0%);border-radius:99px;background:linear-gradient(90deg,var(--green-d),var(--green) 70%,#7cffc4);
     box-shadow:0 0 8px rgba(18,195,124,.6);transition:width .35s cubic-bezier(.2,.8,.3,1)}
   @media (max-width:760px){.lb,.quests{display:none}}
-  body.playing .lb,body.playing .quests{display:none}
+  body.playing .lb,body.playing .quests,body.playing .hotbar{display:none}
 
   .goal{position:absolute;left:50%;top:calc(max(8px,env(safe-area-inset-top)) + 58px);transform:translateX(-50%);z-index:9;max-width:min(92vw,520px);
     padding:10px 18px;border-radius:14px;background:var(--glass);border:1px solid rgba(255,255,255,.1);box-shadow:var(--edge),var(--drop);
@@ -178,8 +178,8 @@
   .fishmsg{text-align:center;padding:10px 16px;border-radius:14px;font-size:1.05rem;transition:background .15s;
     background:linear-gradient(180deg,rgba(44,50,61,.93),rgba(20,23,29,.95));border:1px solid rgba(255,255,255,.09);box-shadow:0 8px 22px rgba(0,0,0,.4)}
   #ridewin{bottom:18px;width:min(380px,82vw)}#ridewin .buy{height:50px;font-size:1.05rem}
-  #rpwin{bottom:92px;width:min(380px,82vw)}#rpwin .buy{height:46px;font-size:1rem}
-  #tkwin{bottom:92px;width:min(560px,94vw)}#tkwin .buy{height:44px;font-size:.95rem}
+  #rpwin{bottom:20px;width:min(380px,70vw);left:calc(50% - 60px)}#rpwin .buy{height:46px;font-size:1rem}
+  #tkwin{bottom:20px;width:min(560px,88vw)}#tkwin .buy{height:44px;font-size:.95rem}
   .tkcards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
   .tkcards button{height:84px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:.85rem;
     background:linear-gradient(180deg,#454d5c,#2d323c);border:2px solid rgba(255,255,255,.12);box-shadow:0 5px 0 #1f232b,0 6px 14px rgba(0,0,0,.35);transition:transform .08s,box-shadow .08s}
@@ -788,8 +788,15 @@ function drawLabel(c,text,o){
   x.fillStyle=o.color||"#fff"; x.fillText(text,w/2,c.height/2+fs*.05);
 }
 function rr(x,X,Y,W,H,R){ x.beginPath(); x.moveTo(X+R,Y); x.arcTo(X+W,Y,X+W,Y+H,R); x.arcTo(X+W,Y+H,X,Y+H,R); x.arcTo(X,Y+H,X,Y,R); x.arcTo(X,Y,X+W,Y,R); x.closePath(); }
+const LABELS=[];
 function label(text,o){ o=o||{}; const c=document.createElement("canvas"); drawLabel(c,text,o); const tex=new T.CanvasTexture(c); tex.minFilter=T.LinearFilter;
-  const sp=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true,depthTest:o.depth!==false})); const H=o.h||1.4; sp.scale.set(H*c.width/c.height,H,1); sp.userData={c,o,tex,text}; return sp; }
+  const sp=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true,depthTest:o.depth!==false})); const H=o.h||1.4; sp.scale.set(H*c.width/c.height,H,1);
+  sp.userData={c,o,tex,text,far:o.far||((o.size||44)>=44?46:20)}; if(!o.nofade) LABELS.push(sp); return sp; }
+/* 멀리 있는 글자는 흐려져 화면이 덜 어수선해진다 */
+function fadeLabels(){ for(const s of LABELS){ if(!s.parent) continue;
+  const f=s.userData.far, d=Math.hypot(s.position.x-P.x,s.position.z-P.z);
+  const a=d<f*.62?1:Math.max(0,1-(d-f*.62)/(f*.42));
+  s.material.opacity=a; s.visible=a>.05; } }
 function relabel(sp,text){ if(sp.userData.text===text) return; const u=sp.userData; drawLabel(u.c,text,u.o); u.tex.needsUpdate=true; u.text=text; const H=u.o.h||1.4; sp.scale.set(H*u.c.width/u.c.height,H,1); }
 function emojiSprite(e,h){ const c=document.createElement("canvas"); c.width=c.height=128; const x=c.getContext("2d"); x.font="100px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif"; x.textAlign="center"; x.textBaseline="middle"; x.fillText(e,64,72);
   const t=new T.CanvasTexture(c); t.minFilter=T.LinearFilter; const sp=new T.Sprite(new T.SpriteMaterial({map:t,transparent:true,opacity:.9})); sp.scale.set(h,h,1); return sp; }
@@ -882,7 +889,7 @@ const npcs=[
   stall(UPSHOP,"🛒 업그레이드",0x00a2ff,{skin:0xd9a066,shirt:0x00a2ff,pants:0x1b1b1b,hairCol:0x111111,hair:"spiky",hat:"headphones"},"준호"),
   stall(BUILDSHOP,"🧱 자재 가게",0xc19a6b,{skin:0xf5c66e,shirt:0xffc83d,pants:0x1f6fff,hairCol:0x4a2c17,hair:"pony",hat:"cap"},"수지")
 ];
-const marketSign=label("📈 최고가",{size:32,h:.9,color:"#ffb3b3"}); at(marketSign,SELL.x,6.6,SELL.z);
+const marketSign=label("📈 최고가",{size:30,h:.8,color:"#ffd7a8",far:30}); at(marketSign,SELL.x+7.5,6.75,SELL.z-.35);
 /* 시세판 (3D) */
 const mkBars=[];
 (function board(){ const bx=SELL.x+7.5,bz=SELL.z-.5;
@@ -890,8 +897,7 @@ const mkBars=[];
   at(box(7.8,4.2,.35,0x2a3038),bx,5.2,bz); at(box(8.2,.4,.55,0x8d5a33),bx,7.5,bz);
   at(box(7,.2,.1,0x4a525e),bx,3.05,bz+.25);
   for(let i=0;i<TRADE.length;i++){ const b=box(.62,1,.3,0xffc83d); b.position.set(bx-3+i*1,3.6,bz+.28); scene.add(b); mkBars.push(b); }
-  at(label("📊 시세판",{size:36,h:1.1,color:"#ffe08a"}),bx,8.4,bz);
-  at(label("작물·물고기 값이 오르내려요",{size:22,h:.62,color:"#bdbebe"}),bx,7.75,bz);
+  at(label("📊 시세판",{size:36,h:1.1,color:"#ffe08a",far:34}),bx,8.9,bz);
 })();
 
 const plotObjs=[];
@@ -1224,7 +1230,7 @@ function placeTrain(u){ const M=new T.Matrix4();
 /* ===================== 🥋 태권도 (동작 기억하기) ===================== */
 const DOJO={x:72,z:56};
 const TKM=[{id:"punch",nm:"지르기",e:"👊",f:440},{id:"kick",nm:"앞차기",e:"🦵",f:550},{id:"block",nm:"막기",e:"🙌",f:660},{id:"spin",nm:"돌려차기",e:"🌀",f:784}];
-const TK={on:false,ph:"",seq:[],di:0,ii:0,t:0,round:0,coins:0,master:null,cue:null,pose:0,poseT:0};
+const TK={on:false,ph:"",seq:[],di:0,ii:0,t:0,round:0,coins:0,master:null,cue:null,yaw:0};
 (function dojoBuild(){
   const D=DOJO;
   at(box(24,.4,20,0xd9534f),D.x,.2,D.z); PLATS.push({x:D.x,z:D.z,w:24,d:20,y:.4,h:.4,noDraw:true});
@@ -1237,18 +1243,19 @@ const TK={on:false,ph:"",seq:[],di:0,ii:0,t:0,round:0,coins:0,master:null,cue:nu
   const MX=D.x-5.5, MZ=D.z-4;
   at(box(8,3.4,5,0x8d5a33),MX,1.7,MZ); at(box(8.4,.3,5.4,0xb5733f),MX,3.5,MZ);
   const ms=mkChar({skin:0xe8c39e,shirt:0xffffff,pants:0xffffff,hairCol:0x111111,hair:"short",face:"cool"});
-  ms.position.set(MX,3.65,MZ); ms.rotation.y=Math.PI; scene.add(ms); TK.master=ms;
+  /* 학생(D.x-0.5, D.z+2)을 바라보게 */ TK.yaw=Math.atan2((D.x-.5)-MX,(D.z+2)-MZ);
+  ms.position.set(MX,3.65,MZ); ms.rotation.y=TK.yaw; scene.add(ms); TK.master=ms;
   const belt=box(2.5,.5,1.5,0x111111); belt.position.set(0,3.1,0); ms.add(belt);
   TK.cue={}; TKM.forEach(m=>{ const s=emojiSprite(m.e,3.2); s.position.set(MX+4.2,7.6,MZ); s.visible=false; scene.add(s); TK.cue[m.id]=s; });
   at(label("사범 도준",{size:26,h:.75}),MX,9.6,MZ);
   beacon(D.x,D.z,0xe8635f);
 })();
-function tkPose(id,on){ const u=TK.master.userData; u.aL.rotation.x=u.aR.rotation.x=u.lL.rotation.x=u.lR.rotation.x=0; TK.master.rotation.y=Math.PI;
+function tkPose(id,on){ const u=TK.master.userData; u.aL.rotation.x=u.aR.rotation.x=u.lL.rotation.x=u.lR.rotation.x=0; TK.master.rotation.y=TK.yaw; TK.master.position.y=3.65;
   if(!on) return;
-  if(id==="punch") u.aR.rotation.x=-1.7;
-  else if(id==="kick") u.lR.rotation.x=-1.4;
-  else if(id==="block"){ u.aL.rotation.x=-2.5; u.aR.rotation.x=-2.5; }
-  else { u.lR.rotation.x=-1.1; TK.master.rotation.y=Math.PI+.9; } }
+  if(id==="punch"){ u.aR.rotation.x=-1.75; u.aL.rotation.x=.5; }
+  else if(id==="kick"){ u.lR.rotation.x=-1.45; u.aL.rotation.x=-.7; u.aR.rotation.x=-.7; }
+  else if(id==="block"){ u.aL.rotation.x=-2.6; u.aR.rotation.x=-2.6; }
+  else { u.lR.rotation.x=-1.25; u.aL.rotation.x=-1.2; TK.master.rotation.y=TK.yaw+1.1; TK.master.position.y=4; } }
 function tkCards(){ const c=$("tkCards"); c.innerHTML="";
   TKM.forEach(m=>{ const b=document.createElement("button"); b.className="tkcard"; b.dataset.id=m.id;
     b.innerHTML="<span>"+m.e+"</span>"+m.nm; b.onclick=()=>tkTap(m.id); c.appendChild(b); }); }
@@ -1256,7 +1263,7 @@ function tkLight(id,cls){ const b=$("tkCards").querySelector('[data-id="'+id+'"]
   b.classList.add(cls||"lit"); setTimeout(()=>b.classList.remove(cls||"lit"),330); }
 function startTkd(){ if(!pay(30)) return;
   TK.on=true; TK.round=1; TK.coins=0; TK.seq=[]; tkCards(); $("tkwin").classList.add("on");
-  teleport(DOJO.x+1.5,DOJO.z+4.5); camYaw=0; tkRound(); drawGoal(); SFX.open(); save(); }
+  teleport(DOJO.x-.5,DOJO.z+2); P.ry=player.rotation.y=TK.yaw+Math.PI; tkRound(); drawGoal(); SFX.open(); save(); }
 function tkRound(){ TK.seq=[]; const n=2+TK.round;
   for(let i=0;i<n;i++) TK.seq.push(TKM[Math.floor(Math.random()*TKM.length)].id);
   TK.ph="demo"; TK.di=-1; TK.ii=0; TK.t=now()+.7;
@@ -1290,27 +1297,26 @@ function tkTick(t){
 }
 /* ===================== 🪢 줄넘기 ===================== */
 const ROPE={x:22,z:70};
-const RP={on:false,th:0,per:1.5,n:0,t0:0,rope:null,best:0,warm:0};
+const RP={on:false,th:0,per:1.5,n:0,t0:0,rope:null,best:0,warm:0,fall:0,flash:0,mat:null};
 (function ropeBuild(){
   const R=ROPE;
   at(box(16,.35,12,0xc8b08a),R.x,.17,R.z); PLATS.push({x:R.x,z:R.z,w:16,d:12,y:.35,h:.35,noDraw:true});
-  const grp=new T.Group(); grp.position.set(R.x,4.2,R.z); scene.add(grp);
-  const pts=[]; for(let i=0;i<=16;i++){ const u=-1+i*2/16; pts.push(new T.Vector3(u*5.5,-3.6*(1-u*u),0)); }
-  const rope=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),32,.12,5,false),new T.MeshLambertMaterial({color:0xff5147}));
-  grp.add(rope); RP.rope=grp;
+  const grp=new T.Group(); grp.position.set(R.x,5.2,R.z); scene.add(grp);
+  const pts=[]; for(let i=0;i<=18;i++){ const u=-1+i*2/18; pts.push(new T.Vector3(u*5.6,-4.8*(1-u*u),0)); }
+  const rope=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),40,.18,6,false),new T.MeshLambertMaterial({color:0xff3b30}));
+  grp.add(rope); RP.rope=grp; RP.mat=rope.material;
   for(const s of [-1,1]){ const h=mkChar({skin:0xe8c39e,shirt:s<0?0x2aa9ff:0xffc83d,pants:0x3b3f46,hairCol:0x3b2314,hair:s<0?"spiky":"short",face:"smile"});
-    h.position.set(R.x+s*6.2,.35,R.z); h.rotation.y=s<0?Math.PI/2:-Math.PI/2; scene.add(h);
-    h.userData.aL.rotation.x=-2.6; h.userData.aR.rotation.x=-2.6; }
-  at(label("🪢 줄넘기",{size:42,h:1.4,color:"#ffd7d7"}),R.x,9.6,R.z);
-  at(label("줄이 발밑을 지날 때 점프!",{size:24,h:.7,color:"#bdbebe"}),R.x,8.7,R.z);
+    h.position.set(R.x+s*6,.35,R.z); h.rotation.y=s<0?Math.PI/2:-Math.PI/2; scene.add(h);
+    h.userData.aL.rotation.x=-2.7; h.userData.aR.rotation.x=-2.7; }
+  at(label("🪢 줄넘기",{size:42,h:1.4,color:"#ffd7d7"}),R.x,12.2,R.z);
   beacon(R.x,R.z,0xff5147);
 })();
 function startRope(){ if(!pay(20)) return;
-  RP.on=true; RP.th=Math.PI*.4; RP.per=1.8; RP.n=0; RP.t0=now(); RP.warm=3;
-  teleport(ROPE.x,ROPE.z); camYaw=0;
+  RP.on=true; RP.th=Math.PI*.4; RP.per=1.8; RP.n=0; RP.t0=now(); RP.warm=3; RP.fall=0; RP.flash=0; player.rotation.x=0;
+  teleport(ROPE.x,ROPE.z); camYaw=.92;
   $("rpwin").classList.add("on"); $("rpmsg").textContent="🪢 준비… 줄이 발밑에 올 때 점프!";
   drawGoal(); SFX.open(); save(); }
-function ropeEnd(){ if(!RP.on) return; const n=RP.n; RP.on=false; $("rpwin").classList.remove("on");
+function ropeEnd(){ if(!RP.on) return; const n=RP.n; RP.on=false; RP.fall=0; player.rotation.x=0; RP.mat.color.setHex(0xff3b30); $("rpwin").classList.remove("on");
   if(n>S.ropeBest) S.ropeBest=n;
   const got=n*7; if(got) earn(got,true); gainXp(n*2);
   teleport(ROPE.x,ROPE.z+8); drawGoal();
@@ -1318,17 +1324,31 @@ function ropeEnd(){ if(!RP.on) return; const n=RP.n; RP.on=false; $("rpwin").cla
   if(n>=10) SFX.fanfare(); quest("rope",n); save(); }
 $("rpquit").onclick=()=>ropeEnd();
 function ropeTick(t,dt){
+  /* 걸린 뒤 넘어지는 연출 */
+  if(RP.fall>0){ RP.fall-=dt; player.rotation.x=Math.min(1.4,(1.2-RP.fall)*3.4);
+    if(RP.fall<=0){ ropeEnd(); } return; }
+  if(RP.flash>0){ RP.flash-=dt; RP.mat.color.setHex(RP.flash>0?0xffe14a:0xff3b30); }
   const prev=RP.th; RP.th+=dt*Math.PI*2/RP.per; RP.rope.rotation.x=RP.th;
   if(Math.floor(RP.th/(Math.PI*2))>Math.floor(prev/(Math.PI*2))){
     if(RP.warm>0){ RP.warm--; const w=["셋!","둘!","하나!"][RP.warm]||"준비!";
       tone(RP.warm?440:660,.14,"triangle",.05); floatText(w,"#ffe08a");
       $("rpmsg").textContent=RP.warm?"🪢 "+w+" 곧 시작해요":"🪢 시작! 지금부터 점프!";
       if(!RP.warm) RP.per=1.5; return; }
-    if(P.y>.8){ RP.n++; RP.per=Math.max(.62,1.5-RP.n*.022);
-      tone(700+Math.min(400,RP.n*12),.07,"triangle",.04); floatText(RP.n+"","#bfe6ff");
-      if(RP.n%10===0){ note("🔥",RP.n+"번 연속!","gold"); chime(700,900,1100); }
-      $("rpmsg").textContent="🪢 "+RP.n+"번! "+(RP.per<.9?"점점 빨라져요!":"좋아요!"); }
-    else { SFX.wrong(); shake(.3,.35); floatText("걸렸다!","#ff9b91"); ropeEnd(); return; }
+    if(P.y>.8){ RP.n++; RP.per=Math.max(.62,1.5-RP.n*.022); RP.flash=.18;
+      /* 잘 넘겼을 때: 발밑 먼지 + 줄 반짝 + 상승음 */
+      tone(700+Math.min(400,RP.n*12),.07,"triangle",.045); noise(.12,.03,1800);
+      burst(P.x,.5,P.z,0xf2e2b8,7,4,.45); floatText(RP.n+"번!",RP.n%10===0?"#ffe08a":"#bfe6ff");
+      if(RP.n%10===0){ note("🔥",RP.n+"번 연속!","gold"); chime(700,900,1100); shake(.12,.2);
+        burst(P.x,P.y+3.5,P.z,0xffc83d,26,8,1); burst(P.x,P.y+3.5,P.z,0x2aa9ff,18,7,.9);
+        const f=$("lvflash"); f.classList.add("on"); setTimeout(()=>f.classList.remove("on"),420); }
+      $("rpmsg").textContent="🪢 "+RP.n+"번! "+(RP.per<.9?"점점 빨라져요!":"좋아요!"); drawGoal(); }
+    else { /* 걸렸을 때: 쿵 + 먼지 + 화면 흔들림 + 붉은 섬광 + 넘어지기 */
+      RP.fall=1.2; RP.mat.color.setHex(0xffffff);
+      SFX.wrong(); noise(.4,.1,220); tone(90,.35,"square",.05,50);
+      shake(.6,.5);
+      burst(P.x,.6,P.z,0xd9b382,24,7,.85); burst(P.x,1.6,P.z,0xff5147,16,6,.7);
+      const el=$("scare"); $("scaretxt").textContent="💥 걸렸다!"; el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),550);
+      $("rpmsg").textContent="💥 앗! 줄에 걸렸어요"; return; }
   }
   const near=Math.cos(RP.th)>.72; if(near&&t-RP.t0>.2){ RP.t0=t; noise(.06,.02,900); }
   P.x+=(ROPE.x-P.x)*Math.min(1,dt*6); P.z+=(ROPE.z-P.z)*Math.min(1,dt*6);
@@ -2044,7 +2064,7 @@ function tick(){
   if(!RIDE.on&&P.y<=gy){ if(P.vy<-9){ SFX.land(); burst(P.x,gy+.2,P.z,0xdddddd,8,3,.5); if(P.vy<-22) shake(.35,.25); } P.y=gy; P.vy=0; lastGround=t; if(t-jumpReq<.15){ jumpReq=0; doJump(); } }
   if(P.y<=gy+.01&&!guiOpen) for(const l of LPADS) if(Math.abs(P.x-l.x)<1.9&&Math.abs(P.z-l.z)<1.9){ P.vy=34; SFX.whoosh(); burst(l.x,.6,l.z,0xff8c1a,24,7,.9); break; }
   if(P.moving&&P.y<=gy+.01){ stepT+=dt; if(stepT>.27){ stepT=0; SFX.step(); burst(P.x,P.y+.15,P.z,H.zone==="haunt"?0x444455:0xa8d97a,2,1.5,.35); } }
-  player.position.set(P.x,P.y,P.z); nameTag.position.set(P.x,P.y+6.7,P.z); nameTag.visible=guiOpen!=="g-av"&&!FP.on&&!(RIDE.on&&RIDE.type!=="caro");
+  player.position.set(P.x,P.y,P.z); nameTag.position.set(P.x,P.y+6.7,P.z); nameTag.visible=guiOpen!=="g-av"&&!FP.on&&!TK.on&&!RP.on&&!(RIDE.on&&RIDE.type!=="caro");
   sun.position.set(P.x+40,P.y+70,P.z+30); sun.target.position.set(P.x,P.y,P.z);
   { let ry=player.rotation.y,d=P.ry-ry; d=Math.atan2(Math.sin(d),Math.cos(d)); if(P.moving) player.rotation.y=ry+d*Math.min(1,dt*14); }
   swing(player,t,P.moving); if(fishing) player.userData.aR.rotation.x=-2.2;
@@ -2073,6 +2093,7 @@ function tick(){
     if(SV.on&&Math.floor(t)!==Math.floor(t-dt)) drawGoal();
   }
   swing(svHost,t*.6,false);
+  if(Math.floor(t*6)!==Math.floor((t-dt)*6)) fadeLabels();
   if(TK.on) tkTick(t); if(RP.on) ropeTick(t,dt); else if(RP.rope) RP.rope.rotation.x=t*.9;
 
   /* 놀이공원 장식 회전 */
@@ -2173,12 +2194,16 @@ function tick(){
     if(RIDE.on&&Math.floor(t*4)!==Math.floor((t-dt)*4)) drawGoal();
   }
   if(RIDE.on){ }
+  else if(RP.on){ camera.up.set(0,1,0); camPos.set(ROPE.x+12,10.5,ROPE.z+15.5);
+    camera.position.lerp(camPos,Math.min(1,dt*5)); camera.lookAt(ROPE.x,3.2,ROPE.z); }
+  else if(TK.on){ camera.up.set(0,1,0); camPos.set(DOJO.x-.5,9,DOJO.z+10.5);
+    camera.position.lerp(camPos,Math.min(1,dt*5)); camera.lookAt(DOJO.x-5.5,6,DOJO.z-4); }
   else if(FP.on){ const dir=fpDir(); camera.position.set(P.x,P.y+4.6,P.z); camera.lookAt(P.x+dir.x,P.y+4.6+dir.y,P.z+dir.z); player.rotation.y=camYaw+Math.PI; P.ry=player.rotation.y; }
   else if(guiOpen==="g-av"){ player.rotation.y+=dt*.9; const fx=Math.sin(editYaw),fz=Math.cos(editYaw); camPos.set(P.x+fx*9,P.y+3.6,P.z+fz*9); camera.position.lerp(camPos,Math.min(1,dt*6)); camera.lookAt(P.x-fz*1.6,P.y+2.9,P.z+fx*1.6); }
-  else { const hz=H.zone==="haunt",hm=H.zone==="home",D=hz?9.5:hm?16:13,Hy=hz?5:hm?8.5:7.5;
+  else { const hz=H.zone==="haunt",hm=H.zone==="home",D=hz?11:hm?16:17,Hy=hz?5.5:hm?8.5:8.8;
     camPos.set(P.x+Math.sin(camYaw)*D,P.y+Hy,P.z+Math.cos(camYaw)*D);
     if(hm){ const R=ROOM,m=1.6; camPos.x=Math.min(Math.max(camPos.x,R.x-R.w/2+m),R.x+R.w/2-m); camPos.z=Math.min(Math.max(camPos.z,R.z-R.d/2+m),R.z+R.d/2-m); }
-    camera.position.lerp(camPos,Math.min(1,dt*8)); camera.lookAt(P.x,P.y+(hm?2.4:3.2),P.z); }
+    camera.position.lerp(camPos,Math.min(1,dt*8)); camera.lookAt(P.x,P.y+(hm?2.4:3.6),P.z); }
   if(shakeT>0){ shakeT-=dt; camera.position.x+=(Math.random()-.5)*shakeA; camera.position.y+=(Math.random()-.5)*shakeA; }
 
   /* 파티클 · 떠오르는 글자 · 새소리 */
