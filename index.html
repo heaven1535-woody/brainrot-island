@@ -1217,82 +1217,137 @@ const plotObjs=[];
   for(let i=-7.5;i<=7.5;i+=3){ at(box(.4,1.7,.4,0xffffff),cx+i,.85,cz-7.5); if(Math.abs(i)>1) at(box(.4,1.7,.4,0xffffff),cx+i,.85,cz+7.5); at(box(.4,1.7,.4,0xffffff),cx-7.5,.85,cz+i); at(box(.4,1.7,.4,0xffffff),cx+7.5,.85,cz+i); }
   at(label("🚪 입구",{size:30,h:.8,color:"#c8ffc8"}),cx,2.6,cz+8.2);
   at(label("내 밭",{size:46,h:1.5}),cx,6,cz+7.5);
-  PLOTS.forEach(p=>{ const grp=new T.Group(); grp.position.set(p.x,0,p.z); const dirt=box(2.6,.3,2.6,0x6b4a2e); dirt.position.y=.2; grp.add(dirt); const plant=new T.Group(); grp.add(plant); scene.add(grp); plotObjs.push({grp,plant,sig:"",fruit:null,mat:null}); });
+  PLOTS.forEach(p=>{ const grp=new T.Group(); grp.position.set(p.x,0,p.z);
+    const dirt=box(2.6,.3,2.6,0x6b4a2e); dirt.position.y=.2; dirt.receiveShadow=true; grp.add(dirt);
+    /* 둥글게 갈아 올린 흙 두둑 + 고랑 — 동물의 숲처럼 폭신한 밭 */
+    const mound=new T.Mesh(new T.SphereGeometry(1.12,14,8,0,6.284,0,Math.PI/2),mat(0x7a5433));
+    mound.scale.set(1,.3,1); mound.position.y=.33; mound.receiveShadow=true; grp.add(mound);
+    for(let i=-1;i<=1;i++){ const f=box(1.9,.05,.13,0x5b3f26); f.position.set(0,.44+Math.abs(i)*-.03,i*.58); grp.add(f); }
+    const plant=new T.Group(); plant.position.y=.42; grp.add(plant);
+    scene.add(grp); plotObjs.push({grp,plant,sig:"",fruit:null,mat:null,spark:null}); });
 })();
 const sprinklerObj=new T.Group(); { const p=box(.4,2.2,.4,0x9aa0a6); p.position.y=1.1; sprinklerObj.add(p); const h=box(1.2,.3,1.2,0x3fa9f5); h.position.y=2.3; sprinklerObj.add(h); } sprinklerObj.position.set(FARM.cx,0,FARM.cz); sprinklerObj.visible=false; scene.add(sprinklerObj);
-/* ---- 작물 모양: 종류마다 다르게 생겼다 (예전엔 전부 색만 다른 공이었음) ---- */
-const CROPSC={carrot:1.2,berry:1.05,corn:1.05,melon:1.15,dragon:1.05,rainbow:1.2};
+/* ================= 작물 (동물의 숲풍: 흙에서 자라는 모습) =================
+   잎은 둥글넓적하게, 열매는 줄기에 매달리거나 땅에 놓이게. 전부 밑동이 흙에 붙어 있다. */
+const LEAF_A=0x4fbf4f, LEAF_B=0x3f9b3f, STEM_C=0x3f8f3f;
+/* 둥근 잎 한 장 (긴 쪽이 +z) */
+function acLeaf(len,wid,col,thick){ const m=new T.Mesh(new T.SphereGeometry(.5,9,7),mat(col));
+  m.scale.set(wid,thick||.13,len); m.castShadow=true; return m; }
+/* 밑동에서 사방으로 퍼지는 잎 — tilt 가 클수록 위로 선다 */
+function leafSpray(g,n,len,wid,col,tilt,y,turn){
+  for(let i=0;i<n;i++){ const a=(i/n)*6.283+(turn||0), t=tilt*(.82+.36*((i*7)%5)/4);
+    const lf=acLeaf(len,wid,(i%2)?col:LEAF_B);
+    lf.rotation.order="YXZ"; lf.rotation.y=a; lf.rotation.x=-t;
+    lf.position.set(Math.sin(a)*Math.cos(t)*len*.5, y+Math.sin(t)*len*.5, Math.cos(a)*Math.cos(t)*len*.5);
+    g.add(lf); }
+}
+/* 아래로 늘어진 줄기 끝에 열매 — 딸기·용과처럼 매달리는 것 */
+function hangFruit(g,a,reach,drop,build){
+  const st=box(.07,.06,reach,STEM_C); st.rotation.order="YXZ"; st.rotation.y=a; st.rotation.x=.45;
+  st.position.set(Math.sin(a)*reach*.5,drop+Math.sin(.45)*reach*.5,Math.cos(a)*reach*.5); g.add(st);
+  const f=build(); f.position.set(Math.sin(a)*reach,drop,Math.cos(a)*reach); g.add(f); return f;
+}
+function tinyFlower(g,x,y,z){ const p=new T.Mesh(new T.SphereGeometry(.16,7,5),mat(0xffffff)); p.scale.set(1,.3,1); p.position.set(x,y,z); g.add(p);
+  const c=new T.Mesh(new T.SphereGeometry(.07,6,5),mat(0xffd166)); c.position.set(x,y+.05,z); g.add(c); }
 function blade(len,w,col,ax,az,x,z,y){ const b=box(w,len,w*.6,col); b.position.set(x,y+len/2,z); b.rotation.set(ax||0,Math.atan2(x,z),az||0); return b; }
 function leafFan(g,n,len,col,y,tilt){ for(let i=0;i<n;i++){ const a=i/n*Math.PI*2+.4, r=.16;
   const b=box(.2,len,.5,col); b.position.set(Math.cos(a)*r,y+len/2*Math.cos(tilt),Math.sin(a)*r);
   b.rotation.y=-a; b.rotation.x=tilt*(0.6+0.4*Math.sin(i*2)); g.add(b); } }
 /* 다 자란 열매 부분 — 종류별 전용 모양을 돌려준다 */
-function cropFruit(id,s,m,sc){
-  const g=new T.Group(); sc=sc||1;
-  if(id==="carrot"){                                   /* 🥕 매끈한 주황 뿌리 + 잎 몇 장 */
-    const c=new T.Mesh(new T.ConeGeometry(.4*sc,1.6*sc,10),m); c.rotation.x=Math.PI; c.position.y=.6*sc; c.castShadow=true; g.add(c);
-    for(let i=0;i<4;i++){ const a=i/4*6.28+.7; const lf=box(.13*sc,.85*sc,.3*sc,0x3f9b3f);
-      lf.position.set(Math.cos(a)*.13*sc,1.7*sc,Math.sin(a)*.13*sc); lf.rotation.z=Math.cos(a)*.3; lf.rotation.x=-Math.sin(a)*.3; g.add(lf); }
-  } else if(id==="berry"){                             /* 🍓 위는 둥글고 아래는 뾰족한 딸기 */
-    const c=new T.Mesh(new T.ConeGeometry(.48*sc,.85*sc,12),m); c.position.y=.42*sc; c.castShadow=true; g.add(c);
-    const top=new T.Mesh(new T.SphereGeometry(.48*sc,12,7,0,6.29,0,Math.PI/2),m); top.position.y=.85*sc; g.add(top);
-    const cap=new T.Mesh(new T.CylinderGeometry(.5*sc,.42*sc,.12*sc,8),mat(0x3f9b3f)); cap.position.y=1.3*sc; g.add(cap);
-    const st=box(.1*sc,.3*sc,.1*sc,0x2f7d2f); st.position.y=1.48*sc; g.add(st);
-    for(let i=0;i<6;i++){ const a=i/6*6.28; const d=new T.Mesh(new T.SphereGeometry(.055*sc,5,4),mat(0xfff3d0));
-      d.position.set(Math.cos(a)*.42*sc,(.62+(i%2)*.28)*sc,Math.sin(a)*.42*sc); g.add(d); }
-  } else if(id==="corn"){                              /* 🌽 매끈한 이삭 + 껍질 두 장 */
-    const c=new T.Mesh(new T.CylinderGeometry(.33*sc,.3*sc,1.4*sc,12),m); c.position.y=.75*sc; c.castShadow=true; g.add(c);
-    const tip=new T.Mesh(new T.ConeGeometry(.33*sc,.42*sc,12),m); tip.position.y=1.66*sc; g.add(tip);
-    for(let i=0;i<5;i++){ const r=new T.Mesh(new T.TorusGeometry(.325*sc,.03*sc,4,14),mat(0xe0a92a));
-      r.rotation.x=Math.PI/2; r.position.y=(.32+i*.26)*sc; g.add(r); }
-    for(const s2 of [-1,1]){ const h=box(.12*sc,1.45*sc,.46*sc,0x3f9b3f); h.position.set(s2*.36*sc,.75*sc,0); h.rotation.z=s2*.1; g.add(h); }
-  } else if(id==="melon"){                             /* 🍉 세로 줄무늬 수박 */
-    const b=new T.Mesh(new T.SphereGeometry(.88*sc,16,12),m); b.position.y=.88*sc; b.castShadow=true; g.add(b);
-    for(let i=0;i<4;i++){ const st=new T.Mesh(new T.TorusGeometry(.885*sc,.05*sc,4,22),mat(0x1f6b2e));
-      st.rotation.y=i/4*Math.PI; st.position.y=.88*sc; g.add(st); }
-    const v=box(.11*sc,.34*sc,.11*sc,0x2f7d2f); v.position.y=1.85*sc; v.rotation.z=.35; g.add(v);
-  } else if(id==="dragon"){                            /* 🐲 위쪽에만 잎이 난 용과 */
-    const b=new T.Mesh(new T.SphereGeometry(.55*sc,14,10),m); b.scale.set(1,1.4,1); b.position.y=.9*sc; b.castShadow=true; g.add(b);
-    for(let i=0;i<5;i++){ const a=i/5*6.28+.4; const lf=new T.Mesh(new T.ConeGeometry(.14*sc,.62*sc,5),mat(0x5bd06a));
-      lf.position.set(Math.cos(a)*.3*sc,1.55*sc,Math.sin(a)*.3*sc);
-      lf.rotation.z=-Math.cos(a)*.75; lf.rotation.x=Math.sin(a)*.75; g.add(lf); }
-  } else {                                             /* 🌈 무지개 열매 — 매끈한 구슬 + 작은 고리 */
-    const b=new T.Mesh(new T.SphereGeometry(.7*sc,18,13),m); b.position.y=.9*sc; b.castShadow=true; g.add(b);
-    const ring=new T.Mesh(new T.TorusGeometry(.9*sc,.06*sc,6,26),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.75}));
-    ring.rotation.x=1.25; ring.position.y=.9*sc; g.add(ring);
-    const star=new T.Mesh(new T.SphereGeometry(.16*sc,8,6),new T.MeshBasicMaterial({color:0xfff9c4})); star.position.y=1.78*sc; g.add(star);
+/* 다 자란 작물 — 종류마다 흙에 뿌리내린 모습이 다르다 */
+function buildRipe(g,id,m){
+  if(id==="carrot"){                                  /* 🥕 어깨만 흙 위로 쏙 나온 당근 + 무성한 잎 */
+    const sh=new T.Mesh(new T.SphereGeometry(.44,12,8,0,6.284,0,Math.PI/2),m); sh.scale.set(1,.75,1); sh.position.y=.02; sh.castShadow=true; g.add(sh);
+    const body=new T.Mesh(new T.ConeGeometry(.44,.9,10),m); body.rotation.x=Math.PI; body.position.y=-.42; g.add(body);
+    for(let i=0;i<3;i++){ const r=new T.Mesh(new T.TorusGeometry(.4-i*.03,.025,4,10),mat(0xe07a1a)); r.rotation.x=Math.PI/2; r.position.y=.1-i*.1; g.add(r); }
+    const st=box(.1,.22,.1,STEM_C); st.position.y=.4; g.add(st);
+    leafSpray(g,7,1.25,.34,LEAF_A,.95,.5,.4);
+    return {y:.35,hang:false};
   }
-  return g;
+  if(id==="berry"){                                   /* 🍓 낮은 덤불에 딸기 세 알이 대롱대롱 */
+    leafSpray(g,7,1.0,.62,LEAF_A,.3,.1,.2);
+    tinyFlower(g,.5,.3,-.35); tinyFlower(g,-.55,.28,.2);
+    for(let i=0;i<3;i++) hangFruit(g,i/3*6.283+.6,.62,.34,()=>{
+      const f=new T.Group();
+      const c=new T.Mesh(new T.ConeGeometry(.3,.5,10),m); c.position.y=-.1; c.castShadow=true; f.add(c);
+      const t=new T.Mesh(new T.SphereGeometry(.3,10,7,0,6.284,0,Math.PI/2),m); t.position.y=.15; f.add(t);
+      const cap=new T.Mesh(new T.SphereGeometry(.31,8,5),mat(LEAF_B)); cap.scale.set(1,.22,1); cap.position.y=.3; f.add(cap);
+      for(let k=0;k<4;k++){ const a=k/4*6.283; const d=new T.Mesh(new T.SphereGeometry(.035,5,4),mat(0xfff3d0));
+        d.position.set(Math.cos(a)*.26,.02+(k%2)*.16,Math.sin(a)*.26); f.add(d); } return f; });
+    return {y:.35,hang:true};
+  }
+  if(id==="corn"){                                    /* 🌽 키 큰 대에 옆으로 달린 이삭 */
+    const st=new T.Mesh(new T.CylinderGeometry(.11,.17,2.5,8),mat(STEM_C)); st.position.y=1.25; st.castShadow=true; g.add(st);
+    for(let i=0;i<5;i++){ const a=i*1.35, y=.5+i*.42, lf=acLeaf(1.5,.34,(i%2)?LEAF_A:LEAF_B,.1);
+      lf.rotation.order="YXZ"; lf.rotation.y=a; lf.rotation.x=.5; lf.rotation.z=.15;
+      lf.position.set(Math.sin(a)*.62,y-.3,Math.cos(a)*.62); g.add(lf); }
+    const tas=box(.07,.5,.07,0xd9a066); tas.position.y=2.6; g.add(tas);
+    const ear=new T.Group(); ear.position.set(.3,1.15,.12); ear.rotation.z=-.3; g.add(ear);
+    const cob=new T.Mesh(new T.CylinderGeometry(.26,.23,1.0,10),m); cob.castShadow=true; ear.add(cob);
+    const tip=new T.Mesh(new T.ConeGeometry(.26,.3,10),m); tip.position.y=.63; ear.add(tip);
+    for(let i=0;i<4;i++){ const r=new T.Mesh(new T.TorusGeometry(.255,.025,4,12),mat(0xe0a92a)); r.rotation.x=Math.PI/2; r.position.y=-.35+i*.24; ear.add(r); }
+    const hu=acLeaf(1.1,.3,LEAF_B,.12); hu.rotation.x=1.57; hu.position.set(-.2,0,0); ear.add(hu);
+    const silk=box(.16,.34,.16,0xd9a066); silk.position.y=.82; ear.add(silk);
+    return {y:.35,hang:false};
+  }
+  if(id==="melon"){                                   /* 🍉 흙에 놓인 수박 + 사방으로 뻗은 덩굴잎 */
+    leafSpray(g,6,1.15,.8,LEAF_A,.12,.06,.35);
+    const b=new T.Mesh(new T.SphereGeometry(.78,16,12),m); b.position.y=.62; b.castShadow=true; g.add(b);
+    for(let i=0;i<4;i++){ const s2=new T.Mesh(new T.TorusGeometry(.785,.045,4,22),mat(0x1f6b2e)); s2.rotation.y=i/4*Math.PI; s2.position.y=.62; g.add(s2); }
+    const v=box(.09,.3,.09,STEM_C); v.position.set(0,1.42,0); v.rotation.z=.4; g.add(v);
+    const cu=new T.Mesh(new T.TorusGeometry(.2,.035,4,12,4.2),mat(STEM_C)); cu.position.set(.75,.5,.5); cu.rotation.set(1.1,.6,0); g.add(cu);
+    return {y:.35,hang:false};
+  }
+  if(id==="dragon"){                                  /* 🐲 선인장 줄기 옆에 매달린 용과 */
+    const col=new T.Mesh(new T.CylinderGeometry(.26,.32,1.5,8),mat(0x4f9e57)); col.position.y=.75; col.castShadow=true; g.add(col);
+    const cap=new T.Mesh(new T.SphereGeometry(.26,10,7),mat(0x4f9e57)); cap.position.y=1.5; g.add(cap);
+    for(let i=0;i<4;i++){ const a=i/4*6.283; const rb=box(.05,1.4,.05,0x3f8a47); rb.position.set(Math.sin(a)*.3,.75,Math.cos(a)*.3); g.add(rb); }
+    for(let i=0;i<2;i++) hangFruit(g,i*3.14+.8,.5,1.0,()=>{
+      const f=new T.Group();
+      const b=new T.Mesh(new T.SphereGeometry(.34,12,9),m); b.scale.set(1,1.25,1); b.castShadow=true; f.add(b);
+      for(let k=0;k<4;k++){ const a=k/4*6.283+.4; const lf=acLeaf(.42,.16,0x6ed67a,.1);
+        lf.rotation.order="YXZ"; lf.rotation.y=a; lf.rotation.x=-.7; lf.position.set(Math.sin(a)*.2,.3,Math.cos(a)*.2); f.add(lf); } return f; });
+    return {y:.35,hang:true};
+  }
+  /* 🌈 무지개 열매 — 잎 둥지에 얹힌 빛나는 구슬 */
+  leafSpray(g,7,.95,.5,0x7fd4a0,.35,.05,.3);
+  const b=new T.Mesh(new T.SphereGeometry(.62,18,13),m); b.position.y=.72; b.castShadow=true; g.add(b);
+  const ring=new T.Mesh(new T.TorusGeometry(.82,.05,6,26),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7}));
+  ring.rotation.x=1.25; ring.position.y=.72; g.add(ring);
+  return {y:.35,hang:false};
 }
 function buildPlant(o,p){
-  while(o.plant.children.length) o.plant.remove(o.plant.children[0]); o.fruit=null; o.mat=null; if(!p) return;
+  while(o.plant.children.length) o.plant.remove(o.plant.children[0]);
+  o.fruit=null; o.mat=null; o.spark=null; if(!p) return;
   const s=byId(SEEDS,p.id),left=p.ripe-now(),ripe=left<=0,stage=ripe?2:(left<s.grow*growMul()*.5?1:0);
-  const id=s.id, tall=id==="corn", vine=id==="melon", root=id==="carrot"||id==="berry";
-  /* --- 자라는 중 --- */
-  if(!ripe){
-    const h=(tall?[.7,1.8]:vine?[.3,.5]:[.45,.95])[stage];
-    if(vine){ const v=box(1.5+stage*.6,.16,1.5+stage*.6,0x4fbf4f); v.position.y=.4; v.rotation.y=.5; o.plant.add(v);
-      leafFan(o.plant,4,.5+stage*.3,0x3f9b3f,.45,1.15); }
-    else if(root){ leafFan(o.plant,stage?7:4,h,0x3f9b3f,.35,.45); }
-    else { const st=box(tall?.28:.3,h,tall?.28:.3,0x3f9b3f); st.position.y=.35+h/2; o.plant.add(st);
-      for(const s2 of [-1,1]){ const lf=box(.14,h*.7,.55,0x4fbf4f); lf.position.set(s2*(tall?.3:.32),.35+h*.55,0); lf.rotation.z=s2*.25; o.plant.add(lf); } }
-    if(stage===1){ const bud=box(.3,.3,.3,0xd9e86a); bud.position.y=.35+h+.2; o.plant.add(bud); }
+  const id=s.id, G=o.plant;
+  /* --- 🌱 새싹 --- */
+  if(stage===0){
+    const st=box(.09,.3,.09,STEM_C); st.position.y=.15; G.add(st);
+    for(const sd of [-1,1]){ const lf=acLeaf(.44,.4,LEAF_A,.12);
+      lf.rotation.order="YXZ"; lf.rotation.y=sd*1.57; lf.rotation.x=-.5;
+      lf.position.set(sd*.19,.36,0); G.add(lf); }
     return;
   }
-  /* --- 다 자람 --- */
+  /* --- 🌿 자라는 중 --- */
+  if(stage===1){
+    const h=id==="corn"?1.3:.5;
+    const st=new T.Mesh(new T.CylinderGeometry(.09,.13,h,7),mat(STEM_C)); st.position.y=h/2; G.add(st);
+    leafSpray(G,5,id==="melon"?.8:.75,id==="melon"?.6:.4,LEAF_A,id==="melon"?.25:.7,h*.55,.3);
+    const bud=new T.Mesh(new T.SphereGeometry(.17,9,7),mat(0xd9e86a)); bud.position.y=h+.12; G.add(bud);
+    return;
+  }
+  /* --- 🌟 다 자람 --- */
   const gold=p.mut==="gold",rain=p.mut==="rain"||id==="rainbow",wet=p.mut==="wet";
   const m=new T.MeshLambertMaterial({color:gold?0xffc93c:wet?0x7fd4ff:s.col,emissive:gold?0x7a5a00:(rain?0x333333:0x1a1a1a)});
-  let base=.35;
-  if(tall){ const st=box(.3,2.6,.3,0x3f9b3f); st.position.y=.35+1.3; o.plant.add(st);
-    for(const s2 of [-1,1]){ const lf=box(.14,2,.62,0x4fbf4f); lf.position.set(s2*.32,1.5,0); lf.rotation.z=s2*.3; o.plant.add(lf); } base=1.0; }
-  else if(vine){ const v=box(2.3,.16,2.3,0x4fbf4f); v.position.y=.4; v.rotation.y=.5; o.plant.add(v); base=.4; }
-  else if(id==="dragon"||id==="rainbow"){ const st=box(.34,1.1,.34,0x3f9b3f); st.position.y=.9; o.plant.add(st); base=1.2; }
-  else if(id==="berry"){ for(let i=0;i<5;i++){ const a=i/5*6.28; const lf=box(.7,.16,.7,0x3f9b3f);
-    lf.position.set(Math.cos(a)*.55,.45,Math.sin(a)*.55); lf.rotation.y=-a; o.plant.add(lf); } base=.45; }
-  const f=cropFruit(id,s,m,CROPSC[id]||1);   /* 모양마다 달라서 종류별로 크기를 따로 잡는다 */
-  f.position.y=base; o.plant.add(f); o.fruit=f; if(rain) o.mat=m;
+  const info=buildRipe(G,id,m);
+  o.fruit=G; if(rain) o.mat=m;
+  /* 수확할 수 있다는 반짝임 */
+  const sp=new T.Group(); G.add(sp); o.spark=sp;
+  for(let i=0;i<3;i++){ const d=new T.Mesh(new T.BoxGeometry(.13,.13,.13),new T.MeshBasicMaterial({color:0xfff9c4}));
+    d.position.set(Math.cos(i*2.1)*.85,1.15+i*.3,Math.sin(i*2.1)*.85); d.rotation.set(.7,.7,0); sp.add(d); }
   if(p.mut){ const l=label(gold?"✨ 금빛":wet?"💧 젖음":"🌈 무지개",{size:34,h:.9,color:gold?"#ffe08a":"#fff"});
-    l.position.y=base+2.4; o.plant.add(l); }
+    l.position.y=2.5; G.add(l); }
 }
 
 (function pond(){
@@ -3347,7 +3402,11 @@ function tick(){
     if(pl&&weather.kind==="rain"&&pl.ripe>t) pl.ripe-=dt;
     const sig=pl?pl.id+(pl.mut||"")+(pl.ripe<=t?"R":pl.ripe-t<byId(SEEDS,pl.id).grow*growMul()*.5?"1":"0"):"";
     if(sig!==o.sig){ o.sig=sig; buildPlant(o,pl); }
-    if(o.fruit){ o.fruit.userData.by=o.fruit.userData.by||o.fruit.position.y; o.fruit.position.y=o.fruit.userData.by+Math.sin(t*3+i)*.15; o.fruit.rotation.y=t; }
+    /* 바람에 살랑 — 열매가 공중에 뜨는 대신 포기 전체가 흔들린다 */
+    if(o.plant.children.length){ const w=weather.kind==="rain"?1.9:1;
+      o.plant.rotation.z=Math.sin(t*1.15+i*.7)*.045*w; o.plant.rotation.x=Math.cos(t*.9+i)*.03*w; }
+    if(o.spark){ o.spark.rotation.y=t*.9; o.spark.children.forEach((d,k)=>{ d.position.y=1.15+k*.3+Math.sin(t*2.4+k)*.14;
+      d.material.opacity=1; d.scale.setScalar(.7+Math.abs(Math.sin(t*3+k))*.6); }); }
     if(o.mat) o.mat.color.setHSL((t*.35+i*.1)%1,.9,.6); });
   if(t>=S.restockAt){ SEEDS.forEach(s=>S.stock[s.id]=s.stock*(S.up.stock2?2:1)); S.restockAt=t+RESTOCK; if(guiOpen==="g-shop") drawShop(); else note("🚚","씨앗 가게 보충!"); }
   if(guiOpen==="g-shop") $("restock").textContent="보충 "+Math.ceil(S.restockAt-t)+"초";
