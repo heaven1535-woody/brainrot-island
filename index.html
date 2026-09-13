@@ -167,7 +167,8 @@
   .buy.blue:active{box-shadow:0 0 0 #0d5583}
   .buy.wide{width:100%;height:56px;font-size:1.1rem}
 
-  .fishwin{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);z-index:25;width:min(560px,92vw);display:none;flex-direction:column;gap:10px}
+  /* 미니게임 하단 패널 — 낚시·놀이기구·태권도·줄넘기·물총이 모두 같은 틀을 쓴다 */
+  .fishwin{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:25;width:min(560px,88vw);display:none;flex-direction:column;gap:10px}
   .fishwin.on{display:flex;animation:winpop .2s cubic-bezier(.2,1.3,.4,1)}
   .track{position:relative;height:58px;border-radius:15px;background:linear-gradient(180deg,rgba(20,23,29,.92),rgba(34,38,47,.92));
     border:2px solid rgba(255,255,255,.22);overflow:hidden;box-shadow:0 8px 22px rgba(0,0,0,.4),inset 0 2px 8px rgba(0,0,0,.5)}
@@ -177,9 +178,9 @@
   .fishbtns{display:flex;gap:9px}.fishbtns .buy{flex:1;height:62px;font-size:1.2rem}
   .fishmsg{text-align:center;padding:10px 16px;border-radius:14px;font-size:1.05rem;transition:background .15s;
     background:linear-gradient(180deg,rgba(44,50,61,.93),rgba(20,23,29,.95));border:1px solid rgba(255,255,255,.09);box-shadow:0 8px 22px rgba(0,0,0,.4)}
-  #ridewin{bottom:18px;width:min(380px,82vw)}#ridewin .buy{height:50px;font-size:1.05rem}
-  #rpwin{bottom:20px;width:min(380px,70vw);left:calc(50% - 60px)}#rpwin .buy{height:46px;font-size:1rem}
-  #tkwin{bottom:20px;width:min(560px,88vw)}#tkwin .buy{height:44px;font-size:.95rem}
+  #ridewin,#rpwin{width:min(400px,76vw)}
+  #ridewin .buy,#rpwin .buy{height:48px;font-size:1.02rem}
+  #tkwin .buy{height:44px;font-size:.95rem}
   .tkcards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
   .tkcards button{height:84px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:.85rem;
     background:linear-gradient(180deg,#454d5c,#2d323c);border:2px solid rgba(255,255,255,.12);box-shadow:0 5px 0 #1f232b,0 6px 14px rgba(0,0,0,.35);transition:transform .08s,box-shadow .08s}
@@ -423,7 +424,10 @@ const UPGRADES=[
 ];
 const COURT={x:44,z:62,w:12,d:24};
 const SURV={x:-78,z:-26,w:34,d:34};
+/* 놀이공원·운동 시설 위치 (지도상 좌표는 전부 여기서 관리) */
 const PARK={x:70,z:104}, WHEEL={x:30,z:124,cy:17,r:14}, CARO={x:46,z:134,r:5.2};
+const DROP={x:100,z:96,bot:2.4,top:44,brk:19,gon:null};
+const DOJO={x:72,z:56}, ROPE={x:22,z:70};
 const SDIFF=[
   {nm:"쉬움",e:"🟢",fee:100,hp:5,sp:9,max:4,pay:3,sub:"하트 5개 · 공이 느려요"},
   {nm:"보통",e:"🟡",fee:200,hp:3,sp:13,max:6,pay:6,sub:"하트 3개 · 조금 빨라요"},
@@ -618,11 +622,9 @@ function musEl(){
 function synthFallback(){ if(MU.mode==="synth") return; MU.mode="synth"; if(MU.a){ try{ MU.a.pause(); }catch(e){} } if(sndOn&&musicOn){ music.set(H.zone==="haunt"?"haunt":"field"); music.start(); } }
 function zoneTrack(){
   if(H.zone==="haunt") return "haunt";
-  if(BD.on) return "sport";
+  { const g=gameMusic(); if(g) return g; }   /* 미니게임 등록부의 music */
   if(H.zone==="home") return "town";
-  if(SV.on||FP.on||TK.on||RP.on||(RIDE.on&&(RIDE.type==="coaster"||RIDE.type==="drop"))) return "sport";
-  if(RIDE.on) return "town";
-  if(fishing||weather.kind==="rain") return "calm";
+  if(weather.kind==="rain") return "calm";
   if(guiOpen==="g-shop"||guiOpen==="g-rod"||guiOpen==="g-sell"||guiOpen==="g-pet"||guiOpen==="g-up"||guiOpen==="g-build") return "town";
   if(Math.hypot(P.x-TOWN.x,P.z-TOWN.z)<36) return "town";
   if(Math.hypot(P.x-FARM.cx,P.z-FARM.cz)<22) return "farm";
@@ -689,7 +691,7 @@ QUESTS.forEach(q=>q.id=q.k);
 
 const GOALS=["🌱 샘의 씨앗 가게(왼쪽)로 가서 씨앗을 사자!","🟫 내 밭(왼쪽 위)의 흙 옆에서 E를 눌러 심자!","⏳ 다 자라면 반짝여요. 다시 가서 수확!","💰 스티븐(가운데)에게 가서 팔자!","🦈 컨베이어(아래)에서 브레인롯을 사면 기지에서 1초마다 코인이 생겨요. 초록 패드에서 수금!","➕ 민지 선생님 퀴즈 · 🎣 낚시 · 🥚 펫 · ⛰️ 산꼭대기 보물상자도 있어요!",""];
 function drawGoal(){ const g=$("goal");
-  document.body.classList.toggle("playing",!!(TK.on||RP.on||RIDE.on||FP.on||SV.on||BD.on));
+  document.body.classList.toggle("playing",!!inGame());
   if(RP.on){ g.className="goal wx"; g.textContent="🪢 "+RP.n+"번 · 최고 "+S.ropeBest+"번"; return; }
   if(TK.on){ g.className="goal wx"; g.textContent="🥋 "+TK.round+"단계 · 최고 "+S.tkdBest+"단계"; return; }
   if(RIDE.on){ g.className="goal wx"; const s=Math.floor(now()-RIDE.t0);
@@ -1076,7 +1078,6 @@ const FP={on:false,diff:1,t0:0,end:0,score:0,pitch:0,targets:[],shots:[],lastSec
 /* ---- 놀이공원: 롤러코스터 · 대관람차 · 회전목마 ---- */
 const RIDE={on:false,type:null,t0:0,u:0,v:0,yaw:0,tick:0,ret:null,dur:0,ph:"",phT:0,gf:1,hy:0,clack:0,rum:0,air:false,hig:false,top:0,dy:0,dv:0,dr:0,ba:0,msg:""};
 const coaster={curve:null,len:0,N:640,P:[],TG:[],UP:[],SD:[],V:[],G:[],train:[],iLift:0,iCrest:0,iBrake:0,au:0,vmax:0,drop:0};
-const DROP={x:100,z:96,bot:2.4,top:44,brk:19,gon:null,seat:null};
 const CG=30, FOV0=camera.fov;
 /* ===== 롤러코스터: 실제 코스터 방식(체인 리프트 → 위치에너지 주행 → 뱅킹 → 브레이크런) ===== */
 (function coasterBuild(){
@@ -1228,7 +1229,6 @@ function placeTrain(u){ const M=new T.Matrix4();
   for(let i=0;i<5;i++){ const x=26+i*11,z=92.5; at(box(.3,3,.3,0xffffff),x,1.5,z); at(box(11,.2,.2,0xffffff),x+5.5,2.6,z); }
 })();
 /* ===================== 🥋 태권도 (동작 기억하기) ===================== */
-const DOJO={x:72,z:56};
 const TKM=[{id:"punch",nm:"지르기",e:"👊",f:440},{id:"kick",nm:"앞차기",e:"🦵",f:550},{id:"block",nm:"막기",e:"🙌",f:660},{id:"spin",nm:"돌려차기",e:"🌀",f:784}];
 const TK={on:false,ph:"",seq:[],di:0,ii:0,t:0,round:0,coins:0,master:null,cue:null,yaw:0};
 (function dojoBuild(){
@@ -1296,7 +1296,6 @@ function tkTick(t){
   else if(TK.ph==="wait"&&t>=TK.t) tkRound();
 }
 /* ===================== 🪢 줄넘기 ===================== */
-const ROPE={x:22,z:70};
 const RP={on:false,th:0,per:1.5,n:0,t0:0,rope:null,best:0,warm:0,fall:0,flash:0,mat:null};
 (function ropeBuild(){
   const R=ROPE;
@@ -1555,7 +1554,7 @@ addEventListener("keydown",e=>{ keys[e.code]=true; if(e.code==="Space"){ if(FP.o
 addEventListener("keyup",e=>{ keys[e.code]=false; });
 let lastGround=0,jumpReq=0,stepT=0,chirpT=0;
 function doJump(){ P.vy=JUMP_V*(S.up.boots?1.12:1); SFX.jump(); burst(P.x,P.y+.2,P.z,0xdddddd,5,2.5,.4); quest("jump"); }
-function jump(){ if(guiOpen||fishing||BD.on||RIDE.on) return; const on=P.y<=groundY(P.x,P.z)+.01||now()-lastGround<.12; if(on&&P.vy<=.01) doJump(); else jumpReq=now(); }
+function jump(){ if(guiOpen||!can("jump")) return; const on=P.y<=groundY(P.x,P.z)+.01||now()-lastGround<.12; if(on&&P.vy<=.01) doJump(); else jumpReq=now(); }
 $("jumpBtn").addEventListener("touchstart",e=>{ e.preventDefault(); if(FP.on) fireFP(); else jump(); },{passive:false}); $("jumpBtn").addEventListener("mousedown",()=>{ if(FP.on) fireFP(); else jump(); });
 cv.addEventListener("touchstart",e=>{ e.preventDefault(); for(const t of e.changedTouches){
   if(t.clientX<innerWidth*.5&&joy.id===null){ joy.id=t.identifier; joy.cx=t.clientX; joy.cy=t.clientY; joy.dx=joy.dy=0; const j=$("joy"); j.style.left=joy.cx+"px"; j.style.top=joy.cy+"px"; j.classList.add("on"); $("knob").style.transform="translate(-50%,-50%)"; }
@@ -1769,7 +1768,7 @@ function placeInBase(id){
 function thiefDropLoot(){ if(thief.lootObj){ thief.obj.remove(thief.lootObj); thief.lootObj=null; } thief.loot=null; }
 
 function findPrompt(){
-  if(guiOpen||fishing||BD.on||FP.on||RIDE.on||TK.on||RP.on){ curI=null; $("prompt").classList.remove("on"); return; }
+  if(guiOpen||!can("prompt")){ curI=null; $("prompt").classList.remove("on"); return; }
   let best=null,bd=1e9;
   for(const it of inter){ const d=Math.hypot(P.x-it.x,P.z-it.z); if(d<it.r&&d<bd&&it.text()!==null){ bd=d; best=it; } }
   for(const b of beltItems){ const d=Math.hypot(P.x-b.x,P.z-BELT.z); if(d<3.6&&d<bd){ bd=d; best=b.it; } }
@@ -2027,6 +2026,26 @@ function answerMath(o,btnEl){
 /* ======================= 낚시 ======================= */
 /* 낚시: 찌가 쑥 들어가면(❗) 2.4초 안에 잡기 — 6살도 되는 반응 게임 */
 let fishing=false,cast={on:false,phase:"idle",t0:0,biteAt:0,endAt:0,pos:0};
+
+/* ======================= 미니게임 등록부 =======================
+   새 미니게임을 추가하면 이 표에 한 줄만 넣으면 된다.
+   on: 진행 중인지 · move: 조이스틱 이동 허용 · jump: 점프 허용 · prompt: E 상호작용 허용
+   cam: 전용 카메라 [카메라위치, 바라보는 곳] · music: 배경음 구역 */
+const GAMES={
+  fish:{on:()=>fishing,  move:0,jump:0,prompt:0,music:"calm"},
+  bd:  {on:()=>BD.on,    move:0,jump:0,prompt:0,music:"sport"},
+  sv:  {on:()=>SV.on,    move:1,jump:1,prompt:0,music:"sport"},
+  fp:  {on:()=>FP.on,    move:1,jump:1,prompt:0,music:"sport"},
+  ride:{on:()=>RIDE.on,  move:0,jump:0,prompt:0,music:()=>RIDE.type==="coaster"||RIDE.type==="drop"?"sport":"town"},
+  tkd: {on:()=>TK.on,    move:0,jump:0,prompt:0,music:"sport",
+        cam:()=>[[DOJO.x-.5,9,DOJO.z+10.5],[DOJO.x-5.5,6,DOJO.z-4]]},
+  rope:{on:()=>RP.on,    move:0,jump:1,prompt:0,music:"sport",
+        cam:()=>[[ROPE.x+12,10.5,ROPE.z+15.5],[ROPE.x,3.2,ROPE.z]]}
+};
+function inGame(){ for(const k in GAMES) if(GAMES[k].on()) return k; return null; }
+function can(what){ const k=inGame(); return k?!!GAMES[k][what]:true; }
+function gameMusic(){ const k=inGame(); if(!k) return null; const m=GAMES[k].music; return typeof m==="function"?m():m; }
+function gameCam(){ const k=inGame(); return k&&GAMES[k].cam?GAMES[k].cam():null; }
 const BITE_WIN=2.4, BITE_PERF=.8;
 function fishReset(){ cast.on=false; cast.phase="idle"; $("fgo").textContent="🎣 던지기"; $("fmsg").classList.remove("bite"); $("fz").style.left="0%"; $("fz").style.width="0%"; $("fcore").style.width="0%"; $("fbob").style.display="none"; }
 function startFish(){ fishing=true; drawFishSell(); $("fishwin").classList.add("on"); fishReset(); $("fmsg").textContent="던지기를 누르고 기다려요. 찌가 쑥 들어가면 ❗ 잡기!"; player.rotation.y=Math.PI; beep(500,.06); }
@@ -2055,7 +2074,7 @@ function tick(){
 
   /* 이동 */
   let mx=0,mz=0;
-  if(!guiOpen&&!fishing&&!BD.on&&!RIDE.on&&!TK.on&&!RP.on){ let fx=0,fy=0; if(joy.id!==null){ fx=joy.dx; fy=-joy.dy; }
+  if(!guiOpen&&can("move")){ let fx=0,fy=0; if(joy.id!==null){ fx=joy.dx; fy=-joy.dy; }
     if(keys.KeyW||keys.ArrowUp) fy=1; if(keys.KeyS||keys.ArrowDown) fy=-1; if(keys.KeyA||keys.ArrowLeft) fx=-1; if(keys.KeyD||keys.ArrowRight) fx=1;
     const l=Math.hypot(fx,fy); if(l>1){ fx/=l; fy/=l; } const f=[-Math.sin(camYaw),-Math.cos(camYaw)],r=[-f[1],f[0]]; mx=f[0]*fy+r[0]*fx; mz=f[1]*fy+r[1]*fx; }
   P.moving=Math.hypot(mx,mz)>.05;
@@ -2193,11 +2212,11 @@ function tick(){
       if(t-RIDE.tick>.6){ RIDE.tick=t; tone(SCALE[Math.floor(Math.random()*SCALE.length)],.3,"triangle",.035); } if(t-RIDE.t0>=RIDE.dur) endRide(); }
     if(RIDE.on&&Math.floor(t*4)!==Math.floor((t-dt)*4)) drawGoal();
   }
+  const gcam=gameCam();
   if(RIDE.on){ }
-  else if(RP.on){ camera.up.set(0,1,0); camPos.set(ROPE.x+12,10.5,ROPE.z+15.5);
-    camera.position.lerp(camPos,Math.min(1,dt*5)); camera.lookAt(ROPE.x,3.2,ROPE.z); }
-  else if(TK.on){ camera.up.set(0,1,0); camPos.set(DOJO.x-.5,9,DOJO.z+10.5);
-    camera.position.lerp(camPos,Math.min(1,dt*5)); camera.lookAt(DOJO.x-5.5,6,DOJO.z-4); }
+  else if(gcam){ /* 미니게임 전용 고정 카메라 (등록부 cam) */
+    camera.up.set(0,1,0); camPos.set(gcam[0][0],gcam[0][1],gcam[0][2]);
+    camera.position.lerp(camPos,Math.min(1,dt*5)); camera.lookAt(gcam[1][0],gcam[1][1],gcam[1][2]); }
   else if(FP.on){ const dir=fpDir(); camera.position.set(P.x,P.y+4.6,P.z); camera.lookAt(P.x+dir.x,P.y+4.6+dir.y,P.z+dir.z); player.rotation.y=camYaw+Math.PI; P.ry=player.rotation.y; }
   else if(guiOpen==="g-av"){ player.rotation.y+=dt*.9; const fx=Math.sin(editYaw),fz=Math.cos(editYaw); camPos.set(P.x+fx*9,P.y+3.6,P.z+fz*9); camera.position.lerp(camPos,Math.min(1,dt*6)); camera.lookAt(P.x-fz*1.6,P.y+2.9,P.z+fx*1.6); }
   else { const hz=H.zone==="haunt",hm=H.zone==="home",D=hz?11:hm?16:17,Hy=hz?5.5:hm?8.5:8.8;
@@ -2331,7 +2350,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+window.BRA={get S(){return S;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
