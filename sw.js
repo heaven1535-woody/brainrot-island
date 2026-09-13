@@ -1,5 +1,5 @@
 /* 브레인롯 아일랜드 - 오프라인 캐시 (서비스 워커) */
-const CACHE = "brainrot-island-v13";
+const CACHE = "brainrot-island-v14";
 const FILES = ["./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png", "./"];
 
 self.addEventListener("install", e => {

@@ -1511,20 +1511,24 @@ $("avBtn").onclick=()=>{ if(fishing) return; drawAv(); editYaw=player.rotation.y
 
 /* ======================= 수학 퀴즈 ======================= */
 const MQ={diff:0,q:null,left:0,right:0,answered:false};
-const MDIFF=[{nm:"쉬움",e:"🌱",coin:50,xp:10},{nm:"보통",e:"🌟",coin:120,xp:25},{nm:"어려움",e:"🔥",coin:300,xp:50}];
+const MDIFF=[{nm:"쉬움",e:"🌱",coin:30,xp:10,d:"10까지 더하기"},{nm:"보통",e:"🌟",coin:70,xp:20,d:"20까지 더하기·빼기"},{nm:"구구단",e:"✖️",coin:250,xp:40,d:"2단~9단 곱하기"},{nm:"어려움",e:"🔥",coin:400,xp:60,d:"100까지 더하기·빼기"},{nm:"최고",e:"👑",coin:600,xp:90,d:"큰 수 계산 + 곱하기·나누기"}];
+function rnd(n){ return Math.floor(Math.random()*n); }
 function mkQ(){ const d=MQ.diff; let a,b,op;
-  if(d===0){ a=1+Math.floor(Math.random()*9); b=1+Math.floor(Math.random()*(10-a)); op="+"; }
-  else if(d===1){ op=Math.random()<.5?"+":"-"; if(op==="+"){ a=1+Math.floor(Math.random()*15); b=1+Math.floor(Math.random()*(20-a)); } else { a=2+Math.floor(Math.random()*19); b=1+Math.floor(Math.random()*(a-1)); } }
-  else { op=Math.random()<.5?"+":"-"; if(op==="+"){ a=10+Math.floor(Math.random()*80); b=1+Math.floor(Math.random()*(99-a)); } else { a=20+Math.floor(Math.random()*80); b=1+Math.floor(Math.random()*(a-1)); } }
-  const ans=op==="+"?a+b:a-b; const set=new Set([ans]); while(set.size<4){ const w=ans+(Math.floor(Math.random()*7)-3); if(w>=0&&w!==ans) set.add(w); }
+  if(d===0){ a=1+rnd(9); b=1+rnd(10-a); op="+"; }
+  else if(d===1){ op=Math.random()<.5?"+":"-"; if(op==="+"){ a=1+rnd(15); b=1+rnd(20-a); } else { a=2+rnd(19); b=1+rnd(a-1); } }
+  else if(d===2){ a=2+rnd(8); b=1+rnd(9); op="×"; }
+  else if(d===3){ op=Math.random()<.5?"+":"-"; if(op==="+"){ a=10+rnd(80); b=1+rnd(99-a); } else { a=20+rnd(80); b=1+rnd(a-1); } }
+  else { const k=rnd(4); if(k===0){ op="+"; a=10+rnd(89); b=10+rnd(89); } else if(k===1){ op="-"; a=30+rnd(70); b=10+rnd(a-10); } else if(k===2){ op="×"; a=11+rnd(14); b=2+rnd(8); } else { op="÷"; b=2+rnd(8); a=b*(2+rnd(8)); } }
+  const ans=op==="+"?a+b:op==="-"?a-b:op==="×"?a*b:a/b; const set=new Set([ans]); let guard=0;
+  while(set.size<4&&guard++<200){ let w; if(op==="×"){ const r=rnd(4); w=r===0?ans+a:r===1?ans-a:r===2?ans+b:ans-b; if(Math.random()<.4) w=ans+(rnd(7)-3); } else if(op==="÷") w=ans+(rnd(5)-2); else w=ans+(rnd(7)-3); if(w>0&&w!==ans) set.add(w); }
   return {a,b,op,ans,opts:[...set].sort(()=>Math.random()-.5)};
 }
 function startMath(){ MQ.left=5; MQ.right=0; MQ.q=null; drawMath(); openGui("g-math"); }
 function drawMath(){
   const B=$("mathBody"); B.innerHTML=""; $("mqLeft").textContent=MQ.q?"남은 문제 "+MQ.left:"";
-  if(!MQ.q){ const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>민지:</b> 안녕! 문제 5개를 풀어보자. 섬에서 코인을 제일 빨리 버는 방법이야 — 다른 일의 <b>10배</b>쯤! 다 맞히면 보너스 2배 + <b>⚡ 3분 동안 모든 코인 2배!</b>"; B.appendChild(h);
+  if(!MQ.q){ const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>민지:</b> 안녕! 문제 5개를 풀어보자. 어려운 문제일수록 코인을 <b>훨씬</b> 많이 줘 — 구구단부터는 섬에서 제일 빨리 버는 방법이야! 다 맞히면 보너스 2배 + <b>⚡ 3분 동안 모든 코인 2배!</b>"; B.appendChild(h);
     const s=document.createElement("div"); s.className="sec"; s.textContent="난이도 고르기"; B.appendChild(s); const g=document.createElement("div"); g.className="menu-grid";
-    MDIFF.forEach((d,i)=>{ const b=btn("<span>"+d.e+"</span>"+d.nm+" · "+d.coin+"코인/문제"); b.setAttribute("aria-pressed",MQ.diff===i?"true":"false"); b.onclick=()=>{ MQ.diff=i; MQ.q=mkQ(); MQ.answered=false; drawMath(); beep(600,.05); }; g.appendChild(b); }); B.appendChild(g); return; }
+    MDIFF.forEach((d,i)=>{ const b=btn("<span>"+d.e+"</span>"+d.nm+" · "+d.coin+"코인/문제<br><small style='opacity:.75'>"+d.d+"</small>"); b.setAttribute("aria-pressed",MQ.diff===i?"true":"false"); b.onclick=()=>{ MQ.diff=i; MQ.q=mkQ(); MQ.answered=false; drawMath(); beep(600,.05); }; g.appendChild(b); }); B.appendChild(g); return; }
   const q=MQ.q, box=document.createElement("div"); box.className="mq"; box.id="mqBox"; box.textContent=q.a+" "+q.op+" "+q.b+" = ?"; B.appendChild(box);
   const st=document.createElement("div"); st.className="mstat"; st.innerHTML="<span>"+MDIFF[MQ.diff].e+" "+MDIFF[MQ.diff].nm+"</span><span>맞힌 문제 "+MQ.right+" / 5</span>"; B.appendChild(st);
   const g=document.createElement("div"); g.className="mgrid";
