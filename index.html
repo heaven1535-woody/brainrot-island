@@ -83,6 +83,9 @@
   .quests .q i{display:block;height:5px;margin-top:5px;border-radius:99px;background:rgba(0,0,0,.45);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
   .quests .q i::after{content:"";display:block;height:100%;width:var(--p,0%);border-radius:99px;background:linear-gradient(90deg,var(--green-d),var(--green) 70%,#7cffc4);
     box-shadow:0 0 8px rgba(18,195,124,.6);transition:width .35s cubic-bezier(.2,.8,.3,1)}
+  .quests .q.done{background:linear-gradient(90deg,rgba(18,195,124,.22),transparent)}
+  .quests .q.done b{color:#8cf7c4}
+  .quests .q.done i::after{background:linear-gradient(90deg,var(--gold-d),var(--gold) 70%,#fff0b8);box-shadow:0 0 10px rgba(255,200,61,.7)}
   @media (max-width:760px){.lb,.quests{display:none}}
   body.playing .lb,body.playing .quests,body.playing .hotbar{display:none}
 
@@ -98,8 +101,11 @@
   @keyframes ppop{from{transform:translate(-50%,-100%) scale(.86);opacity:0}}
   .prompt.on{display:flex}.prompt.off{opacity:.55}
   .prompt:active{transform:translate(-50%,-100%) scale(.96)}
-  .prompt .key{width:38px;height:38px;border-radius:10px;background:linear-gradient(180deg,#fff,#d9dde6);color:#111;display:grid;place-items:center;font-size:1rem;font-weight:900;
+  .prompt .key{position:relative;width:38px;height:38px;border-radius:10px;background:linear-gradient(180deg,#fff,#d9dde6);color:#111;display:grid;place-items:center;font-size:1rem;font-weight:900;
     box-shadow:0 3px 0 #9aa1ad,0 4px 8px rgba(0,0,0,.3)}
+  .prompt .key::after{content:"";position:absolute;inset:-5px;border-radius:14px;border:2px solid rgba(255,255,255,.55);animation:keypulse 1.8s cubic-bezier(.2,.7,.4,1) infinite;pointer-events:none}
+  @keyframes keypulse{0%{transform:scale(.88);opacity:.85}70%,100%{transform:scale(1.3);opacity:0}}
+  .prompt.off .key::after{display:none}
   .prompt.off .key{background:linear-gradient(180deg,#9aa1ad,#6f7683);box-shadow:0 3px 0 #4d525c}
 
   .joy{position:absolute;z-index:11;display:none;pointer-events:none}.joy.on{display:block}
@@ -150,14 +156,17 @@
   .win .bd::-webkit-scrollbar{width:9px}
   .win .bd::-webkit-scrollbar-track{background:transparent}
   .win .bd::-webkit-scrollbar-thumb{background:#4c5464;border-radius:99px;border:2px solid transparent;background-clip:padding-box}
-  .sec{font-size:.72rem;color:var(--txt-2);letter-spacing:.12em;padding:8px 4px 0;font-weight:900;text-transform:uppercase}
-  .row{display:grid;grid-template-columns:50px 1fr auto;align-items:center;gap:11px;padding:9px 11px;border-radius:14px;
+  .sec{display:flex;align-items:center;gap:10px;font-size:.72rem;color:var(--txt-2);letter-spacing:.12em;padding:10px 4px 2px;font-weight:900}
+  .sec::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.18),rgba(255,255,255,0))}
+  .row{display:grid;grid-template-columns:54px 1fr auto;align-items:center;gap:11px;padding:9px 11px;border-radius:14px;
     background:linear-gradient(180deg,#2e3440,#242932);border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
-  .row .pic{width:50px;height:50px;border-radius:13px;background:linear-gradient(180deg,#434b5a,#333a46);display:grid;place-items:center;font-size:1.7rem;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 2px 6px rgba(0,0,0,.3)}
+  .row .pic{width:54px;height:54px;border-radius:14px;background:linear-gradient(180deg,#434b5a,#2c323c);display:grid;place-items:center;font-size:1.8rem;
+    border:2px solid rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 2px 6px rgba(0,0,0,.3)}
   .row .nm{font-size:1rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .row .sub{font-size:.75rem;color:var(--txt-2);font-weight:700}
-  .rar{font-size:.62rem;padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.55);letter-spacing:.06em;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+  .rar{font-size:.62rem;padding:3px 8px;border-radius:99px;background:rgba(0,0,0,.5);letter-spacing:.06em;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  .empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 14px;color:var(--txt-2);text-align:center;font-size:.9rem;line-height:1.5}
+  .empty b{font-size:3rem;line-height:1;filter:grayscale(.3) drop-shadow(0 4px 10px rgba(0,0,0,.4))}
   .buy{min-width:98px;height:46px;padding:0 14px;border-radius:13px;font-size:.95rem;display:flex;align-items:center;justify-content:center;gap:5px;font-variant-numeric:tabular-nums;
     background:linear-gradient(180deg,var(--green),var(--green-d));box-shadow:0 4px 0 #076140,0 5px 12px rgba(0,0,0,.3);transition:transform .08s,box-shadow .08s}
   .buy:active{transform:translateY(4px);box-shadow:0 0 0 #076140,0 2px 6px rgba(0,0,0,.3)}
@@ -685,7 +694,8 @@ function quest(k,amt){
   if(changed) drawQuests();
 }
 function drawQuests(){
-  $("quests").innerHTML='<div class="h">퀘스트</div>'+S.quests.map(q=>{ const d=byId(QUESTS,q.k); return '<div class="q"><b>'+d.e+" "+d.nm+" "+Math.min(q.p,q.n)+"/"+q.n+'<span>+'+num(q.r)+'</span></b><i style="--p:'+Math.min(100,q.p/q.n*100)+'%"></i></div>'; }).join("");
+  $("quests").innerHTML='<div class="h">퀘스트</div>'+S.quests.map(q=>{ const d=byId(QUESTS,q.k),done=q.p>=q.n;
+    return '<div class="q'+(done?" done":"")+'"><b>'+d.e+" "+d.nm+" "+(done?"✓ 완료":Math.min(q.p,q.n)+"/"+q.n)+'<span>+'+num(q.r)+'</span></b><i style="--p:'+Math.min(100,q.p/q.n*100)+'%"></i></div>'; }).join("");
 }
 QUESTS.forEach(q=>q.id=q.k);
 
@@ -737,12 +747,13 @@ function drawInv(){
   if(S.can>0){ any=true; const on=S.sel==="can"; rowBtn("💧","물뿌리개 ×"+S.can,"자라는 식물 8초 단축",on?"내려놓기":"들기",on?"blue":"",()=>{ S.sel=on?null:"can"; beep(600,.05); }); }
   if(S.up.racket){ any=true; B.appendChild(row("🏸","배드민턴 라켓","최고 랠리 "+S.badBest+" · 배드민턴장에서 시합")); }
   if(S.shuttles>0){ any=true; B.appendChild(row("🪶","셔틀콕 ×"+S.shuttles,"시합 한 번에 1개")); }
-  if(!any){ const d=document.createElement("div"); d.className="help"; d.textContent="샘의 씨앗 가게에서 씨앗을 사면 여기 들어와요."; B.appendChild(d); }
+  if(!any) B.appendChild(emptyBox("🌱","아직 들 수 있는 게 없어요.<br>샘의 씨앗 가게에서 씨앗을 사보세요!"));
   S.eggs.forEach(eg=>{ const e=byId(EGGS,eg.id); const r=row(e.e,e.nm,Math.max(0,Math.ceil(eg.at-now()))+"초 뒤 부화"); B.appendChild(r); });
   sec("🧺 수확물 · 물고기 (가방)");
   const g={}; for(const it of S.goods){ g[it.nm]=g[it.nm]||{e:it.e,n:0,v:0,k:it.k,id:it.id}; g[it.nm].n++; g[it.nm].v+=priceOf(it); }
-  if(!Object.keys(g).length){ const d=document.createElement("div"); d.className="help"; d.textContent="밭에서 수확하거나 낚시하면 여기 들어와요. 스티븐에게 팔 수 있어요."; B.appendChild(d); }
-  for(const k in g){ const r=row(g[k].e,k+" ×"+g[k].n,"팔면 "+num(g[k].v)+(hot({k:g[k].k,id:g[k].id||""})>=1.5?" 🔥":"")); if(S.house.storage){ const b=btn("창고에 넣기","blue"); b.disabled=S.store.length>=storeCap(); b.onclick=()=>{ moveGoods(S.goods,S.store,it=>it.nm===k,storeCap()); drawInv(); drawHotbar(); save(); }; r.appendChild(b); } B.appendChild(r); }
+  if(!Object.keys(g).length) B.appendChild(emptyBox("🧺","가방이 비었어요.<br>밭에서 수확하거나 낚시를 해보세요!"));
+  for(const k in g){ const m=hot({k:g[k].k,id:g[k].id||""});
+    const r=row(g[k].e,k+" ×"+g[k].n+(m>=1.5?" "+rarTag("🔥 ×"+m.toFixed(2),"#ff8a80"):m<=.85?" "+rarTag("×"+m.toFixed(2)+" 쌈","#82d9ff"):""),"팔면 "+num(g[k].v),m>=1.5?"#ff5147":null); if(S.house.storage){ const b=btn("창고에 넣기","blue"); b.disabled=S.store.length>=storeCap(); b.onclick=()=>{ moveGoods(S.goods,S.store,it=>it.nm===k,storeCap()); drawInv(); drawHotbar(); save(); }; r.appendChild(b); } B.appendChild(r); }
   if(S.house.storage){
     sec("🏚 창고 ("+S.store.length+" / "+storeCap()+")");
     const two=document.createElement("div"); two.className="two";
@@ -1782,11 +1793,18 @@ $("prompt").addEventListener("touchstart",e=>{ e.preventDefault(); e.stopPropaga
 
 /* ======================= 가게 GUI ======================= */
 const coinSvg='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#e0a92a"/><circle cx="12" cy="12" r="8" fill="#ffc83d"/></svg>';
-function row(pic,nm,sub){ const r=document.createElement("div"); r.className="row"; r.innerHTML='<div class="pic">'+pic+'</div><div><div class="nm">'+nm+'</div><div class="sub">'+sub+'</div></div>'; return r; }
+/* rc를 주면 아이템 칸에 등급 색 테두리+발광 (다른 수집형 게임처럼 등급이 한눈에) */
+function row(pic,nm,sub,rc){ const r=document.createElement("div"); r.className="row";
+  const st=rc?' style="border-color:'+rc+';box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 14px '+rc+'55,0 2px 6px rgba(0,0,0,.3)"':'';
+  r.innerHTML='<div class="pic"'+st+'>'+pic+'</div><div><div class="nm">'+nm+'</div><div class="sub">'+sub+'</div></div>'; return r; }
+function rarTag(txt,c){ return '<span class="rar" style="color:'+c+';background:'+c+'22;box-shadow:inset 0 0 0 1px '+c+'66">'+txt+'</span>'; }
+function emptyBox(e,txt){ const d=document.createElement("div"); d.className="empty"; d.innerHTML="<b>"+e+"</b><span>"+txt+"</span>"; return d; }
 function btn(html,cls){ const b=document.createElement("button"); b.className="buy"+(cls?" "+cls:""); b.innerHTML=html; return b; }
 function drawShop(){
   const L=$("shopList"); L.innerHTML="";
-  for(const s of SEEDS){ const left=S.stock[s.id]||0, r=row(s.e,s.nm+' <span class="rar" style="color:'+s.tc+'">'+s.tier+'</span>',Math.round(s.grow*growMul())+'초 · 팔면 '+num(s.sell)+' · 남은 '+left+'개');
+  for(const s of SEEDS){ const left=S.stock[s.id]||0, m=mkMul(s.id);
+    const r=row(s.e,s.nm+' '+rarTag(s.tier,s.tc)+(m>=1.5?' '+rarTag("🔥 지금 비싸요","#ff8a80"):""),
+      Math.round(s.grow*growMul())+'초 · 지금 팔면 '+num(Math.round(s.sell*m))+' · 남은 '+left+'개',s.tc);
     const b=btn(coinSvg+num(s.cost)); b.disabled=left<=0; b.onclick=()=>{ if(!pay(s.cost)) return; S.stock[s.id]--; S.seeds[s.id]=(S.seeds[s.id]||0)+1; S.sel=s.id; drawHotbar(); drawShop(); note(s.e,s.nm+" 씨앗 샀어!"); beep(700,.08); advance(1); save(); }; r.appendChild(b); L.appendChild(r); }
   const sec=document.createElement("div"); sec.className="sec"; sec.textContent="도구"; L.appendChild(sec);
   for(const g of GEAR){ const r=row(g.e,g.nm,g.sub); const b=btn(coinSvg+num(g.cost));
@@ -1796,7 +1814,9 @@ function drawShop(){
 }
 function drawRod(){
   const L=$("rodList"); L.innerHTML="";
-  RODS.forEach((r,i)=>{ const st=i<S.rod?"가지고 있음":i===S.rod?"지금 쓰는 중":""; const rw=row(r.e,r.nm,'희귀 물고기 확률 ×'+r.luck+' · 입질이 더 빨리 와요'+(st?' · '+st:'')); const b=btn("");
+  const RC=["#8f98a3","#2fb4ff","#b57bff","#ffb52e","#ff5aa0"];
+  RODS.forEach((r,i)=>{ const st=i<S.rod?"가지고 있음":i===S.rod?"지금 쓰는 중":"";
+    const rw=row(r.e,r.nm+(i===S.rod?' '+rarTag("사용 중","#12c37c"):""),'희귀 물고기 확률 ×'+r.luck+' · 입질이 더 빨리 와요'+(st?' · '+st:''),i<=S.rod?RC[i]:null); const b=btn("");
     if(i<=S.rod){ b.textContent=i===S.rod?"사용 중":"✓"; b.disabled=true; } else if(i===S.rod+1){ b.innerHTML=coinSvg+num(RODS[S.rod].up); b.onclick=()=>{ if(!pay(RODS[S.rod].up)) return; S.rod++; drawRod(); note(r.e,r.nm+" 획득!","gold"); chime(620,820,1100); gainXp(30); save(); }; } else { b.textContent="잠김"; b.disabled=true; }
     rw.appendChild(b); L.appendChild(rw); });
 }
@@ -1856,8 +1876,10 @@ function drawSell(){
   s0.textContent="📈 지금 최고가: "+top.x.e+" "+top.x.nm+" ×"+top.m.toFixed(2)+" · 다음 시세 "+Math.max(0,Math.ceil(S.mkt.t-now()))+"초 뒤";
   L.appendChild(s0);
   for(const it of S.goods){ const v=priceOf(it); const m=hot(it); g[it.nm]=g[it.nm]||{e:it.e,n:0,v:0,m}; g[it.nm].n++; g[it.nm].v+=v; tot+=v; }
-  for(const k in g){ const m=g[k].m, tag=m>=1.5?'<span class="rar" style="color:#ff8a80">🔥 ×'+m.toFixed(2)+'</span>':m<=.85?'<span class="rar" style="color:#82d9ff">×'+m.toFixed(2)+' 쌈</span>':'<span class="rar">×'+m.toFixed(2)+'</span>';
-    const r=row(g[k].e,k+' ×'+g[k].n+' '+tag,''); const p=document.createElement("div"); p.className="sub"; p.style.cssText="font-size:1rem;color:var(--gold)"; p.textContent=num(g[k].v); r.appendChild(p); L.appendChild(r); }
+  if(!S.goods.length) L.appendChild(emptyBox("🎒","가방이 비었어요.<br>밭에서 작물을 수확하거나 낚시를 해보세요!"));
+  for(const k in g){ const m=g[k].m, c=m>=1.5?"#ff8a80":m<=.85?"#82d9ff":"#aab1bf";
+    const tag=rarTag((m>=1.5?"🔥 ":"")+"×"+m.toFixed(2)+(m<=.85?" 쌈":""),c);
+    const r=row(g[k].e,k+' ×'+g[k].n+' '+tag,'',m>=1.5?"#ff5147":null); const p=document.createElement("div"); p.className="sub"; p.style.cssText="font-size:1.05rem;font-weight:900;color:var(--gold)"; p.textContent=num(g[k].v); r.appendChild(p); L.appendChild(r); }
   if(bonus("sell")>0){ const s=document.createElement("div"); s.className="sec"; s.textContent="펫 보너스 +"+Math.round(bonus("sell")*100)+"% 적용됨"; L.appendChild(s); }
   const b=btn(coinSvg+"전부 팔기 · "+num(tot),"wide"); b.disabled=!tot; b.onclick=()=>{ sellGoods(()=>true); closeGui(); }; L.appendChild(b);
   if(S.store.length){ const st=S.store.reduce((a,it)=>a+priceOf(it),0); const b2=btn("🏚 창고 물건 전부 팔기 · "+num(st),"wide blue"); b2.onclick=()=>{ const tmp=S.goods; S.goods=S.store; S.store=[]; sellGoods(()=>true); S.goods=tmp; drawHotbar(); closeGui(); }; L.appendChild(b2); }
