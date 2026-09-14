@@ -2119,9 +2119,20 @@ const LETTERS=[
   {id:"L9",f:"🥋",nm:"사범 도준",ti:"수련은 게을리 말 것",
    tx:"동작을 외우는 건 머리 운동이에요.<br>오늘도 한 단계만 더 올라가 봅시다!",g:{coin:1.1}}
 ];
-/* ---- 📝 블로그 편지: 부모님이 블로그에 '편지' 라벨로 글을 쓰면 우체통으로 배달 ---- */
-const MAILCFG={blog:localStorage.getItem("bra2:blog")||"lazyboneslife.blogspot.com",label:localStorage.getItem("bra2:blogtag")||"아빠의 편지"};
-let blogMail=[]; try{ blogMail=JSON.parse(localStorage.getItem("bra2:blogmail")||"[]"); }catch(e){ blogMail=[]; }
+/* ---- 📝 가족 편지 (블로그 → 우체통) ----
+   개인 편지라서 기본은 꺼져 있다. 블로그 주소는 게임 코드에 넣지 않고,
+   어른이 '이 기기에서' 켰을 때만 그 기기 저장소에 둔다.
+   → 게임 링크나 파일을 친구에게 공유해도 친구 기기에는 편지가 절대 나오지 않는다. */
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+const FAMILY_KEYS=["bra2:blog","bra2:blogtag","bra2:blogmail","bra2:family"];
+const FAMILY_ON=lsGet("bra2:family")==="1"&&!!lsGet("bra2:blog");
+/* 예전 버전이 남긴 편지 사본·주소는 켜기 표시가 없으면 전부 지운다 */
+if(!FAMILY_ON) FAMILY_KEYS.forEach(lsDel);
+const MAILCFG={blog:FAMILY_ON?lsGet("bra2:blog"):"",label:(FAMILY_ON&&lsGet("bra2:blogtag"))||"편지"};
+function familyOn(){ return !!MAILCFG.blog; }
+let blogMail=[]; if(FAMILY_ON){ try{ blogMail=JSON.parse(lsGet("bra2:blogmail")||"[]"); }catch(e){ blogMail=[]; } }
 function stripHtml(h){
   let t=String(h||"").replace(/<br\s*\/?>/gi,"\n").replace(/<\/(p|div|h\d|li)>/gi,"\n").replace(/<li[^>]*>/gi,"· ")
     .replace(/<script[\s\S]*?<\/script>/gi,"").replace(/<style[\s\S]*?<\/style>/gi,"").replace(/<[^>]*>/g,"");
@@ -2153,7 +2164,8 @@ async function fetchBlogMail(force){
   if(!MAILCFG.blog) return; if(!force&&now()-blogTried<120) return; blogTried=now();
   try{
     const u="https://"+MAILCFG.blog+"/feeds/posts/default/-/"+encodeURIComponent(MAILCFG.label)+"?alt=json-in-script&max-results=40";
-    const j=await jsonp(u); const en=(j.feed&&j.feed.entry)||[];
+    const j=await jsonp(u); if(!familyOn()) return;   /* 받아오는 사이에 꺼졌으면 저장하지 않는다 */
+    const en=(j.feed&&j.feed.entry)||[];
     const before=unreadBlog().length;
     const list=en.map(e=>{ const html=(e.content&&e.content.$t)||(e.summary&&e.summary.$t)||"";
       const {text,gifts}=parseGifts(stripHtml(html));
@@ -2163,7 +2175,7 @@ async function fetchBlogMail(force){
     }).filter(x=>x.id);
     /* 오래된 편지부터 순서대로 읽도록 뒤집는다 */
     list.reverse();
-    if(list.length){ blogMail=list; try{ localStorage.setItem("bra2:blogmail",JSON.stringify(list)); }catch(e){} }
+    if(list.length){ blogMail=list; lsSet("bra2:blogmail",JSON.stringify(list)); }
     const after=unreadBlog().length;
     if(after>before&&after>0&&!guiOpen) note("💌","편지가 "+after+"통 와 있어요! 우체통으로 가보세요","gold");
     if(guiOpen==="g-mail"&&!vidOn) drawMail(); achBadge();   /* 영상 보는 중엔 다시 그리지 않음 */
@@ -2174,8 +2186,8 @@ function mailDate(d){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d||""); return m?(
 function today(){ return new Date().toDateString(); }
 function mailReady(){ return S.mailDay!==today()||unreadBlog().length>0; }
 /* 우체통을 누르면 '편지 목록'부터 보여준다 (MAILV.open이 있으면 그 편지를 펼친 상태) */
-const MAILV={open:null};
-function openMail(){ MAILV.open=null; drawMail(); openGui("g-mail"); }
+const MAILV={open:null,parent:null};
+function openMail(){ MAILV.open=null; MAILV.parent=null; drawMail(); openGui("g-mail"); }
 function gotOf(id){ const v=S.readMail[id]; return (v&&v.got)?v.got:[]; }
 /* 가족 편지 한 통 펼치기 — 처음 여는 편지면 선물을 주고 축하 연출 */
 function openBlogLetter(id){
@@ -2278,18 +2290,61 @@ function mailRow(p,unread,next){
   const b=btn(unread?"열기":"읽기",unread?"":"blue"); b.onclick=()=>openBlogLetter(p.id); r.appendChild(b); return r;
 }
 function drawMail(){ const B=$("mailBody"); B.innerHTML=""; vidOn=false;
-  if(MAILV.open) drawMailRead(B); else drawMailList(B);
+  if(MAILV.parent) drawMailParent(B); else if(MAILV.open) drawMailRead(B); else drawMailList(B);
 }
-/* 블로그 주소·라벨은 화면에 안 보이게 두고, 필요하면 어른이 콘솔에서 바꾼다 */
+/* 가족 편지 켜기 — 주소는 이 기기 저장소에만 */
 async function setBlog(b,t){
-  b=String(b||"").trim().replace(/^https?:\/\//,"").replace(/\/.*$/,""); t=String(t||MAILCFG.label).trim();
-  if(!b) return "블로그 주소를 입력하세요";
+  b=String(b||"").trim().replace(/^https?:\/\//,"").replace(/\/.*$/,""); t=String(t||MAILCFG.label).trim()||"편지";
+  if(!b){ familyOff(); return "껐어요"; }
   MAILCFG.blog=b; MAILCFG.label=t;
-  localStorage.setItem("bra2:blog",b); localStorage.setItem("bra2:blogtag",t);
+  lsSet("bra2:blog",b); lsSet("bra2:blogtag",t); lsSet("bra2:family","1");
   blogMail=[]; blogTried=0; await fetchBlogMail(true);
   if(guiOpen==="g-mail") drawMail();
   return blogMail.length?("연결 성공 — "+blogMail.length+"통"):"편지를 못 찾았어요 (주소·라벨 확인)";
 }
+/* 가족 편지 끄기 — 이 기기에 남은 주소·편지 사본까지 전부 지운다 */
+function familyOff(){
+  MAILCFG.blog=""; blogMail=[]; blogTried=0; FAMILY_KEYS.forEach(lsDel);
+  if(S.mail&&S.mail.blog) S.mail=null;
+  MAILV.open=null; stopVid(); save();
+}
+/* 어른 전용 설정 화면 — 편지함 제목을 빠르게 5번 누르면 곱셈 확인 뒤에 열린다 */
+function drawMailParent(B){
+  const P=MAILV.parent;
+  const back=document.createElement("button"); back.className="back"; back.textContent="← 편지함으로";
+  back.onclick=()=>{ MAILV.parent=null; drawMail(); }; B.appendChild(back);
+  if(P.step==="gate"){
+    B.appendChild(help2("<b>🔒 어른 확인</b><br>아래 곱셈의 답을 적어 주세요."));
+    const r=document.createElement("div"); r.className="namerow";
+    r.innerHTML='<input id="pgIn" inputmode="numeric" autocomplete="off" placeholder="'+P.a+' × '+P.b+' = ?">';
+    const ok=btn("확인"); r.appendChild(ok); B.appendChild(r);
+    ok.onclick=()=>{ if(parseInt($("pgIn").value,10)===P.a*P.b){ MAILV.parent={step:"set"}; drawMail(); }
+      else { MAILV.parent=null; drawMail(); bad(); } };
+    return;
+  }
+  const on=familyOn();
+  B.appendChild(help2(on
+    ? "<b>💌 가족 편지가 이 기기에서 켜져 있어요.</b><br>주소는 게임 파일이 아니라 <b>이 기기에만</b> 저장돼요. 게임 링크를 친구에게 보내도 친구 기기에는 편지가 나오지 않아요.<br>친구가 이 기기로 같이 놀 때는 잠깐 꺼 두세요."
+    : "<b>🙈 가족 편지가 꺼져 있어요.</b><br>켜면 <b>이 기기에서만</b> 블로그 편지가 우체통으로 와요. 다른 기기·친구에게는 보이지 않아요."));
+  const r1=document.createElement("div"); r1.className="namerow";
+  r1.innerHTML='<input id="blogIn" autocomplete="off" placeholder="블로그 주소 (예: 내블로그.blogspot.com)">'; B.appendChild(r1);
+  const r2=document.createElement("div"); r2.className="namerow";
+  r2.innerHTML='<input id="tagIn" autocomplete="off" placeholder="라벨 이름">'; B.appendChild(r2);
+  $("blogIn").value=on?MAILCFG.blog:""; $("tagIn").value=on?MAILCFG.label:"";
+  const st=help2(on?"지금 <b>"+blogMail.length+"통</b>을 불러와 있어요.":"주소와 라벨을 넣고 켜 주세요."); st.id="blogStat"; B.appendChild(st);
+  const go=btn(on?"🔄 다시 불러오기":"💌 이 기기에서 켜기","wide");
+  go.onclick=async()=>{ $("blogStat").textContent="불러오는 중…"; const msg=await setBlog($("blogIn").value,$("tagIn").value);
+    MAILV.parent={step:"set"}; if(guiOpen==="g-mail") drawMail(); if($("blogStat")) $("blogStat").textContent=msg; beep(700,.08); };
+  B.appendChild(go);
+  if(on){ const off=btn("🙈 이 기기에서 끄고 편지 지우기","wide");
+    off.style.background="linear-gradient(180deg,#ff8a7d,#e2564a)"; off.style.boxShadow="0 4px 0 #b03b31";
+    off.onclick=()=>{ familyOff(); MAILV.parent={step:"set"}; drawMail(); note("🙈","이 기기에서 가족 편지를 껐어요"); };
+    B.appendChild(off); }
+}
+(function mailSecret(){ const hd=document.querySelector("#g-mail .hd"); if(!hd) return; let n=0,t0=0;
+  hd.addEventListener("click",e=>{ if(e.target.closest("[data-close]")) return;
+    const t=now(); if(t-t0>2.5){ n=0; t0=t; } n++;
+    if(n>=5){ n=0; MAILV.parent={step:"gate",a:12+Math.floor(Math.random()*8),b:13+Math.floor(Math.random()*7)}; drawMail(); } }); })();
 function rideMsg(m){ if(RIDE.msg===m) return; RIDE.msg=m; $("rmsg").textContent=m; }
 function startRide(type){
   const fee={coaster:30,wheel:20,caro:10,drop:25}[type]; if(!pay(fee)) return;
@@ -3002,7 +3057,7 @@ $("menuApps").addEventListener("click",e=>{ const b=e.target.closest(".app"); if
     else if(g==="g-inv"){ $("invBtn").click(); }
     else if(g==="g-book"){ drawBook(); openGui("g-book"); }
     else if(g==="g-ach"){ achDraw(); openGui("g-ach"); }
-    else if(g==="g-mail"){ fetchBlogMail(); drawMail(); openGui("g-mail"); }
+    else if(g==="g-mail"){ fetchBlogMail(); openMail(); }
     else { drawMarket(); openGui("g-market"); } return; }
   if(b.dataset.page){ menuPage(b.dataset.page); return; }
   if(b.dataset.act==="snd") toggleSnd();
