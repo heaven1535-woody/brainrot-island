@@ -2126,12 +2126,39 @@ const LETTERS=[
 function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
 function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
-const FAMILY_KEYS=["bra2:blog","bra2:blogtag","bra2:blogmail","bra2:family"];
-const FAMILY_ON=lsGet("bra2:family")==="1"&&!!lsGet("bra2:blog");
+const FAMILY_KEYS=["bra2:feed","bra2:blog","bra2:blogtag","bra2:blogmail","bra2:family"];
+/* ---- RSS 피드 주소 한 칸으로 설정 ----
+   RSS 리더에 넣는 블로그스팟 피드 주소를 그대로 받는다. 브라우저는 다른 사이트의 RSS(XML)를
+   직접 못 읽으므로(블로그가 막음), 같은 피드를 블로그가 허용하는 JSON 방식으로 바꿔 읽는다.
+   받는 형태: …/feeds/posts/default[/-/라벨][?alt=rss]  ·  …/search/label/라벨  ·  …/rss.xml  ·  블로그 주소만 */
+function parseFeed(input){
+  let s=String(input||"").trim(); if(!s) return null;
+  if(!/^https?:\/\//i.test(s)) s="https://"+s;
+  let u; try{ u=new URL(s); }catch(e){ return {bad:true}; }
+  let path=u.pathname; try{ path=decodeURIComponent(path); }catch(e){}
+  const host=u.hostname; if(!host||host.indexOf(".")<0) return {bad:true};
+  let m;
+  if((m=path.match(/^\/feeds\/posts\/(?:default|summary)\/-\/(.+?)\/?$/))) return {host,label:m[1]};
+  if((m=path.match(/^\/search\/label\/(.+?)\/?$/))) return {host,label:m[1]};
+  if(/^\/feeds\/posts\/(?:default|summary)\/?$/.test(path)||/^\/(?:rss|atom)\.xml$/.test(path)||path==="/"||path==="") return {host,label:null};
+  return {bad:true};
+}
+function canonFeed(p){ return "https://"+p.host+"/feeds/posts/default"+(p.label?"/-/"+p.label:""); }
+function feedJsonUrl(start,n){
+  const lab=MAILCFG.label?"/-/"+MAILCFG.label.split("/").map(encodeURIComponent).join("/"):"";
+  return "https://"+MAILCFG.host+"/feeds/posts/default"+lab+"?alt=json-in-script&max-results="+n+"&start-index="+start;
+}
+const MAILCFG={feed:"",host:"",label:null};
+function applyFeed(p){ MAILCFG.feed=p?canonFeed(p):""; MAILCFG.host=p?p.host:""; MAILCFG.label=p?p.label:null; }
+/* 켜기 표시가 있어야만 동작. v30(블로그+라벨 두 칸)으로 켜 둔 기기는 피드 주소로 옮겨 준다 */
+let FAMILY_ON=lsGet("bra2:family")==="1";
+if(FAMILY_ON&&!lsGet("bra2:feed")&&lsGet("bra2:blog")){
+  const b=lsGet("bra2:blog"), t=lsGet("bra2:blogtag"); lsSet("bra2:feed","https://"+b+"/feeds/posts/default"+(t?"/-/"+t:"")); }
+if(FAMILY_ON){ const p=parseFeed(lsGet("bra2:feed")); if(p&&!p.bad) applyFeed(p); else FAMILY_ON=false; }
+lsDel("bra2:blog"); lsDel("bra2:blogtag");
 /* 예전 버전이 남긴 편지 사본·주소는 켜기 표시가 없으면 전부 지운다 */
 if(!FAMILY_ON) FAMILY_KEYS.forEach(lsDel);
-const MAILCFG={blog:FAMILY_ON?lsGet("bra2:blog"):"",label:(FAMILY_ON&&lsGet("bra2:blogtag"))||"편지"};
-function familyOn(){ return !!MAILCFG.blog; }
+function familyOn(){ return !!MAILCFG.host; }
 let blogMail=[]; if(FAMILY_ON){ try{ blogMail=JSON.parse(lsGet("bra2:blogmail")||"[]"); }catch(e){ blogMail=[]; } }
 function stripHtml(h){
   let t=String(h||"").replace(/<br\s*\/?>/gi,"\n").replace(/<\/(p|div|h\d|li)>/gi,"\n").replace(/<li[^>]*>/gi,"· ")
@@ -2142,17 +2169,6 @@ function stripHtml(h){
 /* 글 안의 유튜브 영상 아이디를 뽑아낸다 */
 function ytIds(h){ const out=[],re=/(?:youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([A-Za-z0-9_-]{6,20})/g; let m;
   while((m=re.exec(String(h||"")))) if(out.indexOf(m[1])<0) out.push(m[1]); return out.slice(0,3); }
-/* [선물 코인 500] [선물 씨앗 딸기 3] [선물 알] [선물 부스트] */
-function parseGifts(txt){ const gifts=[]; const clean=txt.replace(/\[\s*선물\s*([^\]]{1,40})\]/g,(m,g)=>{ gifts.push(g.trim()); return ""; });
-  return {text:clean.replace(/\n{3,}/g,"\n\n").trim(),gifts}; }
-function giveGift(g){
-  let m=g.match(/코인\s*([0-9,]+)/); if(m){ const n=Math.min(100000,parseInt(m[1].replace(/,/g,""))||0); if(n>0){ earn(n,true); return num(n)+" 코인"; } }
-  m=g.match(/씨앗\s*(\S+)\s*([0-9]+)?/); if(m){ const s=SEEDS.find(x=>x.nm===m[1]||x.id===m[1]); if(s){ const n=Math.min(20,parseInt(m[2]||"1")); S.seeds[s.id]=(S.seeds[s.id]||0)+n; drawHotbar(); return s.e+" "+s.nm+" 씨앗 "+n+"개"; } }
-  if(/알/.test(g)&&S.eggs.length<4){ const e=EGGS[0]; S.eggs.push({id:e.id,at:now()+e.time}); drawHotbar(); return e.e+" "+e.nm; }
-  if(/부스트|2배/.test(g)){ S.boostUntil=now()+180; return "⚡ 3분 코인 2배"; }
-  if(/레시피/.test(g)){ const un=DISHES.filter(d=>!knowRecipe(d)); if(un.length){ learnRecipe(un[0].id,true); return "📜 "+un[0].nm+" 레시피"; } }
-  return null;
-}
 function jsonp(url){ return new Promise((res,rej)=>{ const n="__bm"+Math.random().toString(36).slice(2);
   const s=document.createElement("script"); let done=false;
   window[n]=d=>{ done=true; res(d); try{ delete window[n]; s.remove(); }catch(e){} };
@@ -2160,26 +2176,29 @@ function jsonp(url){ return new Promise((res,rej)=>{ const n="__bm"+Math.random(
   s.src=url+"&callback="+n; document.head.appendChild(s);
   setTimeout(()=>{ if(!done){ rej(new Error("timeout")); try{ delete window[n]; s.remove(); }catch(e){} } },9000); }); }
 let blogTried=0;
+/* 피드를 읽어 편지 목록으로 — 받아온 글 수를 돌려준다(실패하면 -1).
+   40통 제한 없이 150통씩 끝까지 넘겨 받는다(최대 1500통). 선물 태그 같은 건 읽지 않는다. */
+const FEED_PAGE=150, FEED_MAXPAGES=10;
 async function fetchBlogMail(force){
-  if(!MAILCFG.blog) return; if(!force&&now()-blogTried<120) return; blogTried=now();
+  if(!familyOn()) return -1; if(!force&&now()-blogTried<120) return -1; blogTried=now();
   try{
-    const u="https://"+MAILCFG.blog+"/feeds/posts/default/-/"+encodeURIComponent(MAILCFG.label)+"?alt=json-in-script&max-results=40";
-    const j=await jsonp(u); if(!familyOn()) return;   /* 받아오는 사이에 꺼졌으면 저장하지 않는다 */
-    const en=(j.feed&&j.feed.entry)||[];
+    const en=[];
+    for(let pg=0;pg<FEED_MAXPAGES;pg++){
+      const j=await jsonp(feedJsonUrl(1+pg*FEED_PAGE,FEED_PAGE)); if(!familyOn()) return -1;   /* 받는 사이에 꺼졌으면 버린다 */
+      const part=(j.feed&&j.feed.entry)||[]; en.push(...part); if(part.length<FEED_PAGE) break; }
     const before=unreadBlog().length;
     const list=en.map(e=>{ const html=(e.content&&e.content.$t)||(e.summary&&e.summary.$t)||"";
-      const {text,gifts}=parseGifts(stripHtml(html));
       return { id:(e.id&&e.id.$t||"").slice(-24), t:(e.title&&e.title.$t)||"편지",
         who:(()=>{ const w=(e.author&&e.author[0]&&e.author[0].name&&e.author[0].name.$t)||""; return (!w||w==="Unknown"||/^(anonymous|unknown)$/i.test(w))?"아빠":w; })(),
-        d:(e.published&&e.published.$t||"").slice(0,10), tx:text, gifts, yt:ytIds(html) };
+        d:(e.published&&e.published.$t||"").slice(0,10), tx:stripHtml(html).replace(/\n{3,}/g,"\n\n").trim(), yt:ytIds(html) };
     }).filter(x=>x.id);
-    /* 오래된 편지부터 순서대로 읽도록 뒤집는다 */
-    list.reverse();
+    list.reverse();   /* 저장은 오래된 순, 화면은 최신순 */
     if(list.length){ blogMail=list; lsSet("bra2:blogmail",JSON.stringify(list)); }
     const after=unreadBlog().length;
     if(after>before&&after>0&&!guiOpen) note("💌","편지가 "+after+"통 와 있어요! 우체통으로 가보세요","gold");
-    if(guiOpen==="g-mail"&&!vidOn) drawMail(); achBadge();   /* 영상 보는 중엔 다시 그리지 않음 */
-  }catch(e){ /* 오프라인이면 조용히 넘어감 */ }
+    if(guiOpen==="g-mail"&&!vidOn&&!MAILV.parent) drawMail(); achBadge();   /* 영상 보는 중·설정 중엔 다시 그리지 않음 */
+    return list.length;
+  }catch(e){ return -1; /* 오프라인이면 조용히 넘어감 */ }
 }
 function unreadBlog(){ return blogMail.filter(m=>!S.readMail[m.id]); }
 function mailDate(d){ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(d||""); return m?(+m[2])+"월 "+(+m[3])+"일":(d||""); }
@@ -2188,13 +2207,11 @@ function mailReady(){ return S.mailDay!==today()||unreadBlog().length>0; }
 /* 우체통을 누르면 '편지 목록'부터 보여준다 (MAILV.open이 있으면 그 편지를 펼친 상태) */
 const MAILV={open:null,parent:null};
 function openMail(){ MAILV.open=null; MAILV.parent=null; drawMail(); openGui("g-mail"); }
-function gotOf(id){ const v=S.readMail[id]; return (v&&v.got)?v.got:[]; }
-/* 가족 편지 한 통 펼치기 — 처음 여는 편지면 선물을 주고 축하 연출 */
+/* 가족 편지 한 통 펼치기 — 선물·보상 없이 편지만. 처음 열 때만 작은 축하 연출 */
 function openBlogLetter(id){
   const m=blogMail.find(x=>x.id===id); if(!m) return;
   const fresh=!S.readMail[id];
-  if(fresh){ const got=[]; for(const g of m.gifts){ const r=giveGift(g); if(r) got.push(r); }
-    S.readMail[id]={got,at:today()}; gainXp(20);
+  if(fresh){ S.readMail[id]={at:today()};
     SFX.fanfare(); burst(P.x,P.y+4,P.z,0xff9ad5,26,8,1); note("💌",m.who+"의 편지를 열었어요!","gold"); save(); }
   else beep(650,.06);
   MAILV.open={blog:id}; drawMail(); $("mailBody").scrollTop=0;
@@ -2249,7 +2266,7 @@ function drawMailRead(B){
   if(o.blog){ const bm=blogMail.find(x=>x.id===o.blog);
     /* 블로그 글 제목이 날짜인 경우가 많아, 그럴 땐 부제에 날짜를 또 쓰지 않는다 */
     if(bm){ const dup=/\d{1,4}\s*[년.\-/]\s*\d{1,2}/.test(bm.t);
-      B.appendChild(letterEl("💌",bm.who,dup?"아빠가 쓴 편지":mailDate(bm.d)+"에 아빠가 쓴 편지",bm.t,esc(bm.tx).replace(/\n/g,"<br>"),gotOf(bm.id),true,bm.yt)); } }
+      B.appendChild(letterEl("💌",bm.who,dup?"아빠가 쓴 편지":mailDate(bm.d)+"에 아빠가 쓴 편지",bm.t,esc(bm.tx).replace(/\n/g,"<br>"),[],true,bm.yt)); } }
   else if(o.id){ const L=byId(LETTERS,o.id),m=S.mail;
     if(L) B.appendChild(letterEl(L.f,L.nm,((m&&m.day)||1)+"일째 편지",L.ti,L.tx,(m&&m.got)||[])); }
   /* 다음 편지로 바로 넘어가기 (최신 것부터) */
@@ -2292,19 +2309,28 @@ function mailRow(p,unread,next){
 function drawMail(){ const B=$("mailBody"); B.innerHTML=""; vidOn=false;
   if(MAILV.parent) drawMailParent(B); else if(MAILV.open) drawMailRead(B); else drawMailList(B);
 }
-/* 가족 편지 켜기 — 주소는 이 기기 저장소에만 */
-async function setBlog(b,t){
-  b=String(b||"").trim().replace(/^https?:\/\//,"").replace(/\/.*$/,""); t=String(t||MAILCFG.label).trim()||"편지";
-  if(!b){ familyOff(); return "껐어요"; }
-  MAILCFG.blog=b; MAILCFG.label=t;
-  lsSet("bra2:blog",b); lsSet("bra2:blogtag",t); lsSet("bra2:family","1");
-  blogMail=[]; blogTried=0; await fetchBlogMail(true);
-  if(guiOpen==="g-mail") drawMail();
-  return blogMail.length?("연결 성공 — "+blogMail.length+"통"):"편지를 못 찾았어요 (주소·라벨 확인)";
+/* RSS 주소를 넣으면 이 기기에서 켠다 — 주소는 이 기기 저장소에만.
+   처음 켤 때 글을 하나도 못 받으면 켜지 않고, 이미 켜진 상태에서 새 주소가 틀리면 원래 주소를 지킨다. */
+async function setFeed(input){
+  const p=parseFeed(input);
+  if(!p) return "RSS 주소를 넣어 주세요.";
+  if(p.bad) return "블로그스팟(Blogger) 블로그의 RSS 주소만 읽을 수 있어요.";
+  const wasOn=familyOn(), prev=wasOn?parseFeed(MAILCFG.feed):null, same=wasOn&&canonFeed(p)===MAILCFG.feed;
+  applyFeed(p); blogTried=0;
+  const n=await fetchBlogMail(true);
+  const what=p.label?"라벨 ‘"+p.label+"’ 글":"블로그의 모든 글";
+  if(n>0){ lsSet("bra2:feed",MAILCFG.feed); lsSet("bra2:family","1");
+    return "✓ 연결됐어요 — "+what+" "+n+"통"+(p.label?"":" (편지가 아닌 글도 우체통에 와요)"); }
+  if(!wasOn){ familyOff(); return n===0?"이 주소에는 글이 없어요. 주소를 확인해 주세요.":"불러오지 못했어요. 주소나 인터넷 연결을 확인해 주세요."; }
+  if(same) return "지금은 불러오지 못했어요. 이전에 받은 편지 "+blogMail.length+"통은 그대로 있어요.";
+  applyFeed(prev);   /* 새 주소가 틀렸으면 원래 주소로 되돌림 */
+  return "새 주소에서 글을 못 찾아서 원래 주소를 그대로 둘게요.";
 }
+/* 예전 콘솔 호환: setBlog(주소, 라벨) */
+function setBlog(b,t){ const s=String(b||"").trim(); return setFeed(s&&t?s.replace(/\/+$/,"")+"/feeds/posts/default/-/"+t:s); }
 /* 가족 편지 끄기 — 이 기기에 남은 주소·편지 사본까지 전부 지운다 */
 function familyOff(){
-  MAILCFG.blog=""; blogMail=[]; blogTried=0; FAMILY_KEYS.forEach(lsDel);
+  applyFeed(null); blogMail=[]; blogTried=0; FAMILY_KEYS.forEach(lsDel);
   if(S.mail&&S.mail.blog) S.mail=null;
   MAILV.open=null; stopVid(); save();
 }
@@ -2327,13 +2353,14 @@ function drawMailParent(B){
     ? "<b>💌 가족 편지가 이 기기에서 켜져 있어요.</b><br>주소는 게임 파일이 아니라 <b>이 기기에만</b> 저장돼요. 게임 링크를 친구에게 보내도 친구 기기에는 편지가 나오지 않아요.<br>친구가 이 기기로 같이 놀 때는 잠깐 꺼 두세요."
     : "<b>🙈 가족 편지가 꺼져 있어요.</b><br>켜면 <b>이 기기에서만</b> 블로그 편지가 우체통으로 와요. 다른 기기·친구에게는 보이지 않아요."));
   const r1=document.createElement("div"); r1.className="namerow";
-  r1.innerHTML='<input id="blogIn" autocomplete="off" placeholder="블로그 주소 (예: 내블로그.blogspot.com)">'; B.appendChild(r1);
-  const r2=document.createElement("div"); r2.className="namerow";
-  r2.innerHTML='<input id="tagIn" autocomplete="off" placeholder="라벨 이름">'; B.appendChild(r2);
-  $("blogIn").value=on?MAILCFG.blog:""; $("tagIn").value=on?MAILCFG.label:"";
-  const st=help2(on?"지금 <b>"+blogMail.length+"통</b>을 불러와 있어요.":"주소와 라벨을 넣고 켜 주세요."); st.id="blogStat"; B.appendChild(st);
+  r1.innerHTML='<input id="feedIn" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="RSS 주소">'; B.appendChild(r1);
+  $("feedIn").value=on?MAILCFG.feed:"";
+  B.appendChild(help2("RSS 리더에 넣는 <b>블로그스팟 RSS 주소</b>를 붙여 넣으면 돼요.<br>"+
+    "· 특정 라벨 글만: 블로그에서 라벨을 눌렀을 때의 주소나 라벨 RSS 주소<br>"+
+    "· 블로그 주소만 넣으면: 블로그의 <b>모든 글</b>이 와요"));
+  const st=help2(on?"지금 "+(MAILCFG.label?"라벨 ‘"+esc(MAILCFG.label)+"’ 글":"모든 글")+" <b>"+blogMail.length+"통</b>을 받아 와 있어요.":"RSS 주소를 넣고 켜 주세요."); st.id="blogStat"; B.appendChild(st);
   const go=btn(on?"🔄 다시 불러오기":"💌 이 기기에서 켜기","wide");
-  go.onclick=async()=>{ $("blogStat").textContent="불러오는 중…"; const msg=await setBlog($("blogIn").value,$("tagIn").value);
+  go.onclick=async()=>{ go.disabled=true; $("blogStat").textContent="불러오는 중…"; const msg=await setFeed($("feedIn").value);
     MAILV.parent={step:"set"}; if(guiOpen==="g-mail") drawMail(); if($("blogStat")) $("blogStat").textContent=msg; beep(700,.08); };
   B.appendChild(go);
   if(on){ const off=btn("🙈 이 기기에서 끄고 편지 지우기","wide");
@@ -3578,7 +3605,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,openMail,get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
