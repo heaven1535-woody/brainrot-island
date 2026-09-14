@@ -2447,6 +2447,9 @@ const roomLight=new T.PointLight(0xfff1c0,0,20,1.6); roomLight.position.set(LOT.
 function buildHouse(){
   while(houseGrp.children.length) houseGrp.remove(houseGrp.children[0]);
   for(let i=PLATS.length-1;i>=0;i--) if(PLATS[i].house) PLATS.splice(i,1);
+  for(let i=solids.length-1;i>=0;i--) if(solids[i].house) solids.splice(i,1);
+  const hp=(o)=>{ o.noDraw=true; o.house=true; o.x=LOT.x+(o.dx||0); o.z=LOT.z+(o.dz||0); PLATS.push(o); };   /* 집터 기준 좌표로 충돌판 */
+  const hs=(dx,dz,r)=>solids.push({x:LOT.x+dx,z:LOT.z+dz,r,house:true});                                   /* 집터 기준 기둥 */
   doorGrp=null; tvScreen=null; tankFish=null;
   const h=S.house, wc=h.wallCol, W=12, HT=6;
   const wallMat=id=>({wood:wc,brick:wc,stone:0x9aa0a6,candy:0xff9ad5}[id]);
@@ -2465,18 +2468,25 @@ function buildHouse(){
     else { hb(W,HT,.6,wallMat(h.walls.F),0,HT/2,W/2); PLATS.push({x:LOT.x,z:LOT.z+W/2,w:W,d:.6,y:HT,h:HT,noDraw:true,house:true}); } }
   if(h.walls.brick||h.walls.F==="brick"||h.walls.B==="brick"){ for(let i=0;i<6;i++) for(const side of ["F","B"]) if(h.walls[side]==="brick") hb(.5,.25,.1,0x8a3a2a,-5+i*2,1+(i%2)*2.4,(side==="F"?W/2+.35:-W/2-.35)); }
   for(let i=0;i<h.windows;i++){ const side=i===0?"L":"R"; if(h.walls[side]) hb(.3,1.8,1.8,0xbfe6ff,(side==="L"?-W/2-.2:W/2+.2),3.6,0); }
-  if(h.roof){ const rc=h.roofCol; if(h.roof==="flat") hb(W+1.4,.6,W+1.4,rc,0,HT+.3,0);
-    else if(h.roof==="peak"){ const c=new T.Mesh(new T.ConeGeometry(W*.78,4.5,4),mat(rc)); c.rotation.y=Math.PI/4; c.position.set(LOT.x,HT+2.25,LOT.z); c.castShadow=true; houseGrp.add(c); hb(W+1,.5,W+1,rc,0,HT+.25,0); }
-    else { const d=new T.Mesh(new T.SphereGeometry(W*.62,16,10,0,Math.PI*2,0,Math.PI/2),mat(rc)); d.position.set(LOT.x,HT,LOT.z); d.castShadow=true; houseGrp.add(d); } }
-  if(h.fence){ for(let i=-8;i<=8;i+=2){ if(Math.abs(i)<2) continue; hb(.35,1.2,.35,0xffffff,i,.6,8.6); hb(.35,1.2,.35,0xffffff,i,.6,-8.6); hb(.35,1.2,.35,0xffffff,8.6,.6,i); hb(.35,1.2,.35,0xffffff,-8.6,.6,i); } for(const [x,z,w,d] of [[-5,8.6,7,.2],[5,8.6,7,.2],[0,-8.6,17,.2],[8.6,0,.2,17],[-8.6,0,.2,17]]) hb(w,.2,d,0xffffff,x,1,z); }
-  for(let i=0;i<h.pots;i++){ const [x,z]=[[-7.5,7.5],[7.5,7.5],[-7.5,-7.5],[7.5,-7.5]][i]; hb(1,.9,1,0xb5533c,x,.75,z); hb(.6,.6,.6,[0xff69b4,0xfff176,0xff5252,0xb57bff][i],x,1.55,z); }
-  if(h.flag){ hb(.2,7,.2,0xf1f1f1,-6.5,3.8,-7); hb(2.2,1.3,.1,S.av.shirt,-5.3,6.6,-7); }
+  if(h.roof){ const rc=h.roofCol;
+    /* 지붕도 밟히게 — 예전엔 충돌이 없어서 지붕 위로 떨어지면 집 안으로 쑥 빠졌다 */
+    if(h.roof==="flat"){ hb(W+1.4,.6,W+1.4,rc,0,HT+.3,0); hp({w:W+1.4,d:W+1.4,y:HT+.6,h:.6}); }
+    else if(h.roof==="peak"){ const c=new T.Mesh(new T.ConeGeometry(W*.78,4.5,4),mat(rc)); c.rotation.y=Math.PI/4; c.position.set(LOT.x,HT+2.25,LOT.z); c.castShadow=true; houseGrp.add(c); hb(W+1,.5,W+1,rc,0,HT+.25,0);
+      hp({w:W+1,d:W+1,y:HT+.5,h:.5});
+      const r=W*.78/Math.SQRT2; hp({shape:"pyr",r,y0:HT,ht:4.5,y:HT+4.5,h:4.5,w:r*2,d:r*2}); }   /* 네모 피라미드: 경사 그대로 */
+    else { const R=W*.62; const d=new T.Mesh(new T.SphereGeometry(R,16,10,0,Math.PI*2,0,Math.PI/2),mat(rc)); d.position.set(LOT.x,HT+.5,LOT.z); d.castShadow=true; houseGrp.add(d);
+      /* 반구가 네모 벽보다 작아서 네 모서리가 하늘로 뚫려 있었다 → 받침판을 깔아 덮는다 */
+      hb(W+1,.5,W+1,rc,0,HT+.25,0); hp({w:W+1,d:W+1,y:HT+.5,h:.5});
+      hp({shape:"dome",r:R,y0:HT+.5,y:HT+.5+R,h:R,w:R*2,d:R*2}); } }                              /* 반구: 둥근 경사 그대로 */
+  if(h.fence){ for(let i=-8;i<=8;i+=2){ if(Math.abs(i)<2) continue; hb(.35,1.2,.35,0xffffff,i,.6,8.6); hb(.35,1.2,.35,0xffffff,i,.6,-8.6); hb(.35,1.2,.35,0xffffff,8.6,.6,i); hb(.35,1.2,.35,0xffffff,-8.6,.6,i); } for(const [x,z,w,d] of [[-5,8.6,7,.2],[5,8.6,7,.2],[0,-8.6,17,.2],[8.6,0,.2,17],[-8.6,0,.2,17]]){ hb(w,.2,d,0xffffff,x,1,z); hp({dx:x,dz:z,w:w+.3,d:d+.3,y:1.25,h:1.25,pad:.45}); } }
+  for(let i=0;i<h.pots;i++){ const [x,z]=[[-7.5,7.5],[7.5,7.5],[-7.5,-7.5],[7.5,-7.5]][i]; hb(1,.9,1,0xb5533c,x,.75,z); hb(.6,.6,.6,[0xff69b4,0xfff176,0xff5252,0xb57bff][i],x,1.55,z); hp({dx:x,dz:z,w:1,d:1,y:1.2,h:.9,pad:.45}); }
+  if(h.flag){ hb(.2,7,.2,0xf1f1f1,-6.5,3.8,-7); hb(2.2,1.3,.1,S.av.shirt,-5.3,6.6,-7); hs(-6.5,-7,.2); }
   if(h.pond){ hb(4,.2,3,0x3fa9f5,5,.35,-5,{transparent:true,opacity:.85}); hb(5,.15,4,0xe6d3a3,5,.3,-5); }
-  for(let i=0;i<h.tree;i++){ const x=i?7:-7,z=i?-7:0; hb(.7,3,.7,0x7a4b2a,x,1.5,z); const c=hb(2.6,2.4,2.6,0x3f9b3f,x,3.6,z); c.rotation.y=.7; }
-  for(let i=0;i<h.lamp;i++){ const x=i?4:-4; hb(.25,4,.25,0x333333,x,2,9.4); hb(.8,.8,.8,0xfff176,x,4.3,9.4,{emissive:0x8a7a00}); }
-  if(h.mailbox){ hb(.25,2,.25,0x7a4b2a,8.2,1,9.4); hb(1,.8,.7,0xf4443c,8.2,2.3,9.4); }
+  for(let i=0;i<h.tree;i++){ const x=i?7:-7,z=i?-7:0; hb(.7,3,.7,0x7a4b2a,x,1.5,z); const c=hb(2.6,2.4,2.6,0x3f9b3f,x,3.6,z); c.rotation.y=.7; hs(x,z,.45); }
+  for(let i=0;i<h.lamp;i++){ const x=i?4:-4; hb(.25,4,.25,0x333333,x,2,9.4); hb(.8,.8,.8,0xfff176,x,4.3,9.4,{emissive:0x8a7a00}); hs(x,9.4,.2); }
+  if(h.mailbox){ hb(.25,2,.25,0x7a4b2a,8.2,1,9.4); hb(1,.8,.7,0xf4443c,8.2,2.3,9.4); hs(8.2,9.4,.35); }
   if(h.storage){ const s=3.6+h.storage*.6; hb(s,s*.9,s,0x8b5a2b,9.5,s*.45,-8.5); hb(s+.8,.4,s+.8,0x5b3d2b,9.5,s*.9+.2,-8.5); hb(1.2,1.8,.2,0x3d2718,9.5,.9,-8.5+s/2+.05); PLATS.push({x:LOT.x+9.5,z:LOT.z-8.5,w:s,d:s,y:s*.9,h:s*.9,noDraw:true,house:true}); const l=label("🏚 창고 Lv."+h.storage,{size:28,h:.8,color:"#ffe08a"}); l.position.set(LOT.x+9.5,s*.9+1.6,LOT.z-8.5); houseGrp.add(l); }
-  if(h.swing){ hb(4,.3,.3,0x9aa0a6,-5.5,4,6); hb(.3,4,.3,0x9aa0a6,-7.3,2,6); hb(.3,4,.3,0x9aa0a6,-3.7,2,6); hb(1.4,.2,.5,0xf4443c,-5.5,1.2,6); hb(.06,2.8,.06,0x222222,-6.1,2.6,6); hb(.06,2.8,.06,0x222222,-4.9,2.6,6); }
+  if(h.swing){ hb(4,.3,.3,0x9aa0a6,-5.5,4,6); hb(.3,4,.3,0x9aa0a6,-7.3,2,6); hb(.3,4,.3,0x9aa0a6,-3.7,2,6); hb(1.4,.2,.5,0xf4443c,-5.5,1.2,6); hb(.06,2.8,.06,0x222222,-6.1,2.6,6); hb(.06,2.8,.06,0x222222,-4.9,2.6,6); hs(-7.3,6,.2); hs(-3.7,6,.2); }
   buildFurn(h);
   relabel(lotSign,h.done?"🏡 "+S.name+"의 집":"🏡 내 집터");
 }
@@ -2612,12 +2622,23 @@ function groundY(x,z){
   else if(Math.abs(x)<7&&z>-1&&z<9) g=.12;
   else if(x>LOT.x-7.2&&x<LOT.x+7.2&&z>LOT.z-7.2&&z<LOT.z+7.2) g=.3;
   else if(Math.abs(x-SURV.x)<SURV.w/2&&Math.abs(z-SURV.z)<SURV.d/2) g=.27;
-  for(const p of PLATS) if(Math.abs(x-p.x)<p.w/2&&Math.abs(z-p.z)<p.d/2&&p.y<=P.y+.8&&p.y>g) g=p.y;
+  for(const p of PLATS){ const t=platTop(p,x,z); if(t>g&&t<=P.y+.8) g=t; }
   return g;
 }
+/* 판 모양별 꼭대기 높이 — 상자는 평평, 뾰족 지붕(피라미드)·둥근 지붕(돔)은 보이는 경사 그대로. 밖이면 -1 */
+function platTop(p,x,z){
+  if(p.shape==="pyr"){ const k=Math.max(Math.abs(x-p.x),Math.abs(z-p.z))/p.r; return k<1?p.y0+p.ht*(1-k):-1; }
+  if(p.shape==="dome"){ const d=Math.hypot(x-p.x,z-p.z); return d<p.r?p.y0+Math.sqrt(p.r*p.r-d*d):-1; }
+  return (Math.abs(x-p.x)<p.w/2&&Math.abs(z-p.z)<p.d/2)?p.y:-1;
+}
 function inWater(x,z){ if(x>DOCK.x-1.6&&x<DOCK.x+1.6&&z<DOCK.z1&&z>DOCK.z2) return false; return x>POND.x1-.5&&x<POND.x2+.5&&z>POND.z1-.5&&z<POND.z2+.5; }
-function blocked(x,z){ for(const p of PLATS){ const pd=p.pad!==undefined?p.pad:.7; if(p.y>P.y+.8&&p.y-p.h<P.y+4.5&&Math.abs(x-p.x)<p.w/2+pd&&Math.abs(z-p.z)<p.d/2+pd) return true; } return false; }
-function blockers(x,z){ const out=[]; for(const p of PLATS){ const pd=p.pad!==undefined?p.pad:.7; if(p.y>P.y+.8&&p.y-p.h<P.y+4.5&&Math.abs(x-p.x)<p.w/2+pd&&Math.abs(z-p.z)<p.d/2+pd) out.push({x:p.x,z:p.z,w:p.w,d:p.d,y:p.y,house:!!p.house}); } return out; }
+function blocks(p,x,z){
+  if(p.shape){ const t=platTop(p,x,z); return t>P.y+.8&&p.y0<P.y+4.5; }   /* 경사 지붕: 그 자리 높이가 발보다 높으면 막힘 */
+  const pd=p.pad!==undefined?p.pad:.7;
+  return p.y>P.y+.8&&p.y-p.h<P.y+4.5&&Math.abs(x-p.x)<p.w/2+pd&&Math.abs(z-p.z)<p.d/2+pd;
+}
+function blocked(x,z){ for(const p of PLATS) if(blocks(p,x,z)) return true; return false; }
+function blockers(x,z){ const out=[]; for(const p of PLATS) if(blocks(p,x,z)) out.push({x:p.x,z:p.z,w:p.w,d:p.d,y:p.y,shape:p.shape||"box",house:!!p.house}); return out; }
 function tryMove(nx,nz){
   if(H.zone==="haunt"){ const A=ARENA; nx=Math.min(Math.max(nx,A.x-A.w/2+1.5),A.x+A.w/2-1.5); nz=Math.min(Math.max(nz,A.z-A.d/2+1.5),A.z+A.d/2-1.5); }
   else if(H.zone==="home"){ const A=ROOM; nx=Math.min(Math.max(nx,A.x-A.w/2+1.6),A.x+A.w/2-1.6); nz=Math.min(Math.max(nz,A.z-A.d/2+1.6),A.z+A.d/2-1); }
@@ -2878,6 +2899,26 @@ addI({x:SPAWN.x+7,z:SPAWN.z+.6,h:4.2,r:3.4,
 addI({r:3.4,get x(){ const o=bugNear(); return o?o.x:1e9; },get z(){ const o=bugNear(); return o?o.z:1e9; },get h(){ return 2.6; },
   text:()=>{ const o=bugNear(); return o?(S.up.net?"🥅 "+o.type.nm+" 잡기":"🥅 잠자리채가 필요해요 (준호 가게)"):null; },
   ok:()=>!!S.up.net,act:()=>catchBug()});
+/* ===================== 🧱 충돌 보강: 보이는 모양 = 부딪히는 모양 =====================
+   장면의 보이는 물체와 충돌판을 전부 대조하는 점검으로 찾은 것들을 한곳에 모았다. */
+(function colliderPatch(){
+  /* 마을 집: 계단식 3단 지붕 — 예전엔 벽 높이(6)의 평평한 판뿐이라 지붕 속에 파묻혀 걸어다녔다 */
+  HOUSES.forEach(h=>PLATS.push(
+    {x:h.x,z:h.z,w:11,d:11,y:7.2,h:1.2,noDraw:true},{x:h.x,z:h.z,w:7,d:7,y:8.4,h:1.2,noDraw:true},{x:h.x,z:h.z,w:3.5,d:3.5,y:9.6,h:1.2,noDraw:true}));
+  /* 귀신의 집 건물: 3단 지붕 + 비석 4개 + 호박 2개 */
+  { const {x,z}=HOUSE;
+    PLATS.push({x,z,w:17.5,d:13.5,y:11.4,h:1.4,noDraw:true},{x,z,w:11,d:8,y:12.7,h:1.3,noDraw:true},{x,z,w:5,d:3,y:14.1,h:1.4,noDraw:true});
+    for(const [dx,dz] of [[-10,4],[-9,-3],[10,2],[11,-4]]) solids.push({x:x+dx,z:z+dz,r:.8});
+    PLATS.push({x:x-7,z:z+8,w:1.2,d:1.2,y:1.2,h:1.2,pad:.45,noDraw:true},{x:x+7.5,z:z+7.5,w:1.2,d:1.2,y:1.2,h:1.2,pad:.45,noDraw:true}); }
+  for(const dx of [-2.8,2.8]) solids.push({x:TOWN.x+18+dx,z:TOWN.z-8,r:.25});                /* 마을 그네 기둥 */
+  for(const dx of [-1.5,1.5]) solids.push({x:FARM.cx+dx,z:FARM.cz+7.5,r:.15});                 /* 밭 입구 문기둥 */
+  for(const dx of [-1.3,1.3]) for(const zz of [DOCK.z1-1,DOCK.z2+1]) solids.push({x:DOCK.x+dx,z:zz,r:.2});   /* 부두 말뚝 */
+  PLATS.push({x:WHEEL.x,z:WHEEL.z,w:6,d:1.2,y:WHEEL.cy-WHEEL.r+.4,h:1,noDraw:true});           /* 대관람차 바퀴 맨 아래 테두리 */
+  for(const dx of [-9,9]) solids.push({x:COURT.x+dx,z:COURT.z+4,r:.25});                        /* 배드민턴장 벤치 기둥 */
+  /* 발판 위에 서 있어도 막히도록 높이(y)를 준 기둥: 롤러코스터 승강장 지붕 기둥 · 자이로드롭 탑승구 기둥 */
+  for(const dz of [-5.5,0,5.5]) solids.push({x:PARK.x+3.8,z:PARK.z-8+dz,r:.25,y:6.1});
+  for(const dx of [-2.6,2.6]) solids.push({x:DROP.x+dx,z:DROP.z+9.3,r:.25,y:4.4});
+})();
 /* ===================== ✏️ 맞춤법 수확 =====================
    작물을 수확할 때 맞춤법 문제를 푼다. 틀리면 수확하다 흠집이 나서 값이 반으로 떨어진다.
    국립국어원은 '자주 틀리는 맞춤법' 공식 목록이 없다고 답했고(온라인가나다), 초등 문제집은 저작권이 있어서
@@ -3848,7 +3889,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,PLATS,solids,get houseGrp(){return typeof houseGrp!=="undefined"?houseGrp:null;},get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
