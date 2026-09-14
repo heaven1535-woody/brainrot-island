@@ -247,6 +247,9 @@
   .spellopts button.ok{background:linear-gradient(180deg,#4ede9f,#12c37c);color:#fff;box-shadow:0 5px 0 #0a7d4e}
   .spellopts button.no{background:linear-gradient(180deg,#ff8a7d,#e2564a);color:#fff;box-shadow:0 5px 0 #b03b31}
   .spellopts button:disabled{opacity:1}
+  .mgrid .buy.ok{background:linear-gradient(180deg,#4ede9f,#12c37c);color:#fff;box-shadow:0 4px 0 #0a7d4e}
+  .mgrid .buy.no{background:linear-gradient(180deg,#ff8a7d,#e2564a);color:#fff;box-shadow:0 4px 0 #b03b31}
+  .mgrid .buy:disabled{opacity:1}
   .spellwhy{padding:12px 14px;border-radius:16px;font-size:.98rem;line-height:1.6;font-weight:800;word-break:keep-all}
   .spellwhy.ok{background:rgba(18,195,124,.14);color:#0a7d4e}
   .spellwhy.no{background:rgba(226,86,74,.12);color:#b03b31}
@@ -442,6 +445,7 @@
   <div class="gui" id="g-ach"><div class="win"><div class="hd">🏅 업적 <button class="x" data-close>✕</button></div><div class="bd" id="achBody"></div></div></div>
   <div class="gui" id="g-mail"><div class="win"><div class="hd">📮 편지함 <button class="x" data-close>✕</button></div><div class="bd" id="mailBody"></div></div></div>
   <div class="gui" id="g-pet"><div class="win"><div class="hd">🥚 미아의 펫 가게 <button class="x" data-close>✕</button></div><div class="bd" id="petList"></div></div></div>
+  <div class="gui" id="g-gate"><div class="win"><div class="hd">🎟️ <span id="gateTitle"></span><small></small><button class="x" data-close>✕</button></div><div class="bd" id="gateBody"></div></div></div>
   <div class="gui" id="g-spell"><div class="win"><div class="hd">✏️ 맞춤법 수확 <small id="spellCnt"></small><button class="x" data-close>✕</button></div><div class="bd" id="spellBody"></div></div></div>
   <div class="gui" id="g-ped"><div class="win"><div class="hd">🦈 받침대 <small id="pedIps"></small><button class="x" data-close>✕</button></div><div class="bd" id="pedBody"></div></div></div>
   <div class="gui" id="g-menu"><div class="win"><div class="hd">📱 브레인롯폰 <small id="phoneTime"></small><button class="x" data-close>✕</button></div><div class="bd">
@@ -589,11 +593,11 @@ const QUESTS=[
   {k:"math",nm:"수학 퀴즈 맞히기",e:"➕",n:[5,10],r:150},{k:"feed",nm:"펫 먹이 주기",e:"🍖",n:[2,5],r:30,req:()=>S.pets.length>0},
   {k:"haunt",nm:"귀신의 집 촛불 모으기",e:"🕯️",n:[12,24],r:100,req:()=>S.coins>=200||S.hauntClears>0},
   {k:"badminton",nm:"배드민턴 랠리",e:"🏸",n:[10,25],r:60,req:()=>!!S.up.racket&&S.shuttles>0},
-  {k:"survive",nm:"서바이벌 버티기(초)",e:"🎯",n:[20,45],r:90,req:()=>S.coins>=150},
+  {k:"survive",nm:"서바이벌 버티기(초)",e:"🎯",n:[20,45],r:90},
   {k:"shoot",nm:"풍선 터뜨리기",e:"💦",n:[15,40],r:80,req:()=>!!S.up.watergun},
-  {k:"ride",nm:"놀이기구 타기",e:"🎢",n:[2,5],r:60,req:()=>S.coins>=60||(S.qc.ride||0)>0},
-  {k:"tkd",nm:"태권도 단계",e:"🥋",n:[3,6],r:90,req:()=>S.coins>=30||S.tkdBest>0},
-  {k:"rope",nm:"줄넘기(번)",e:"🪢",n:[12,30],r:80,req:()=>S.coins>=20||S.ropeBest>0},
+  {k:"ride",nm:"놀이기구 타기",e:"🎢",n:[2,5],r:60},
+  {k:"tkd",nm:"태권도 단계",e:"🥋",n:[3,6],r:90},
+  {k:"rope",nm:"줄넘기(번)",e:"🪢",n:[12,30],r:80},
   {k:"bug",nm:"곤충 잡기",e:"🦋",n:[3,8],r:85,req:()=>!!S.up.net},
   {k:"cook",nm:"요리 만들기",e:"🍳",n:[2,5],r:95,req:()=>toolLv()>0}
 ];
@@ -607,7 +611,7 @@ const UPGRADES=[
   {id:"lantern",nm:"큰 손전등",e:"🔦",cost:2500,sub:"귀신의 집에서 더 멀리 보여요"},
   {id:"bag1",nm:"큰 가방",e:"🎒",cost:2500,sub:"가방 20개 → 40개"},
   {id:"bag2",nm:"아주 큰 가방",e:"🧳",cost:7000,sub:"가방 +30개 (큰 가방 다음)"},
-  {id:"racket",nm:"배드민턴 라켓",e:"🏸",cost:800,sub:"배드민턴장에서 코치 태오와 시합 (시합비 50코인 + 셔틀콕 1개)"},
+  {id:"racket",nm:"배드민턴 라켓",e:"🏸",cost:800,sub:"배드민턴장에서 코치 태오와 시합 (문제 풀고 입장 + 셔틀콕 1개)"},
   {id:"watergun",nm:"물총",e:"💦",cost:1200,sub:"서바이벌 게임장에서 풍선 사격(1인칭) 모드를 열어요"}
 ];
 const COURT={x:44,z:62,w:12,d:24};
@@ -1509,7 +1513,7 @@ const SV={on:false,t0:0,hp:3,diff:1,balls:[],inv:0,next:0};
   for(let i=-hw;i<=hw;i+=4){ at(box(.5,4.2,.5,0xf1f1f1),A.x+i,2.1,A.z-hd); at(box(.5,4.2,.5,0xf1f1f1),A.x-hw,2.1,A.z+i); at(box(.5,4.2,.5,0xf1f1f1),A.x+hw,2.1,A.z+i); }
   for(const [dx,dz] of [[-9,-9],[9,-9],[-9,9],[9,9],[0,0]]){ at(box(3,2.6,3,0x9aa0a6),A.x+dx,1.3,A.z+dz); PLATS.push({x:A.x+dx,z:A.z+dz,w:3,d:3,y:2.6,h:2.6,pad:.4,noDraw:true}); }
   at(label("🎯 서바이벌 게임장",{size:46,h:1.6}),A.x,8,A.z+hd+2);
-  at(label("입장료를 내고 공을 피해 버티기!",{size:28,h:.8,color:"#bdbebe"}),A.x,6.6,A.z+hd+2);
+  at(label("문제를 풀고 들어가 공을 피해 버티기!",{size:28,h:.8,color:"#bdbebe"}),A.x,6.6,A.z+hd+2);
   beacon(A.x,A.z,0xff8c1a);
   const bm=new T.MeshLambertMaterial({color:0xf4443c});
   for(let i=0;i<10;i++){ const b=new T.Mesh(new T.SphereGeometry(1.1,12,9),bm); b.castShadow=true; b.visible=false; scene.add(b); SV.balls.push({m:b,on:false,x:0,z:0,vx:0,vz:0}); }
@@ -1740,7 +1744,7 @@ function tkCards(){ const c=$("tkCards"); c.innerHTML="";
     b.innerHTML="<span>"+m.e+"</span>"+m.nm; b.onclick=()=>tkTap(m.id); c.appendChild(b); }); }
 function tkLight(id,cls){ const b=$("tkCards").querySelector('[data-id="'+id+'"]'); if(!b) return;
   b.classList.add(cls||"lit"); setTimeout(()=>b.classList.remove(cls||"lit"),330); }
-function startTkd(){ if(!pay(30)) return;
+function startTkd(){
   TK.on=true; TK.round=1; TK.coins=0; TK.seq=[]; tkCards(); $("tkwin").classList.add("on");
   teleport(DOJO.x-.5,DOJO.z+2); P.ry=player.rotation.y=TK.yaw+Math.PI; tkRound(); drawGoal(); SFX.open(); save(); }
 function tkRound(){ TK.seq=[]; const n=2+TK.round;
@@ -1789,7 +1793,7 @@ const RP={on:false,th:0,per:1.5,n:0,t0:0,rope:null,best:0,warm:0,fall:0,flash:0,
   at(label("🪢 줄넘기",{size:42,h:1.4,color:"#ffd7d7"}),R.x,12.2,R.z);
   beacon(R.x,R.z,0xff5147);
 })();
-function startRope(){ if(!pay(20)) return;
+function startRope(){
   RP.on=true; RP.th=Math.PI*.4; RP.per=1.8; RP.n=0; RP.t0=now(); RP.warm=3; RP.fall=0; RP.flash=0; player.rotation.x=0;
   teleport(ROPE.x,ROPE.z); camYaw=.92;
   $("rpwin").classList.add("on"); $("rpmsg").textContent="🪢 준비… 줄이 발밑에 올 때 점프!";
@@ -2401,7 +2405,7 @@ function drawMailParent(B){
   hd.addEventListener("click",e=>{ if(now()-lastTouch<.6) return; hit(e); }); })();
 function rideMsg(m){ if(RIDE.msg===m) return; RIDE.msg=m; $("rmsg").textContent=m; }
 function startRide(type){
-  const fee={coaster:30,wheel:20,caro:10,drop:25}[type]; if(!pay(fee)) return;
+
   RIDE.on=true; RIDE.type=type; RIDE.t0=now(); RIDE.u=0; RIDE.v=0; RIDE.yaw=0; RIDE.tick=0; RIDE.clack=0; RIDE.rum=0; RIDE.air=false; RIDE.hig=false; RIDE.top=0; RIDE.gf=1; RIDE.msg="";
   RIDE.ret={x:P.x,z:P.z}; RIDE.dur=type==="wheel"?50:type==="caro"?30:0; RIDE.ph=type==="coaster"?"load":type==="drop"?"up":""; RIDE.phT=now();
   RIDE.dy=DROP.bot; RIDE.dv=0; RIDE.dr=0; RIDE.ba=0;
@@ -2695,23 +2699,23 @@ FURN.filter(f=>f.act).forEach(f=>addI({x:ROOM.x+f.x*FS,z:ROOM.z+f.z*FS,h:3.4,r:3
       note("📚","Lv."+S.lvl+" · 물고기 도감 "+n+"/"+FISH.length+" · 배드민턴 최고 "+S.badBest+" · 수학 최고 "+S.mathBest+"/5 · 집 가치 "+num(houseValue())); SFX.open(); return; }
     if(f.id==="toy"){ note("🧸","포옹! 기분이 좋아졌어"); tone(700,.14,"sine",.05,900); burst(ROOM.x+f.x*FS,2.4,ROOM.z+f.z*FS,0xff6b8a,12,3,.8); return; }
   }}));
-addI({x:SURV.x,z:SURV.z+SURV.d/2+2,h:4.4,r:4.5,text:()=>SV.on?null:"🎯 서바이벌 게임장 (입장료 필요)",act:()=>openSurv()});
-addI({x:PARK.x+6,z:PARK.z-8,h:5,r:5.5,text:()=>RIDE.on?null:"🎢 롤러코스터 타기 · 30코인",ok:()=>S.coins>=30,act:()=>startRide("coaster")});
-addI({x:DROP.x,z:DROP.z+7.4,h:5.8,r:4.2,text:()=>RIDE.on?null:"🗼 자이로드롭 타기 · 25코인",ok:()=>S.coins>=25,act:()=>startRide("drop")});
-addI({x:DOJO.x,z:DOJO.z+10.5,h:4.5,r:5,text:()=>TK.on?null:"🥋 태권도 배우기 · 30코인 (최고 "+S.tkdBest+"단계)",ok:()=>S.coins>=30,act:()=>startTkd()});
-addI({x:ROPE.x,z:ROPE.z+7,h:4.5,r:4.5,text:()=>RP.on?null:"🪢 줄넘기 하기 · 20코인 (최고 "+S.ropeBest+"번)",ok:()=>S.coins>=20,act:()=>startRope()});
-addI({x:WHEEL.x,z:WHEEL.z+4.5,h:4.5,r:4.5,text:()=>RIDE.on?null:"🎡 대관람차 타기 · 20코인",ok:()=>S.coins>=20,act:()=>startRide("wheel")});
-addI({x:CARO.x,z:CARO.z+CARO.r+2.5,h:4,r:4.5,text:()=>RIDE.on?null:"🎠 회전목마 타기 · 10코인",ok:()=>S.coins>=10,act:()=>startRide("caro")});
+addI({x:SURV.x,z:SURV.z+SURV.d/2+2,h:4.4,r:4.5,text:()=>SV.on?null:"🎯 서바이벌 게임장 · 🎟️ 문제 풀고 입장",act:()=>openSurv()});
+addI({x:PARK.x+6,z:PARK.z-8,h:5,r:5.5,text:()=>RIDE.on?null:"🎢 롤러코스터 타기 · 🎟️ 문제 풀고",act:()=>gate("🎢 롤러코스터",()=>startRide("coaster"))});
+addI({x:DROP.x,z:DROP.z+7.4,h:5.8,r:4.2,text:()=>RIDE.on?null:"🗼 자이로드롭 타기 · 🎟️ 문제 풀고",act:()=>gate("🗼 자이로드롭",()=>startRide("drop"))});
+addI({x:DOJO.x,z:DOJO.z+10.5,h:4.5,r:5,text:()=>TK.on?null:"🥋 태권도 배우기 · 🎟️ 문제 풀고 (최고 "+S.tkdBest+"단계)",act:()=>gate("🥋 태권도",()=>startTkd())});
+addI({x:ROPE.x,z:ROPE.z+7,h:4.5,r:4.5,text:()=>RP.on?null:"🪢 줄넘기 하기 · 🎟️ 문제 풀고 (최고 "+S.ropeBest+"번)",act:()=>gate("🪢 줄넘기",()=>startRope())});
+addI({x:WHEEL.x,z:WHEEL.z+4.5,h:4.5,r:4.5,text:()=>RIDE.on?null:"🎡 대관람차 타기 · 🎟️ 문제 풀고",act:()=>gate("🎡 대관람차",()=>startRide("wheel"))});
+addI({x:CARO.x,z:CARO.z+CARO.r+2.5,h:4,r:4.5,text:()=>RIDE.on?null:"🎠 회전목마 타기 · 🎟️ 문제 풀고",act:()=>gate("🎠 회전목마",()=>startRide("caro"))});
 function openSurv(){
   const B=$("survBody"); B.innerHTML="";
   const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>리호:</b> 굴러오는 공을 피해서 오래 버티면 코인을 줄게! <b>점프로 넘을 수도</b> 있어. 하트가 다 없어지면 끝!<br>최고 기록 "+S.svBest+"초"; B.appendChild(h);
   const s1=document.createElement("div"); s1.className="sec"; s1.textContent="🎯 피하기 서바이벌 (공을 피해 버티기)"; B.appendChild(s1);
-  SDIFF.forEach((d,i)=>{ const r=row(d.e,d.nm+" · 입장료 "+num(d.fee)+"코인",d.sub+" · 1초당 "+d.pay+"코인"); const b=btn(coinSvg+num(d.fee),"blue"); b.disabled=S.coins<d.fee;
-    b.onclick=()=>{ if(!pay(d.fee)) return; S.svDiff=i; closeGui(); startSurv(i); }; r.appendChild(b); B.appendChild(r); });
+  SDIFF.forEach((d,i)=>{ const r=row(d.e,d.nm,d.sub+" · 1초당 "+d.pay+"코인"); const b=btn("🎟️ 문제 풀기","blue");
+    b.onclick=()=>gate("🎯 서바이벌 · "+d.nm,()=>{ S.svDiff=i; startSurv(i); }); r.appendChild(b); B.appendChild(r); });
   const s2=document.createElement("div"); s2.className="sec"; s2.textContent="💦 물총 사격 (1인칭 · 60초 동안 풍선 터뜨리기) · 최고 "+S.fpBest+"개"; B.appendChild(s2);
   if(!S.up.watergun){ const d=document.createElement("div"); d.className="help"; d.textContent="💦 물총이 있어야 해요 — 준호의 업그레이드 가게에서 1,200코인"; B.appendChild(d); }
-  else FDIFF.forEach((d,i)=>{ const r=row(d.e,d.nm+" · 입장료 "+num(d.fee)+"코인",d.sub+" · 풍선 1개당 "+d.pay+"코인"); const b=btn(coinSvg+num(d.fee),"blue"); b.disabled=S.coins<d.fee;
-    b.onclick=()=>{ if(!pay(d.fee)) return; closeGui(); startFP(i); }; r.appendChild(b); B.appendChild(r); });
+  else FDIFF.forEach((d,i)=>{ const r=row(d.e,d.nm,d.sub+" · 풍선 1개당 "+d.pay+"코인"); const b=btn("🎟️ 문제 풀기","blue");
+    b.onclick=()=>gate("💦 물총 사격 · "+d.nm,()=>startFP(i)); r.appendChild(b); B.appendChild(r); });
   openGui("g-surv");
 }
 function fpSpawn(tg){
@@ -2781,9 +2785,9 @@ function svSpawn(){
   b.vx=dx/dl*sp; b.vz=dz/dl*sp; b.on=true; b.m.visible=true; b.m.position.set(b.x,1.3,b.z);
   tone(220,.1,"square",.03);
 }
-addI({x:COURT.x,z:COURT.z+COURT.d/2+1.5,h:4,r:4.5,text:()=>BD.on?null:!S.up.racket?"🏸 라켓이 필요해요 (준호 가게)":!S.shuttles?"🪶 셔틀콕이 없어요 (준호 가게)":"🏸 시합하기 · 50코인 + 셔틀콕 1개 (남은 "+S.shuttles+")",ok:()=>!!S.up.racket&&S.shuttles>0&&S.coins>=50,act:()=>startBad()});
+addI({x:COURT.x,z:COURT.z+COURT.d/2+1.5,h:4,r:4.5,text:()=>BD.on?null:!S.up.racket?"🏸 라켓이 필요해요 (준호 가게)":!S.shuttles?"🪶 셔틀콕이 없어요 (준호 가게)":"🏸 시합하기 · 🎟️ 문제 풀고 (셔틀콕 1개 · 남은 "+S.shuttles+")",ok:()=>!!S.up.racket&&S.shuttles>0,act:()=>gate("🏸 배드민턴",()=>startBad())});
 function startBad(){
-  if(!S.up.racket||S.shuttles<=0) return; if(!pay(50)) return; S.shuttles--; BD.on=true; BD.rally=0; teleport(COURT.x,COURT.z+9); camYaw=0; player.rotation.y=Math.PI; P.ry=Math.PI;
+  if(!S.up.racket||S.shuttles<=0) return; S.shuttles--; BD.on=true; BD.rally=0; teleport(COURT.x,COURT.z+9); camYaw=0; player.rotation.y=Math.PI; P.ry=Math.PI;
   BD.racket=mkRacket(); player.userData.aR.add(BD.racket); shuttle.visible=true; $("badwin").classList.add("on"); $("bmsg").textContent="코치가 서브! 셔틀콕이 가까이 오면(초록칸) 치기!"; SFX.open(); save();
   setTimeout(()=>{ if(BD.on) coachHit(); },700);
 }
@@ -3016,6 +3020,67 @@ function spellAnswer(w,btnEl){
   harvestPlot(SPQ.plot,!ok);
   const close=btn(ok?"🧺 좋아요!":"알았어요!","wide"); close.onclick=()=>closeGui(); $("spellBody").appendChild(close);
   if(ok) setTimeout(()=>{ if(guiOpen==="g-spell"&&SPQ.done) closeGui(); },1600);
+}
+/* ===================== 🎟️ 입장 문제 =====================
+   놀이기구·미니게임은 코인을 내는 대신 산수 또는 맞춤법 문제를 풀고 들어간다(무작위 반반).
+   단계는 맞춤법 수확과 같은 S.spellLv 를 쓴다: 🌱 쉬움 = 10까지 더하기·1~2학년 맞춤법, 🌿 보통 = 20까지 더하기빼기·3~4학년 맞춤법.
+   틀리면 정답을 보여주고 3초 뒤에 다른 문제를 풀 수 있다(아무거나 계속 눌러 통과하지 못하게). */
+const GATE={title:"",pass:null,kind:"",q:null,done:false,timer:null};
+function gate(title,pass){ GATE.title=title; GATE.pass=pass; gateNew(); openGui("g-gate"); }
+function gateNew(){
+  clearInterval(GATE.timer); const lv=S.spellLv||1; GATE.done=false;
+  GATE.kind=Math.random()<.5?"math":"spell";
+  if(GATE.kind==="math") GATE.q=mkQ(lv===1?0:1);
+  else GATE.q={i:spellDraw(lv),swap:Math.random()<.5};
+  drawGate();
+}
+function drawGate(){
+  const B=$("gateBody"); B.innerHTML=""; $("gateTitle").textContent=GATE.title;
+  const t=document.createElement("div"); t.className="talk";
+  t.innerHTML='<span class="face">🎟️</span><div><b>입장 문제 · '+(GATE.kind==="math"?"➕ 산수":"✏️ 맞춤법")+'</b><p>맞히면 <strong>바로 들어가요!</strong></p></div>';
+  B.appendChild(t);
+  const lvRow=document.createElement("div"); lvRow.className="chips"; lvRow.style.justifyContent="center";
+  [[1,"🌱 쉬움"],[2,"🌿 보통"]].forEach(([lv,nm])=>{ const b=document.createElement("button");
+    b.textContent=nm; b.setAttribute("aria-pressed",(S.spellLv||1)===lv?"true":"false");
+    b.onclick=()=>{ if(GATE.done||(S.spellLv||1)===lv) return; S.spellLv=lv; save(); gateNew(); beep(620,.05); };
+    lvRow.appendChild(b); }); B.appendChild(lvRow);
+  if(GATE.kind==="math"){
+    const q=GATE.q, box=document.createElement("div"); box.className="mq"; box.id="gateBox"; box.textContent=q.a+" "+q.op+" "+q.b+" = ?"; B.appendChild(box);
+    const g=document.createElement("div"); g.className="mgrid";
+    q.opts.forEach(o=>{ const b=btn(String(o)); b.dataset.v=String(o); b.onclick=()=>gateAnswer(o===q.ans,b); g.appendChild(b); });
+    B.appendChild(g);
+  } else {
+    const q=SPELL[GATE.q.i], parts=q[1].split("＿");
+    const qs=document.createElement("div"); qs.className="spellq";
+    qs.innerHTML=esc(parts[0])+'<span class="blank" id="gateBlank">&nbsp;</span>'+esc(parts[1]||""); B.appendChild(qs);
+    const opts=document.createElement("div"); opts.className="spellopts";
+    (GATE.q.swap?[q[3],q[2]]:[q[2],q[3]]).forEach(w=>{ const b=document.createElement("button"); b.textContent=w; b.dataset.v=w;
+      b.onclick=()=>gateAnswer(w===q[2],b); opts.appendChild(b); });
+    B.appendChild(opts);
+  }
+}
+function gateAnswer(ok,btnEl){
+  if(GATE.done) return; GATE.done=true; const B=$("gateBody");
+  const right=GATE.kind==="math"?String(GATE.q.ans):SPELL[GATE.q.i][2];
+  B.querySelectorAll(".mgrid .buy, .spellopts button").forEach(b=>{ b.disabled=true;
+    if(b.dataset.v===right) b.classList.add("ok"); else if(b===btnEl) b.classList.add("no"); });
+  B.querySelectorAll(".chips button").forEach(b=>b.disabled=true);
+  if(GATE.kind==="math"){ const q=GATE.q, box=$("gateBox"); box.className="mq "+(ok?"ok":"no"); box.textContent=q.a+" "+q.op+" "+q.b+" = "+q.ans; }
+  else $("gateBlank").textContent=right;
+  const why=document.createElement("div"); why.className="spellwhy "+(ok?"ok":"no");
+  if(ok) why.innerHTML="⭕ 정답! 들어가요~";
+  else { const q=GATE.kind==="spell"?SPELL[GATE.q.i]:null;
+    why.innerHTML="❌ 아쉬워요! 다른 문제를 맞히면 들어갈 수 있어요."+(q?"<br>✏️ 바른 말: <b>"+esc(q[1].replace("＿",q[2]))+"</b><br>"+esc(q[4]):""); }
+  B.appendChild(why);
+  if(GATE.kind==="spell"){ if(ok) S.spellOk=(S.spellOk||0)+1; else S.spellNg=(S.spellNg||0)+1; }
+  if(ok){ SFX.right(); burst(P.x,P.y+5,P.z,0x00b06f,12,5,.7); save();
+    setTimeout(()=>{ if(guiOpen==="g-gate"&&GATE.done){ const f=GATE.pass; GATE.pass=null; closeGui(); if(f) f(); } },750);
+    return; }
+  SFX.wrong(); save();
+  const again=btn("🔄 다른 문제 (3)","wide"); again.disabled=true; B.appendChild(again);
+  let n=3; GATE.timer=setInterval(()=>{ n--; if(n>0) again.textContent="🔄 다른 문제 ("+n+")";
+    else { clearInterval(GATE.timer); again.disabled=false; again.textContent="🔄 다른 문제 풀기"; } },1000);
+  again.onclick=()=>{ gateNew(); beep(600,.05); };
 }
 /* 실제 수확 — damaged 면 흠집 나서 값이 반 */
 function harvestPlot(i,damaged){
@@ -3350,7 +3415,7 @@ $("avBtn").onclick=()=>{ if(fishing) return; drawAv(); editYaw=player.rotation.y
 const MQ={diff:0,q:null,left:0,right:0,answered:false};
 const MDIFF=[{nm:"쉬움",e:"🌱",coin:30,xp:10,d:"10까지 더하기"},{nm:"보통",e:"🌟",coin:70,xp:20,d:"20까지 더하기·빼기"},{nm:"구구단",e:"✖️",coin:250,xp:40,d:"2단~9단 곱하기"},{nm:"어려움",e:"🔥",coin:400,xp:60,d:"100까지 더하기·빼기"},{nm:"최고",e:"👑",coin:600,xp:90,d:"큰 수 계산 + 곱하기·나누기"}];
 function rnd(n){ return Math.floor(Math.random()*n); }
-function mkQ(){ const d=MQ.diff; let a,b,op;
+function mkQ(dd){ const d=dd!==undefined?dd:MQ.diff; let a,b,op;
   if(d===0){ a=1+rnd(9); b=1+rnd(10-a); op="+"; }
   else if(d===1){ op=Math.random()<.5?"+":"-"; if(op==="+"){ a=1+rnd(15); b=1+rnd(20-a); } else { a=2+rnd(19); b=1+rnd(a-1); } }
   else if(d===2){ a=2+rnd(8); b=1+rnd(9); op="×"; }
@@ -3783,7 +3848,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
