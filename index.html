@@ -236,6 +236,9 @@
   .ytlink{display:inline-block;margin-top:7px;font-size:.8rem;font-weight:800;color:#1470ad;text-decoration:none}
   .ytstop{display:block;width:100%;margin-top:8px;padding:9px;border:0;border-radius:12px;cursor:pointer;
     background:#5b4636;color:#fffaef;font:inherit;font-weight:800;font-size:.84rem}
+  .adultlink{align-self:center;margin-top:10px;padding:9px 16px;border-radius:99px;font-size:.8rem;font-weight:800;
+    color:var(--ink2);background:transparent;border:2px dashed #d9c69a;cursor:pointer}
+  .adultlink:active{background:#f3e7c8}
   /* 요리 과정 */
   .cookstage{display:flex;flex-direction:column;align-items:center;gap:9px;padding:18px 14px;border-radius:20px;
     background:#fff9ea;border:2px solid var(--tan);box-shadow:0 3px 0 #e8d8b3}
@@ -2297,7 +2300,13 @@ function drawMailList(B){
     n.innerHTML="오늘 섬 편지는 받았어요. <b>내일</b> 또 와요 — 연속 "+(S.mailStreak||1)+"일째! 연속으로 받을수록 선물이 커져요.";
     B.appendChild(n); }
   if(!blogMail.length&&S.mailDay===today()&&!(S.mail&&S.mail.id)) B.appendChild(emptyBox("📭","아직 온 편지가 없어요."));
+  /* 어른용 연결 버튼 — 눈에 보이게 두되 곱셈 확인을 통과해야 들어갈 수 있다.
+     친구 기기에는 편지 자체가 없으니 버튼이 보여도 노출될 것이 없다. */
+  const adult=document.createElement("button"); adult.className="adultlink";
+  adult.textContent=familyOn()?"👪 가족 편지 설정 (어른용)":"👪 가족 편지 연결 (어른용)";
+  adult.onclick=()=>openParentGate(); B.appendChild(adult);
 }
+function openParentGate(){ MAILV.open=null; MAILV.parent={step:"gate",a:12+Math.floor(Math.random()*8),b:13+Math.floor(Math.random()*7)}; drawMail(); $("mailBody").scrollTop=0; beep(560,.05); }
 function mailRow(p,unread,next){
   /* 제목이 날짜뿐인 글이 많아서, 아래줄에는 날짜 대신 첫 문장을 미리 보여준다 */
   const peek=(p.tx||"").replace(/\s+/g," ").trim().slice(0,26);
@@ -2368,10 +2377,13 @@ function drawMailParent(B){
     off.onclick=()=>{ familyOff(); MAILV.parent={step:"set"}; drawMail(); note("🙈","이 기기에서 가족 편지를 껐어요"); };
     B.appendChild(off); }
 }
-(function mailSecret(){ const hd=document.querySelector("#g-mail .hd"); if(!hd) return; let n=0,t0=0;
-  hd.addEventListener("click",e=>{ if(e.target.closest("[data-close]")) return;
+/* 지름길: 편지함 제목 5번 탭 (아이패드는 버튼이 아닌 곳의 click 이 빠지기도 해서 터치도 함께 센다) */
+(function mailSecret(){ const hd=document.querySelector("#g-mail .hd"); if(!hd) return; let n=0,t0=0,lastTouch=0;
+  const hit=e=>{ if(e.target.closest("[data-close]")) return;
     const t=now(); if(t-t0>2.5){ n=0; t0=t; } n++;
-    if(n>=5){ n=0; MAILV.parent={step:"gate",a:12+Math.floor(Math.random()*8),b:13+Math.floor(Math.random()*7)}; drawMail(); } }); })();
+    if(n>=5){ n=0; openParentGate(); } };
+  hd.addEventListener("touchend",e=>{ lastTouch=now(); hit(e); },{passive:true});
+  hd.addEventListener("click",e=>{ if(now()-lastTouch<.6) return; hit(e); }); })();
 function rideMsg(m){ if(RIDE.msg===m) return; RIDE.msg=m; $("rmsg").textContent=m; }
 function startRide(type){
   const fee={coaster:30,wheel:20,caro:10,drop:25}[type]; if(!pay(fee)) return;
