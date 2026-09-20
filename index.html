@@ -558,7 +558,8 @@ const ACHS=[
   {id:"a13",e:"🥚",nm:"펫 친구",n:3,r:700,get:()=>S.pets.length,sub:"펫 3마리"},
   {id:"a14",e:"🦈",nm:"브레인롯 수집가",n:6,r:1500,get:()=>S.base.filter(Boolean).length,sub:"받침대 6칸 채우기"},
   {id:"a15",e:"⭐",nm:"레벨 15",n:15,r:2500,get:()=>S.lvl,sub:"레벨 15 달성"},
-  {id:"a16",e:"🧩",nm:"퍼즐 박사",n:10,r:1200,get:()=>S.puzWins||0,sub:"나무 블록 퍼즐 10번 완성"}
+  {id:"a16",e:"🧩",nm:"퍼즐 박사",n:10,r:1200,get:()=>S.puzWins||0,sub:"나무 블록 퍼즐 10번 완성"},
+  {id:"a17",e:"⚡",nm:"레이저 마스터",n:1,r:2000,get:()=>S.lzHard||0,sub:"레이저 방 어려움 클리어"}
 ];
 /* 시세가 붙는 품목 */
 const TRADE=SEEDS.map(s=>({id:s.id,nm:s.nm,e:s.e,base:s.sell})).concat([{id:"fish",nm:"물고기",e:"🐟",base:0},{id:"bug",nm:"곤충",e:"🦋",base:0}]);
@@ -581,7 +582,8 @@ const ROTS=[
   {id:"tra",nm:"트랄랄레로",e:"🦈",cost:40,ips:.2,col:0x3d8bff},{id:"bom",nm:"봄바르디로",e:"🐊",cost:180,ips:.6,col:0x4caf50},
   {id:"tun",nm:"퉁퉁퉁 사후르",e:"🪵",cost:700,ips:2,col:0x8d6e63},{id:"bal",nm:"발레리나 카푸치나",e:"☕",cost:2600,ips:6,col:0xd7a86e},
   {id:"chi",nm:"치미판지니",e:"🍌",cost:9000,ips:18,col:0xffd54f},{id:"gar",nm:"가라마 케이크",e:"🍰",cost:30000,ips:50,col:0xff8a80},
-  {id:"rnb",nm:"무지개 브레인롯",e:"🌈",cost:90000,ips:130,col:0xffffff}
+  {id:"rnb",nm:"무지개 브레인롯",e:"🌈",cost:90000,ips:130,col:0xffffff},
+  {id:"lzr",nm:"레이저 브레인롯",e:"⚡",cost:40000,ips:60,col:0x40c4ff,noBuy:true}   /* ⚡ 레이저 방 어려움 클리어 보상 — 컨베이어·옆집엔 안 나옴, 팔면 4만 */
 ];
 const PETS=[
   {id:"dog",nm:"강아지",e:"🐶",col:0xd9a066,desc:"수확 코인 +15%",b:{harvest:.15}},
@@ -606,7 +608,7 @@ const QUESTS=[
   {k:"math",nm:"수학 퀴즈 맞히기",e:"➕",n:[5,10],r:150},{k:"feed",nm:"펫 먹이 주기",e:"🍖",n:[2,5],r:30,req:()=>S.pets.length>0},
   {k:"haunt",nm:"귀신의 집 촛불 모으기",e:"🕯️",n:[12,24],r:100,req:()=>S.coins>=200||S.hauntClears>0},
   {k:"badminton",nm:"배드민턴 랠리",e:"🏸",n:[10,25],r:60,req:()=>!!S.up.racket&&S.shuttles>0},
-  {k:"survive",nm:"서바이벌 버티기(초)",e:"🎯",n:[20,45],r:90},
+  {k:"survive",nm:"레이저 방 버티기(초)",e:"⚡",n:[20,45],r:90},
   {k:"shoot",nm:"풍선 터뜨리기",e:"💦",n:[15,40],r:80,req:()=>!!S.up.watergun},
   {k:"ride",nm:"놀이기구 타기",e:"🎢",n:[2,5],r:60},
   {k:"tkd",nm:"태권도 단계",e:"🥋",n:[3,6],r:90},
@@ -633,10 +635,11 @@ const SURV={x:-78,z:-26,w:34,d:34};
 const PARK={x:70,z:104}, WHEEL={x:30,z:124,cy:17,r:14}, CARO={x:46,z:134,r:5.2};
 const DROP={x:100,z:96,bot:2.4,top:44,brk:19,gon:null};
 const DOJO={x:72,z:56}, ROPE={x:22,z:70};
+/* ⚡ 레이저 방 단계: dur 초를 버티면 클리어(bonus), sp 는 차선 묶음 속도(m/s), gap 은 묶음 간격(초) */
 const SDIFF=[
-  {nm:"쉬움",e:"🟢",fee:100,hp:5,sp:9,max:4,pay:3,sub:"하트 5개 · 공이 느려요"},
-  {nm:"보통",e:"🟡",fee:200,hp:3,sp:13,max:6,pay:6,sub:"하트 3개 · 조금 빨라요"},
-  {nm:"어려움",e:"🔴",fee:400,hp:3,sp:18,max:9,pay:11,sub:"하트 3개 · 공이 많고 빨라요"}
+  {nm:"쉬움",e:"🟢",hp:5,dur:60,sp:6,gap:4.5,pay:3,bonus:200,sub:"하트 5개 · 60초 · 빈 차선 찾기 → 낮은 빔 점프"},
+  {nm:"보통",e:"🟡",hp:3,dur:90,sp:8,gap:3.4,pay:6,bonus:500,sub:"하트 3개 · 90초 · 높은 빔(점프 금지)·회전 빔 추가"},
+  {nm:"어려움",e:"🔴",hp:3,dur:120,sp:10,gap:2.6,pay:11,bonus:1000,sub:"하트 3개 · 120초 · 추적 빔·좁아지기 · ⚡ 첫 클리어 땐 레이저 브레인롯"}
 ];
 const FDIFF=[
   {nm:"쉬움",e:"🎈",fee:100,n:4,size:1.7,move:0,pay:2,aim:.12,sub:"큰 풍선 · 안 움직여요 · 조준 도우미"},
@@ -679,7 +682,7 @@ const AV_SKIN=[0xf5c66e,0xffdbac,0xd9a066,0xa8734a,0x6b4423,0xffc1d6,0xa5d8ff,0x
 const AV_COL=[0xffffff,0x111111,0xf4443c,0xff8c1a,0xffc83d,0x2fbf5a,0x00b06f,0x00a2ff,0x1f6fff,0x4b2fa8,0xb57bff,0xff4f9a,0xa0522d,0x9aa0a6];
 const AV_HAIR=[{id:"none",nm:"없음",e:"🥚"},{id:"short",nm:"짧은 머리",e:"💇"},{id:"long",nm:"긴 머리",e:"👩"},{id:"pony",nm:"포니테일",e:"🎀"},{id:"twin",nm:"양갈래",e:"👧"},{id:"spiky",nm:"뾰족 머리",e:"⚡"}];
 const AV_FACE=[{id:"smile",nm:"미소",e:"🙂"},{id:"laugh",nm:"크게 웃기",e:"😄"},{id:"wink",nm:"윙크",e:"😉"},{id:"cool",nm:"선글라스",e:"😎"},{id:"wow",nm:"놀람",e:"😮"},{id:"cat",nm:"고양이",e:"😸"}];
-const AV_HAT=[{id:"none",nm:"없음",e:"🚫",cost:0},{id:"cap",nm:"야구모자",e:"🧢",cost:0},{id:"bow",nm:"리본",e:"🎀",cost:0},{id:"flower",nm:"꽃",e:"🌸",cost:150},{id:"catears",nm:"고양이 귀",e:"🐱",cost:400},{id:"headphones",nm:"헤드폰",e:"🎧",cost:800},{id:"tophat",nm:"신사 모자",e:"🎩",cost:1500},{id:"halo",nm:"천사 링",e:"😇",cost:3000},{id:"crown",nm:"왕관",e:"👑",cost:8000},{id:"rainbowhat",nm:"무지개 모자",e:"🌈",cost:20000},{id:"pumpkin",nm:"호박 모자",e:"🎃",cost:-1}];
+const AV_HAT=[{id:"none",nm:"없음",e:"🚫",cost:0},{id:"cap",nm:"야구모자",e:"🧢",cost:0},{id:"bow",nm:"리본",e:"🎀",cost:0},{id:"flower",nm:"꽃",e:"🌸",cost:150},{id:"catears",nm:"고양이 귀",e:"🐱",cost:400},{id:"headphones",nm:"헤드폰",e:"🎧",cost:800},{id:"tophat",nm:"신사 모자",e:"🎩",cost:1500},{id:"halo",nm:"천사 링",e:"😇",cost:3000},{id:"crown",nm:"왕관",e:"👑",cost:8000},{id:"rainbowhat",nm:"무지개 모자",e:"🌈",cost:20000},{id:"pumpkin",nm:"호박 모자",e:"🎃",cost:-1,how:"귀신의 집 클리어 보상"},{id:"bolt",nm:"번개 모자",e:"⚡",cost:-1,how:"레이저 방 클리어 보상"}];
 const byId=(arr,id)=>{ for(const a of arr) if(a.id===id) return a; return arr[0]; };
 
 /* ======================= 맵 좌표 ======================= */
@@ -982,7 +985,7 @@ function drawGoal(){ const g=$("goal");
       :RIDE.type==="drop"?"🗼 "+Math.round(RIDE.hy*.34)+"m · "+Math.round(RIDE.v*1.22)+"km/h · "+RIDE.gf.toFixed(1)+"G"
       :RIDE.type==="wheel"?"🎡 대관람차 · "+s+"초":"🎠 회전목마 · "+s+"초"; return; }
   if(FP.on){ const d=FDIFF[FP.diff]; g.className="goal wx"; g.textContent="💦 "+d.nm+" · 🎈 "+FP.score+"개 · 남은 시간 "+Math.max(0,Math.ceil(FP.end-now()))+"초"; return; }
-  if(SV.on){ const d=SDIFF[SV.diff],sec=Math.floor(now()-SV.t0); g.className="goal wx"; g.textContent=d.e+" "+d.nm+" · "+"❤️".repeat(Math.max(0,SV.hp))+" · "+sec+"초 버팀 (초당 "+d.pay+"코인)"; return; }
+  if(SV.on){ const d=SDIFF[SV.diff],left=Math.max(0,Math.ceil(SV.dur-(now()-SV.t0))); g.className="goal wx"; g.textContent="⚡ "+d.nm+" · "+"❤️".repeat(Math.max(0,SV.hp))+" · "+left+"초 남음 · "+(SV.phase+1)+"단계 (초당 "+d.pay+"코인)"; return; }
   if(H.zone==="home"){ g.className="goal"; g.textContent="🏡 우리 집 · 가구를 눌러서 써보세요 · 🚪 문으로 나가기"; return; }
   if(H.zone==="haunt"){ const d=HDIFF[H.diff]||HDIFF[1]; g.className="goal wx"; g.textContent=d.e+" "+d.nm+" · 🕯️ 촛불 "+H.got+" / "+H.n+" · 문으로 나가면 촛불당 "+d.pay+"코인"; return; }
   { const pt=pzGoal(); if(pt){ g.className="goal wx"; g.textContent=pt; return; } }   /* 🧩 퍼즐 판 근처: 조각 수·모래시계 */
@@ -1014,7 +1017,8 @@ const TIPS=[
   {e:"👻",t:"귀신의 집에서 촛불을 모으면 코인을 받아요",ok:()=>S.coins>=200},
   {e:"🧩",t:"동쪽 꽃밭 옆 퍼즐 광장(노란 빛기둥) — 조각 앞에서 E를 눌러 들고, 파인 홈에 놓아 보세요",ok:()=>(S.puzWins||0)<3},
   {e:"🚀",t:"출발점 남쪽 노란 발사대를 밟으면 퍼즐 광장까지 슝 날아가요",ok:()=>(S.puzWins||0)<5},
-  {e:"🦉",t:"퍼즐이 어려우면 광장의 부엉이 박사에게 힌트를 물어봐요 — 1분 넘게 막히면 무료",ok:()=>(S.puzWins||0)<8}
+  {e:"🦉",t:"퍼즐이 어려우면 광장의 부엉이 박사에게 힌트를 물어봐요 — 1분 넘게 막히면 무료",ok:()=>(S.puzWins||0)<8},
+  {e:"⚡",t:"레이저 방(서쪽): 초록 빈 차선으로! 노란 빔은 점프, 분홍 빔은 점프 금지",ok:()=>(S.lzClears||0)<3}
 ];
 const TIP={until:0,next:12,txt:"",cls:"goal",last:-1};
 function showTip(txt,secs,cls){ TIP.txt=txt; TIP.cls=cls||"goal"; TIP.until=now()+(secs||7); }
@@ -1170,6 +1174,8 @@ function mkChar(p){
   if(Ht==="crown"){ add(1.35,.35,1.35,0,.85,0,gold); for(const [x,z] of [[-.5,-.5],[.5,-.5],[-.5,.5],[.5,.5],[0,0]]) add(.22,.45,.22,x,1.2,z,gold); add(.2,.2,.2,0,1.05,.68,mat(0xf4443c)); }
   if(Ht==="rainbowhat"){ [0xff5252,0xffb300,0x69f0ae,0x40c4ff,0xe040fb].forEach((c,i)=>add(1.5-i*.22,.24,1.5-i*.22,0,.78+i*.24,0,mat(c))); }
   if(Ht==="pumpkin"){ const o=mat(0xff8c1a),k=mat(0x1a1226); add(1.5,1.5,1.5,0,.05,0,o); add(.32,.32,.1,-.32,.28,.78,k); add(.32,.32,.1,.32,.28,.78,k); add(.8,.2,.1,0,-.22,.78,k); add(.25,.4,.25,0,.95,0,mat(0x3f9b3f)); }
+  if(Ht==="bolt"){ /* ⚡ 번개 모자: 남색 띠 위에 지그재그 번개(레이저 방 클리어 보상) */ const y=new T.MeshLambertMaterial({color:0xffea00,emissive:0x6b5a00}); add(1.45,.32,1.45,0,.82,0,mat(0x1b1b3a));
+    add(.24,.5,.24,-.14,1.15,0,y).rotation.z=.55; add(.24,.5,.24,.14,1.5,0,y).rotation.z=-.55; add(.24,.5,.24,-.14,1.85,0,y).rotation.z=.55; add(.34,.12,.34,0,.98,.62,y); }
   for(const m of [lL,lR,torso,aL,aR,head]) m.castShadow=true;
   g.add(lL,lR,torso,aL,aR,hg); g.userData={lL,lR,aL,aR,hg,torso}; return g;
 }
@@ -1414,7 +1420,7 @@ function mkRot(id){ const r=byId(ROTS,id),g=new T.Group(); const side=mat(r.col)
   const b=new T.Mesh(new T.BoxGeometry(1.7,1.7,1.7),[side,side,side,side,face,face]); b.castShadow=true; b.position.y=.85; g.add(b);
   const ll=new T.Mesh(new T.BoxGeometry(.45,.6,.45),mat(0x222222)); ll.position.set(-.45,-.3,0); g.add(ll); const lr=ll.clone(); lr.position.x=.45; g.add(lr); g.userData.rot=r; return g; }
 const beltItems=[]; let beltNext=now()+1;
-function pickRot(){ const pool=ROTS.filter(r=>r.cost<=Math.max(40,S.coins*2.5)).map(r=>r.id); return pool[Math.floor(Math.random()*pool.length)]; }
+function pickRot(){ const pool=ROTS.filter(r=>!r.noBuy&&r.cost<=Math.max(40,S.coins*2.5)).map(r=>r.id); return pool[Math.floor(Math.random()*pool.length)]; }
 
 function pedestal(x,z){ const p=new T.Mesh(new T.CylinderGeometry(1.3,1.5,.6,16),mat(0xbfc4c9)); p.receiveShadow=true; p.castShadow=true; at(p,x,.3,z); solids.push({x,z,r:1.4}); }
 const baseSlots=[],rivalSlots=[];
@@ -1534,21 +1540,35 @@ const coachRacket=mkRacket(); coach.userData.aR.add(coachRacket);
 const shuttle=new T.Group(); { const c=new T.Mesh(new T.ConeGeometry(.28,.6,8,1,true),mat(0xffffff,{side:T.DoubleSide})); c.rotation.x=Math.PI; c.position.y=.3; shuttle.add(c); const k=new T.Mesh(new T.SphereGeometry(.14,8,6),mat(0xf4443c)); shuttle.add(k); } shuttle.visible=false; scene.add(shuttle);
 const BD={on:false,rally:0,phase:"idle",t0:0,dur:1.4,from:new T.Vector3(),to:new T.Vector3(),racket:null,swing:0,cswing:0};
 
-/* ---- 서바이벌 게임장 ---- */
-const SV={on:false,t0:0,hp:3,diff:1,balls:[],inv:0,next:0};
-(function arena(){
+/* ---- ⚡ 레이저 방 (예전 "서바이벌 게임장": 굴러오는 공 피하기 → 레이저 피하기로 교체) ----
+   벤치마크: 로블록스 Epic Minigames「Laser Cutting」(차선 묶음이 한 방향으로 오고 빈 차선 하나·낮은 빔은 점프),
+   폴가이즈「Jump Club」(낮은 빔 점프 · 머리 위 두꺼운 빔은 점프 금지)·「Block Party」(3단계로 요소 추가·좁아지기),
+   스텀블가이즈「Laser Tracer」(추적 빔). 정해진 시간(60/90/120초)을 끝까지 버티면 클리어.
+   빔은 나오기 전에 예고(발사기 반짝·바닥 깜빡)가 있고, 맞으면 하트 -1 · 1.4초 무적. 하트가 다 닳으면 버틴 초만큼만 코인.
+   같은 경기장을 💦 물총 사격도 그대로 쓴다. */
+const SV={on:false,t0:0,hp:3,diff:0,inv:0,next:0,gridNext:0,phase:-1,shrink:0,items:[],rots:[],tracer:null,walls:null,lastSec:-1,dur:0,seenHigh:false};
+const LZ={lanes:4,laneW:SURV.w/4,grid:5,cell:SURV.w/5,emit:[]};
+const LZM={};
+function lzMat(col,op){ const k=col+"_"+(op||1); return LZM[k]||(LZM[k]=new T.MeshBasicMaterial(op?{color:col,transparent:true,opacity:op,depthWrite:false,side:T.DoubleSide}:{color:col})); }
+/* 빔 하나: 가운데 심지 + 넓은 반투명 빛. 길이는 x 방향 */
+function lzBar(len,th,col){ const g=new T.Group(); g.add(new T.Mesh(new T.BoxGeometry(len,th,th),lzMat(col))); g.add(new T.Mesh(new T.BoxGeometry(len,th*3.2,th*3.2),lzMat(col,.28))); return g; }
+(function laserRoom(){
   const A=SURV,hw=A.w/2,hd=A.d/2;
-  const fl=box(A.w,.3,A.d,0xd9b382); fl.receiveShadow=true; at(fl,A.x,.12,A.z);
-  for(let i=-hw+3;i<hw;i+=6) for(let j=-hd+3;j<hd;j+=6) if((i+j)%12===0) at(box(5.8,.06,5.8,0xc9a072),A.x+i,.28,A.z+j);
-  for(const [dx,dz,w,d] of [[0,-hd,A.w,.8],[-hw,0,.8,A.d],[hw,0,.8,A.d]]){ at(box(w,3.4,d,0xff8c1a),A.x+dx,1.7,A.z+dz); PLATS.push({x:A.x+dx,z:A.z+dz,w,d,y:3.4,h:3.4,noDraw:true}); }
-  for(const s of [-1,1]){ at(box(hw-2.5,3.4,.8,0xff8c1a),A.x+s*(hw/2+1.25),1.7,A.z+hd); PLATS.push({x:A.x+s*(hw/2+1.25),z:A.z+hd,w:hw-2.5,d:.8,y:3.4,h:3.4,noDraw:true}); }
-  for(let i=-hw;i<=hw;i+=4){ at(box(.5,4.2,.5,0xf1f1f1),A.x+i,2.1,A.z-hd); at(box(.5,4.2,.5,0xf1f1f1),A.x-hw,2.1,A.z+i); at(box(.5,4.2,.5,0xf1f1f1),A.x+hw,2.1,A.z+i); }
-  for(const [dx,dz] of [[-9,-9],[9,-9],[-9,9],[9,9],[0,0]]){ at(box(3,2.6,3,0x9aa0a6),A.x+dx,1.3,A.z+dz); PLATS.push({x:A.x+dx,z:A.z+dz,w:3,d:3,y:2.6,h:2.6,pad:.4,noDraw:true}); }
-  at(label("🎯 서바이벌 게임장",{size:46,h:1.6}),A.x,8,A.z+hd+2);
-  at(label("문제를 풀고 들어가 공을 피해 버티기!",{size:28,h:.8,color:"#bdbebe"}),A.x,6.6,A.z+hd+2);
-  beacon(A.x,A.z,0xff8c1a);
-  const bm=new T.MeshLambertMaterial({color:0xf4443c});
-  for(let i=0;i<10;i++){ const b=new T.Mesh(new T.SphereGeometry(1.1,12,9),bm); b.castShadow=true; b.visible=false; scene.add(b); SV.balls.push({m:b,on:false,x:0,z:0,vx:0,vz:0}); }
+  /* 바닥: 어두운 판 + 차선 4개(밝기 교대) + 흰 차선 줄 */
+  const fl=box(A.w,.3,A.d,0x23233a); fl.receiveShadow=true; at(fl,A.x,.12,A.z);
+  for(let l=0;l<LZ.lanes;l++){ const s=box(LZ.laneW-.2,.05,A.d-1,l%2?0x2f2f4d:0x3a3a5e); s.receiveShadow=true; at(s,A.x-hw+(l+.5)*LZ.laneW,.29,A.z); }
+  for(let l=1;l<LZ.lanes;l++) at(box(.12,.05,A.d-1,0xe0e0ff),A.x-hw+l*LZ.laneW,.31,A.z);
+  /* 벽: 어두운 회색 + 빨간 띠, 남쪽(입구)은 가운데가 트여 있다 */
+  for(const [dx,dz,w,d] of [[0,-hd,A.w,.8],[-hw,0,.8,A.d],[hw,0,.8,A.d]]){ at(box(w,3.4,d,0x3a3a4a),A.x+dx,1.7,A.z+dz); at(box(w+.02,.25,d+.02,0xff1744),A.x+dx,3.0,A.z+dz); PLATS.push({x:A.x+dx,z:A.z+dz,w,d,y:3.4,h:3.4,noDraw:true}); }
+  for(const s of [-1,1]){ at(box(hw-2.5,3.4,.8,0x3a3a4a),A.x+s*(hw/2+1.25),1.7,A.z+hd); at(box(hw-2.5,.25,.82,0xff1744),A.x+s*(hw/2+1.25),3.0,A.z+hd); PLATS.push({x:A.x+s*(hw/2+1.25),z:A.z+hd,w:hw-2.5,d:.8,y:3.4,h:3.4,noDraw:true}); }
+  for(let i=-hw;i<=hw;i+=4){ at(box(.5,4.2,.5,0xd0d0e0),A.x+i,2.1,A.z-hd); at(box(.5,4.2,.5,0xd0d0e0),A.x-hw,2.1,A.z+i); at(box(.5,4.2,.5,0xd0d0e0),A.x+hw,2.1,A.z+i); }
+  /* 북쪽 벽의 발사기(차선마다) — 빔은 여기서 나와 남쪽(카메라 쪽)으로 온다 */
+  for(let l=0;l<LZ.lanes;l++){ const x=A.x-hw+(l+.5)*LZ.laneW; at(box(1.6,1.4,1,0x2a2a38),x,2.2,A.z-hd+.9); const lens=new T.Mesh(new T.SphereGeometry(.35,10,8),lzMat(0xff1744)); at(lens,x,2.2,A.z-hd+1.5); LZ.emit.push(lens); }
+  /* 가운데 기둥(회전 빔·추적 빔이 여기서 나온다) */
+  at(new T.Mesh(new T.CylinderGeometry(.6,.8,1.6,12),mat(0x2a2a38)),A.x,.95,A.z); at(new T.Mesh(new T.SphereGeometry(.5,12,9),lzMat(0xff5252)),A.x,1.9,A.z); solids.push({x:A.x,z:A.z,r:.9});
+  at(label("⚡ 레이저 방",{size:46,h:1.6}),A.x,8,A.z+hd+2);
+  at(label("빈 차선으로! 노란 빔은 점프, 분홍 빔은 점프 금지",{size:28,h:.8,color:"#bdbebe"}),A.x,6.6,A.z+hd+2);
+  beacon(A.x,A.z,0xff1744);
 })();
 /* ---- 물총 사격 (1인칭) ---- */
 const FP={on:false,diff:1,t0:0,end:0,score:0,pitch:0,targets:[],shots:[],lastSec:0};
@@ -2674,7 +2694,7 @@ function blockers(x,z){ const out=[]; for(const p of PLATS) if(blocks(p,x,z)) ou
 function tryMove(nx,nz){
   if(H.zone==="haunt"){ const A=ARENA; nx=Math.min(Math.max(nx,A.x-A.w/2+1.5),A.x+A.w/2-1.5); nz=Math.min(Math.max(nz,A.z-A.d/2+1.5),A.z+A.d/2-1.5); }
   else if(H.zone==="home"){ const A=ROOM; nx=Math.min(Math.max(nx,A.x-A.w/2+1.6),A.x+A.w/2-1.6); nz=Math.min(Math.max(nz,A.z-A.d/2+1.6),A.z+A.d/2-1); }
-  else if(SV.on||FP.on){ const A=SURV; nx=Math.min(Math.max(nx,A.x-A.w/2+1.4),A.x+A.w/2-1.4); nz=Math.min(Math.max(nz,A.z-A.d/2+1.4),A.z+A.d/2-1.4); }
+  else if(SV.on||FP.on){ const A=SURV,sh=SV.on?SV.shrink:0; nx=Math.min(Math.max(nx,A.x-A.w/2+1.4+sh),A.x+A.w/2-1.4-sh); nz=Math.min(Math.max(nz,A.z-A.d/2+1.4),A.z+A.d/2-1.4); }   /* 레이저 방 3단계 좁아지기(sh) */
   else { if(Math.abs(nx)>BOUND) nx=Math.sign(nx)*BOUND; if(Math.abs(nz)>BOUND) nz=Math.sign(nz)*BOUND; }
   if(inWater(nx,P.z)||blocked(nx,P.z)) nx=P.x; if(inWater(nx,nz)||blocked(nx,nz)) nz=P.z;
   /* 원기둥 충돌 — 한 번 밀려난 뒤 다른 물체 안으로 들어가는 일이 있어 두 번 푼다 */
@@ -2752,7 +2772,7 @@ FURN.filter(f=>f.act).forEach(f=>addI({x:ROOM.x+f.x*FS,z:ROOM.z+f.z*FS,h:3.4,r:3
       note("📚","Lv."+S.lvl+" · 물고기 도감 "+n+"/"+FISH.length+" · 배드민턴 최고 "+S.badBest+" · 수학 최고 "+S.mathBest+"/5 · 집 가치 "+num(houseValue())); SFX.open(); return; }
     if(f.id==="toy"){ note("🧸","포옹! 기분이 좋아졌어"); tone(700,.14,"sine",.05,900); burst(ROOM.x+f.x*FS,2.4,ROOM.z+f.z*FS,0xff6b8a,12,3,.8); return; }
   }}));
-addI({x:SURV.x,z:SURV.z+SURV.d/2+2,h:4.4,r:4.5,text:()=>SV.on?null:"🎯 서바이벌 게임장 · 🎟️ 문제 풀고 입장",act:()=>openSurv()});
+addI({x:SURV.x,z:SURV.z+SURV.d/2+2,h:4.4,r:4.5,text:()=>SV.on?null:"⚡ 레이저 방 · 🎟️ 문제 풀고 입장",act:()=>openSurv()});
 addI({x:PARK.x+6,z:PARK.z-8,h:5,r:5.5,text:()=>RIDE.on?null:"🎢 롤러코스터 타기 · 🎟️ 문제 풀고",act:()=>gate("🎢 롤러코스터",()=>startRide("coaster"))});
 addI({x:DROP.x,z:DROP.z+7.4,h:5.8,r:4.2,text:()=>RIDE.on?null:"🗼 자이로드롭 타기 · 🎟️ 문제 풀고",act:()=>gate("🗼 자이로드롭",()=>startRide("drop"))});
 addI({x:DOJO.x,z:DOJO.z+10.5,h:4.5,r:5,text:()=>TK.on?null:"🥋 태권도 배우기 · 🎟️ 문제 풀고 (최고 "+S.tkdBest+"단계)",act:()=>gate("🥋 태권도",()=>startTkd())});
@@ -2761,10 +2781,11 @@ addI({x:WHEEL.x,z:WHEEL.z+4.5,h:4.5,r:4.5,text:()=>RIDE.on?null:"🎡 대관람�
 addI({x:CARO.x,z:CARO.z+CARO.r+2.5,h:4,r:4.5,text:()=>RIDE.on?null:"🎠 회전목마 타기 · 🎟️ 문제 풀고",act:()=>gate("🎠 회전목마",()=>startRide("caro"))});
 function openSurv(){
   const B=$("survBody"); B.innerHTML="";
-  const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>리호:</b> 굴러오는 공을 피해서 오래 버티면 코인을 줄게! <b>점프로 넘을 수도</b> 있어. 하트가 다 없어지면 끝!<br>최고 기록 "+S.svBest+"초"; B.appendChild(h);
-  const s1=document.createElement("div"); s1.className="sec"; s1.textContent="🎯 피하기 서바이벌 (공을 피해 버티기)"; B.appendChild(s1);
-  SDIFF.forEach((d,i)=>{ const r=row(d.e,d.nm,d.sub+" · 1초당 "+d.pay+"코인"); const b=btn("🎟️ 문제 풀기","blue");
-    b.onclick=()=>gate("🎯 서바이벌 · "+d.nm,()=>{ S.svDiff=i; startSurv(i); }); r.appendChild(b); B.appendChild(r); });
+  const h=document.createElement("div"); h.className="help"; h.innerHTML="<b>리호:</b> 레이저가 벽에서 벽으로 지나가! <b>초록으로 빛나는 빈 차선</b>으로 가고, <b>노란 낮은 빔은 점프</b>, <b>분홍 높은 빔은 점프하지 말고</b> 걸어서 지나가. 빨간 바닥이 깜빡이면 그 칸에서 나가! 끝까지 버티면 클리어 보너스!<br>색은 속도: 🟠 느림 · 🔴 보통 · 🔵 빠름 · 최고 기록 "+S.svBest+"초 · 클리어 "+(S.lzClears||0)+"번"; B.appendChild(h);
+  if(S.lzRotPending){ if(freeSlot()>=0){ const b=btn("⚡ 레이저 브레인롯 받기 (리호가 맡아둔 것)","wide"); b.onclick=()=>{ lzGiveRot(); closeGui(); }; B.appendChild(b); } else B.appendChild(help2("⚡ 리호가 <b>레이저 브레인롯</b>을 맡아두고 있어요 — 기지 받침대 한 칸을 비우고 다시 오면 줘요.")); }
+  const s1=document.createElement("div"); s1.className="sec"; s1.textContent="⚡ 레이저 피하기 (끝까지 버티면 클리어)"; B.appendChild(s1);
+  SDIFF.forEach((d,i)=>{ const r=row(d.e,d.nm,d.sub+" · 1초당 "+d.pay+"코인 · 클리어 +"+d.bonus); const b=btn("🎟️ 문제 풀기","blue");
+    b.onclick=()=>gate("⚡ 레이저 방 · "+d.nm,()=>{ S.svDiff=i; startSurv(i); }); r.appendChild(b); B.appendChild(r); });
   const s2=document.createElement("div"); s2.className="sec"; s2.textContent="💦 물총 사격 (1인칭 · 60초 동안 풍선 터뜨리기) · 최고 "+S.fpBest+"개"; B.appendChild(s2);
   if(!S.up.watergun){ const d=document.createElement("div"); d.className="help"; d.textContent="💦 물총이 있어야 해요 — 준호의 업그레이드 가게에서 1,200코인"; B.appendChild(d); }
   else FDIFF.forEach((d,i)=>{ const r=row(d.e,d.nm,d.sub+" · 풍선 1개당 "+d.pay+"코인"); const b=btn("🎟️ 문제 풀기","blue");
@@ -2810,34 +2831,88 @@ function fireFP(){
 $("fireBtn").addEventListener("touchstart",e=>{ e.preventDefault(); e.stopPropagation(); fireFP(); },{passive:false});
 $("fireBtn").addEventListener("mousedown",e=>{ e.stopPropagation(); fireFP(); });
 $("fpquit").onclick=()=>{ if(FP.on) endFP("그만했어!"); };
+/* ---- ⚡ 레이저 방 진행: 단계 → 차선 묶음·바닥 격자·회전 빔·추적 빔·좁아지기 ---- */
+function lzPhases(){ return [[30,60],[30,60,90],[30,60,120]][SV.diff]; }
+function lzLaneX(l){ return SURV.x-SURV.w/2+(l+.5)*LZ.laneW; }
+function lzLaneOf(x){ return Math.min(LZ.lanes-1,Math.max(0,Math.floor((x-(SURV.x-SURV.w/2))/LZ.laneW))); }
+function lzSpeed(){ const d=SDIFF[SV.diff], k=(now()-SV.t0)/SV.dur; return d.sp*(1+.12*Math.max(0,SV.phase))*(1+.3*k); }
+function lzColor(sp){ return sp<7?0xffb300:sp<9.5?0xff1744:0x40c4ff; }   /* 색 = 속도 (주황 느림 · 빨강 보통 · 파랑 빠름) */
 function startSurv(lv){
-  const d=SDIFF[lv]; SV.on=true; SV.diff=lv; SV.hp=d.hp; SV.t0=now(); SV.inv=now()+1.5; SV.next=now()+1.2;
-  SV.balls.forEach(b=>{ b.on=false; b.m.visible=false; });
-  camYaw=0; teleport(SURV.x,SURV.z+SURV.d/2-5); $("survwin").classList.add("on"); $("svmsg").textContent="공을 피해요! 점프로 넘을 수도 있어요";
-  drawGoal(); note("🎯",d.nm+" 시작! 오래 버텨봐","gold"); SFX.alarm(); save();
+  const d=SDIFF[lv]; SV.on=true; SV.diff=lv; SV.hp=d.hp; SV.dur=d.dur; SV.t0=now(); SV.inv=now()+2; SV.next=now()+3; SV.gridNext=now()+6; SV.phase=-1; SV.shrink=0; SV.lastSec=-1; SV.seenHigh=false; SV.items=[]; SV.rots=[]; SV.tracer=null; SV.walls=null;
+  camYaw=0; teleport(SURV.x,SURV.z+SURV.d/2-5); $("survwin").classList.add("on");
+  lzPhase(0); drawGoal(); note("⚡",d.nm+" 시작! "+d.dur+"초만 버티면 클리어","gold"); SFX.alarm(); save();
 }
-function endSurv(why){
-  const d=SDIFF[SV.diff],sec=Math.floor(now()-SV.t0),pay=sec*d.pay,bonus=sec>=60?Math.round(150*(1+SV.diff*.6)):sec>=30?Math.round(60*(1+SV.diff*.6)):0;
-  SV.on=false; SV.balls.forEach(b=>{ b.on=false; b.m.visible=false; }); $("survwin").classList.remove("on");
-  teleport(SURV.x,SURV.z+SURV.d/2+5);
-  if(sec>S.svBest) S.svBest=sec;
-  earn(pay+bonus); gainXp(sec*3); quest("survive",sec);
-  if(bonus){ note("🏆",why+" "+sec+"초! +"+num(pay)+" +보너스 "+num(bonus),"gold"); SFX.fanfare(); burst(P.x,P.y+4,P.z,0xff8c1a,30,7,1); }
-  else note("🎯",why+" "+sec+"초 · +"+num(pay)+" 코인"+(S.svBest>sec?" (최고 "+S.svBest+"초)":""));
-  drawGoal(); save();
+function lzPhase(p){ SV.phase=p;
+  if(p===0) $("svmsg").textContent="1단계 · 초록으로 빛나는 빈 차선으로 가요!";
+  if(p===1){ $("svmsg").textContent="2단계 · 노란 낮은 빔은 점프로 넘어요!"; chime(600,800); }
+  if(p===2){ $("svmsg").textContent="3단계 · 가운데서 도는 빔도 점프! 더 빨라져요"; chime(600,800,1000);
+    lzRotAdd(.9); if(SV.diff===2){ lzRotAdd(-1.3); lzTracerAdd(); lzWallsAdd(); } }
+  drawGoal(); }
+function lzRotAdd(w){ const A=SURV; const g=lzBar(A.w-3,.22,0xff1744); g.position.set(A.x,1.0,A.z); scene.add(g); SV.rots.push({g,th:Math.random()*6.28,w}); }
+function lzTracerAdd(){ const A=SURV,L=A.w/2-1.5; const g=new T.Group(); const bar=lzBar(L,.22,0x40c4ff); bar.position.x=L/2; g.add(bar); g.position.set(A.x,1.0,A.z); scene.add(g); SV.tracer={g,th:0,L}; }
+function lzWallsAdd(){ const A=SURV; const mk=()=>{ const m=new T.Mesh(new T.BoxGeometry(.3,5,A.d-1),lzMat(0xff1744,.35)); m.position.set(A.x,2.5,A.z); scene.add(m); return m; }; SV.walls=[mk(),mk()]; }
+/* 차선 묶음: 빈 차선 하나만 남기고 나머지에 레이저 커튼(막대 4단+반투명 판). 옵션: 낮은 빔(노랑, 점프)·높은 빔(분홍, 점프 금지) */
+function lzBatch(opt){ const A=SURV,hd=A.d/2, free=Math.floor(Math.random()*LZ.lanes), sp=lzSpeed(), col=lzColor(sp);
+  const g=new T.Group(); g.position.set(A.x,0,A.z-hd-1.5);
+  for(let l=0;l<LZ.lanes;l++){ const x=lzLaneX(l)-A.x;
+    if(l===free){ if(SV.diff<2){ const pl=new T.Mesh(new T.PlaneGeometry(LZ.laneW-.4,4.6),lzMat(0x69f0ae,.22)); pl.position.set(x,2.5,0); g.add(pl); } continue; }   /* 빈 차선은 초록 문(어려움은 표시 없음) */
+    for(const y of [.7,1.9,3.1,4.3]){ const b=lzBar(LZ.laneW-.3,.14,col); b.position.set(x,y,0); g.add(b); }
+    const pl=new T.Mesh(new T.PlaneGeometry(LZ.laneW-.3,4.6),lzMat(col,.16)); pl.position.set(x,2.5,0); g.add(pl); }
+  if(opt.low){ const b=lzBar(A.w-.6,.2,0xffea00); b.position.set(0,1.0,0); g.add(b); }
+  if(opt.high){ const b=lzBar(A.w-.6,.6,0xe040fb); b.position.set(0,7.4,0); g.add(b); if(!SV.seenHigh){ SV.seenHigh=true; $("svmsg").textContent="분홍 빔은 높아요 — 점프하지 말고 걸어서 지나가요!"; } }
+  scene.add(g); SV.items.push({type:"lane",g,z:A.z-hd-1.5,sp,free,low:!!opt.low,high:!!opt.high,hit:false});
+  tone(220,.1,"square",.03); for(const e of LZ.emit) e.scale.setScalar(1.7); }
+/* 바닥 격자: 칸이 1초 깜빡인 뒤 레이저가 내리꽂힘(0.45초). 70%는 내가 서 있는 칸 */
+function lzGridCell(){ const A=SURV,hw=A.w/2,hd=A.d/2; let i,j;
+  if(Math.random()<.7){ i=Math.min(LZ.grid-1,Math.max(0,Math.floor((P.x-(A.x-hw))/LZ.cell))); j=Math.min(LZ.grid-1,Math.max(0,Math.floor((P.z-(A.z-hd))/LZ.cell))); } else { i=Math.floor(Math.random()*LZ.grid); j=Math.floor(Math.random()*LZ.grid); }
+  const x=A.x-hw+(i+.5)*LZ.cell, z=A.z-hd+(j+.5)*LZ.cell;
+  const pl=new T.Mesh(new T.PlaneGeometry(LZ.cell-.4,LZ.cell-.4),new T.MeshBasicMaterial({color:0xff1744,transparent:true,opacity:.35,depthWrite:false,side:T.DoubleSide})); pl.rotation.x=-Math.PI/2; pl.position.set(x,.36,z); scene.add(pl);
+  SV.items.push({type:"grid",g:pl,x,z,t0:now(),warn:1.0,fire:.45,col:null,hit:false}); beep(440,.08,"square",.03); }
+function lzHit(x,z,col){ if(now()<SV.inv) return; SV.hp--; SV.inv=now()+1.4; SFX.sting(); shake(.5,.3); burst(x,1.5,z,col||0xff1744,16,5,.6);
+  const el=$("scare"); $("scaretxt").textContent="⚡ 지지직!"; el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),350);
+  if(SV.hp<=0){ endSurv("아쉽다!",false); return; } $("svmsg").textContent="앗! 하트 "+SV.hp+"개 남았어"; drawGoal(); }
+function lzTick(t,dt){ if(!SV.on) return; const A=SURV,hw=A.w/2,hd=A.d/2,d=SDIFF[SV.diff],el=t-SV.t0;
+  if(el>=SV.dur){ endSurv("클리어!",true); return; }
+  let p=0; for(const b of lzPhases()) if(el>=b) p++; if(p!==SV.phase) lzPhase(p);
+  const gap=d.gap*(1-.25*(el/SV.dur))*(SV.phase>=2?1.4:1);
+  if(t>=SV.next){ SV.next=t+gap; const r=Math.random(), opt={}; if(SV.phase>=1){ if(r<.45) opt.low=true; else if(SV.diff>=1&&r<.75) opt.high=true; } lzBatch(opt); }
+  const gridGap=SV.diff===0?6:SV.diff===1?8:7; if(t>=SV.gridNext){ SV.gridNext=t+gridGap; lzGridCell(); }
+  for(const e of LZ.emit){ const s=e.scale.x; if(s>1) e.scale.setScalar(Math.max(1,s-dt*3)); }
+  const lane=lzLaneOf(P.x);
+  for(let i=SV.items.length-1;i>=0;i--){ const it=SV.items[i];
+    if(it.type==="lane"){ it.z+=it.sp*dt; it.g.position.z=it.z; if(it.z>A.z+hd+2){ scene.remove(it.g); SV.items.splice(i,1); continue; }
+      if(!it.hit&&Math.abs(P.z-it.z)<.8){ let h=false; if(lane!==it.free) h=true; if(it.low&&P.y<1.4) h=true; if(it.high&&P.y>1.0) h=true;
+        if(h){ it.hit=true; lzHit(P.x,it.z,it.high&&lane===it.free?0xe040fb:it.low&&lane===it.free?0xffea00:0xff1744); if(!SV.on) return; } } }
+    else { const k=t-it.t0;
+      if(k<it.warn) it.g.material.opacity=.22+.28*Math.abs(Math.sin(k*18));
+      else if(!it.col){ it.col=new T.Mesh(new T.BoxGeometry(LZ.cell-.5,10,LZ.cell-.5),lzMat(0xff1744,.4)); it.col.position.set(it.x,5,it.z); scene.add(it.col); noise(.15,.05,3000); tone(160,.2,"sawtooth",.04); }
+      if(k>=it.warn&&k<it.warn+it.fire&&!it.hit&&Math.abs(P.x-it.x)<LZ.cell/2&&Math.abs(P.z-it.z)<LZ.cell/2&&P.y<1.6){ it.hit=true; lzHit(it.x,it.z); if(!SV.on) return; }
+      if(k>=it.warn+it.fire){ scene.remove(it.g); if(it.col) scene.remove(it.col); SV.items.splice(i,1); } } }
+  /* 회전 빔(가운데 기둥, 낮음): 그룹의 x축이 빔 방향 — rotation.y=θ 면 월드 방향은 (cosθ, -sinθ) */
+  const dx=P.x-A.x,dz=P.z-A.z,L=A.w-3;
+  for(const r of SV.rots){ r.th+=r.w*(1+Math.min(1,Math.max(0,el-60)/60)*.6)*dt; r.g.rotation.y=r.th; const c=Math.cos(r.th),s=Math.sin(r.th), along=dx*c-dz*s, perp=dx*s+dz*c;
+    if(P.y<1.4&&Math.abs(along)<L/2&&Math.abs(perp)<.8){ lzHit(P.x,P.z); if(!SV.on) return; } }
+  /* 추적 빔(어려움): 나를 향해 천천히 돈다 — 뛰어서 돌거나 점프 */
+  if(SV.tracer){ const tr=SV.tracer, want=Math.atan2(-dz,dx); let df=want-tr.th; df=Math.atan2(Math.sin(df),Math.cos(df)); const w=.7*dt; tr.th+=Math.max(-w,Math.min(w,df)); tr.g.rotation.y=tr.th;
+    const c=Math.cos(tr.th),s=Math.sin(tr.th), along=dx*c-dz*s, perp=dx*s+dz*c; if(P.y<1.4&&along>0&&along<tr.L&&Math.abs(perp)<.8){ lzHit(P.x,P.z,0x40c4ff); if(!SV.on) return; } }
+  /* 좁아지기(어려움 3단계): 양옆 빛의 벽이 6m씩 들어온다 */
+  if(SV.walls){ SV.shrink=6*Math.min(1,(el-lzPhases()[1])/20); const lim=hw-SV.shrink; SV.walls[0].position.x=A.x-lim; SV.walls[1].position.x=A.x+lim; if(Math.abs(P.x-A.x)>lim-1.4) P.x=A.x+Math.sign(P.x-A.x)*(lim-1.4); }
+  if(Math.floor(t)!==SV.lastSec){ SV.lastSec=Math.floor(t); drawGoal(); }
 }
-function svSpawn(){
-  const d=SDIFF[SV.diff],A=SURV,alive=SV.balls.filter(b=>b.on).length,sec=now()-SV.t0;
-  const cap=Math.min(d.max,2+Math.floor(sec/12));
-  if(alive>=cap) return;
-  const b=SV.balls.find(x=>!x.on); if(!b) return;
-  const side=Math.floor(Math.random()*4),hw=A.w/2-1,hd=A.d/2-1;
-  if(side===0){ b.x=A.x-hw; b.z=A.z+(Math.random()-.5)*A.d*.8; } else if(side===1){ b.x=A.x+hw; b.z=A.z+(Math.random()-.5)*A.d*.8; }
-  else if(side===2){ b.x=A.x+(Math.random()-.5)*A.w*.8; b.z=A.z-hd; } else { b.x=A.x+(Math.random()-.5)*A.w*.8; b.z=A.z+hd; }
-  const sp=d.sp*(1+Math.min(.8,sec/70)),dx=P.x-b.x,dz=P.z-b.z,dl=Math.hypot(dx,dz)||1;
-  b.vx=dx/dl*sp; b.vz=dz/dl*sp; b.on=true; b.m.visible=true; b.m.position.set(b.x,1.3,b.z);
-  tone(220,.1,"square",.03);
-}
+function endSurv(why,clear){ if(!SV.on) return; const d=SDIFF[SV.diff],sec=Math.min(SV.dur,Math.floor(now()-SV.t0)),pay=sec*d.pay,bonus=clear?d.bonus:sec>=30?Math.round(60*(1+SV.diff*.6)):0;
+  SV.on=false; for(const it of SV.items){ scene.remove(it.g); if(it.col) scene.remove(it.col); } SV.items=[]; for(const r of SV.rots) scene.remove(r.g); SV.rots=[]; if(SV.tracer){ scene.remove(SV.tracer.g); SV.tracer=null; } if(SV.walls){ SV.walls.forEach(w=>scene.remove(w)); SV.walls=null; } SV.shrink=0;
+  $("survwin").classList.remove("on"); teleport(SURV.x,SURV.z+SURV.d/2+5);
+  if(sec>S.svBest) S.svBest=sec; earn(pay+bonus); gainXp(sec*3+(clear?100:0)); quest("survive",sec);
+  if(clear){ S.lzClears=(S.lzClears||0)+1; if(SV.diff===2) S.lzHard=(S.lzHard||0)+1;
+    note("🏆","⚡ "+d.nm+" 클리어! "+sec+"초 · +"+num(pay)+" +보너스 "+num(bonus),"gold"); SFX.fanfare(); burst(P.x,P.y+4,P.z,0xff1744,30,7,1);
+    if(!S.hats.includes("bolt")){ S.hats.push("bolt"); setTimeout(()=>note("⚡","번개 모자를 얻었어! 👕에서 써봐","gold"),900); }
+    if(SV.diff===2&&!S.lzRotGiven) lzGiveRot(); }
+  else if(bonus){ note("🏆",why+" "+sec+"초! +"+num(pay)+" +보너스 "+num(bonus),"gold"); SFX.fanfare(); }
+  else note("⚡",why+" "+sec+"초 · +"+num(pay)+" 코인"+(S.svBest>sec?" (최고 "+S.svBest+"초)":""));
+  drawGoal(); save(); }
+/* ⚡ 레이저 브레인롯: 어려움 첫 클리어 보상. 돈으로는 못 사고(컨베이어·옆집에 안 나옴) 프로필당 하나. 기지가 꽉 차면 리호가 맡아둔다 */
+function lzGiveRot(){ const i=freeSlot(); if(i<0){ S.lzRotPending=1; setTimeout(()=>note("⚡","레이저 브레인롯은 기지가 꽉 차서 리호가 맡아둘게 — 자리를 비우고 다시 와!","gold"),1600); save(); return; }
+  S.lzRotGiven=1; S.lzRotPending=0; S.base[i]="lzr"; S.baseLv[i]=0; syncSlots(baseSlots,S.base); setTimeout(()=>{ note("⚡","레이저 브레인롯을 얻었어! 기지에서 1초마다 60코인","gold"); chime(700,900,1200); },1600); save(); }
 addI({x:COURT.x,z:COURT.z+COURT.d/2+1.5,h:4,r:4.5,text:()=>BD.on?null:!S.up.racket?"🏸 라켓이 필요해요 (준호 가게)":!S.shuttles?"🪶 셔틀콕이 없어요 (준호 가게)":"🏸 시합하기 · 🎟️ 문제 풀고 (셔틀콕 1개 · 남은 "+S.shuttles+")",ok:()=>!!S.up.racket&&S.shuttles>0,act:()=>gate("🏸 배드민턴",()=>startBad())});
 function startBad(){
   if(!S.up.racket||S.shuttles<=0) return; S.shuttles--; BD.on=true; BD.rally=0; teleport(COURT.x,COURT.z+9); camYaw=0; player.rotation.y=Math.PI; P.ry=Math.PI;
@@ -2885,7 +2960,7 @@ function drawPed(){
   B.appendChild(help2("지금 있는 <b>"+r.nm+"</b>을(를) "+num(ref)+" 코인에 돌려받고 새 걸로 놓아요."+
     (lv>0?" <b style='color:#c0392b'>강화 Lv."+lv+"는 사라져요.</b>":"")));
   let any=false;
-  for(const n of ROTS){ if(n.id===id) continue; if(n.ips<=mine) continue; any=true;
+  for(const n of ROTS){ if(n.id===id||n.noBuy) continue; if(n.ips<=mine) continue; any=true;
     const diff=n.cost-ref, price=Math.max(0,diff);
     const rr=row(n.e,n.nm,"1초에 "+fips(n.ips)+" 코인");
     const b=btn(diff<0?"+"+num(-diff)+" 코인":num(price)+" 코인","blue"); b.disabled=S.coins<price;
@@ -3611,7 +3686,7 @@ $("menuBtn").onclick=()=>{ drawMenu(); openGui("g-menu"); }; $("whoBtn").onclick
 const MAPLIST=[["🌱","샘의 씨앗 가게","씨앗을 사서 밭에 심어요"],["💰","스티븐의 판매대","수확물·물고기를 팔아요"],["📊","시세판","값이 오를 때를 노려요"],
   ["➕","민지 선생님","수학 퀴즈 — 코인을 제일 많이 줘요"],["🎣","부두","낚시를 해요"],["🥚","미아의 펫 가게","알에서 펫이 나와요"],
   ["🦈","컨베이어","브레인롯을 사면 저절로 코인이 쌓여요"],["🏡","내 집터","벽·지붕을 사서 집을 지어요"],["👻","귀신의 집","촛불을 모아 탈출해요"],
-  ["🏸","배드민턴장","코치와 시합해요"],["🎯","서바이벌·💦 물총","피하고 맞혀요"],["🥋","태권도장","사범 동작을 외워요"],["🪢","줄넘기","줄이 올 때 점프!"],
+  ["🏸","배드민턴장","코치와 시합해요"],["⚡","레이저 방·💦 물총","레이저를 피해 끝까지 버티고, 풍선을 맞혀요"],["🥋","태권도장","사범 동작을 외워요"],["🪢","줄넘기","줄이 올 때 점프!"],
   ["🎢","놀이공원","롤러코스터·자이로드롭·대관람차·회전목마"],["⛰️","산꼭대기","보물상자가 있어요"],["🏗️","오비","발판을 뛰어 올라가요"],
   ["🍳","요리 냄비","판매대 옆 — 재료를 합쳐 비싸게 팔아요"],["🧩","나무 블록 퍼즐","동쪽 꽃밭 옆 퍼즐 광장(노란 빛기둥) — 출발점 남쪽 🚀 발사대를 밟으면 바로 날아가요"],["📮","우체통","출발점 옆 — 하루에 한 번 선물이 와요"],
   ["🦋","들판의 곤충","잠자리채(준호 가게)로 잡아요. 뛰면 도망가요!"],["🌙","밤","밤에만 나오는 곤충이 있어요"]];
@@ -3672,7 +3747,7 @@ function drawAv(){
   const B=$("avBody"); B.innerHTML="";
   const sec=t=>{ const d=document.createElement("div"); d.className="sec"; d.textContent=t; B.appendChild(d); };
   const sw=(title,key,cols)=>{ sec(title); const d=document.createElement("div"); d.className="sw"; for(const c of cols){ const b=document.createElement("button"); b.style.background=hex(c); b.setAttribute("aria-pressed",S.av[key]===c?"true":"false"); b.setAttribute("aria-label",title); b.onclick=()=>{ S.av[key]=c; setAv(); }; d.appendChild(b); } B.appendChild(d); };
-  const chips=(title,key,opts)=>{ sec(title); const d=document.createElement("div"); d.className="chips"; for(const o of opts){ const owned=key!=="hat"||S.hats.includes(o.id); const b=document.createElement("button"); b.textContent=o.e+" "+o.nm+(owned?"":(o.cost<0?" · 귀신의 집 클리어 보상":" · "+num(o.cost)+"코인")); b.setAttribute("aria-pressed",S.av[key]===o.id?"true":"false"); if(!owned) b.className="lock"; if(!owned&&o.cost<0) b.disabled=true;
+  const chips=(title,key,opts)=>{ sec(title); const d=document.createElement("div"); d.className="chips"; for(const o of opts){ const owned=key!=="hat"||S.hats.includes(o.id); const b=document.createElement("button"); b.textContent=o.e+" "+o.nm+(owned?"":(o.cost<0?" · "+(o.how||"클리어 보상"):" · "+num(o.cost)+"코인")); b.setAttribute("aria-pressed",S.av[key]===o.id?"true":"false"); if(!owned) b.className="lock"; if(!owned&&o.cost<0) b.disabled=true;
     b.onclick=()=>{ if(!owned){ if(!pay(o.cost)) return; S.hats.push(o.id); note(o.e,o.nm+" 샀어!","gold"); chime(620,820,1100); gainXp(20); } S.av[key]=o.id; setAv(); }; d.appendChild(b); } B.appendChild(d); };
   sw("피부색","skin",AV_SKIN); sw("셔츠","shirt",AV_COL); sw("바지","pants",AV_COL); chips("머리 스타일","hair",AV_HAIR); sw("머리색","hairCol",AV_COL); chips("표정","face",AV_FACE); chips("모자·액세서리 (코인으로 구매)","hat",AV_HAT);
 }
@@ -3846,20 +3921,8 @@ function tick(){
       else { $("bbob").style.left="0%"; if(k>=1) coachHit(); } }
   } else if(!fishing) coach.userData.aR.rotation.x=Math.sin(t*2)*.04;
 
-  /* 서바이벌 */
-  if(SV.on){
-    const d=SDIFF[SV.diff],A=SURV;
-    if(t>=SV.next){ SV.next=t+Math.max(.55,1.5-(t-SV.t0)/40); svSpawn(); }
-    for(const b of SV.balls){ if(!b.on) continue;
-      b.x+=b.vx*dt; b.z+=b.vz*dt; b.m.position.set(b.x,1.3,b.z); b.m.rotation.x+=dt*4; b.m.rotation.z-=dt*3;
-      if(Math.abs(b.x-A.x)>A.w/2+2||Math.abs(b.z-A.z)>A.d/2+2){ b.on=false; b.m.visible=false; continue; }
-      if(t>SV.inv&&P.y<2.1&&Math.hypot(P.x-b.x,P.z-b.z)<2.0){
-        SV.hp--; SV.inv=t+1.4; b.on=false; b.m.visible=false; SFX.sting(); shake(.5,.3); burst(b.x,1.5,b.z,0xf4443c,16,5,.6);
-        const el=$("scare"); $("scaretxt").textContent="💥 아앗!"; el.classList.add("on"); setTimeout(()=>el.classList.remove("on"),350);
-        if(SV.hp<=0){ endSurv("아쉽다!"); break; }
-        $("svmsg").textContent="앗! 하트 "+SV.hp+"개 남았어"; drawGoal(); } }
-    if(SV.on&&Math.floor(t)!==Math.floor(t-dt)) drawGoal();
-  }
+  /* ⚡ 레이저 방 */
+  lzTick(t,dt);
   swing(svHost,t*.6,false);
   bugTick(t,dt);
   if(MAILOBJ.flag){ const has=unreadBlog().length>0||S.mailDay!==today();
@@ -3978,7 +4041,7 @@ function tick(){
     camera.position.lerp(camPos,Math.min(1,dt*5)); camera.lookAt(gcam[1][0],gcam[1][1],gcam[1][2]); }
   else if(FP.on){ const dir=fpDir(); camera.position.set(P.x,P.y+4.6,P.z); camera.lookAt(P.x+dir.x,P.y+4.6+dir.y,P.z+dir.z); player.rotation.y=camYaw+Math.PI; P.ry=player.rotation.y; }
   else if(guiOpen==="g-av"){ player.rotation.y+=dt*.9; const fx=Math.sin(editYaw),fz=Math.cos(editYaw); camPos.set(P.x+fx*9,P.y+3.6,P.z+fz*9); camera.position.lerp(camPos,Math.min(1,dt*6)); camera.lookAt(P.x-fz*1.6,P.y+2.9,P.z+fx*1.6); }
-  else { const hz=H.zone==="haunt",hm=H.zone==="home",pz=PZ.near&&!hz&&!hm,D=hz?11:hm?16:pz?9+pzSize()*.35:17,Hy=hz?5.5:hm?8.5:pz?10+pzSize()*.7:8.8;   /* 🧩 퍼즐 판 근처는 위에서 내려다봐야 홈과 그림자가 보인다 — 판이 클수록 더 높이 */
+  else { const hz=H.zone==="haunt",hm=H.zone==="home",pz=(PZ.near||SV.on)&&!hz&&!hm,D=hz?11:hm?16:SV.on?14:pz?9+pzSize()*.35:17,Hy=hz?5.5:hm?8.5:SV.on?15:pz?10+pzSize()*.7:8.8;   /* 🧩 퍼즐 판 근처·⚡ 레이저 방은 위에서 내려다봐야 홈·그림자·오는 빔이 보인다 */
     camPos.set(P.x+Math.sin(camYaw)*D,P.y+Hy,P.z+Math.cos(camYaw)*D);
     if(hm){ const R=ROOM,m=1.6; camPos.x=Math.min(Math.max(camPos.x,R.x-R.w/2+m),R.x+R.w/2-m); camPos.z=Math.min(Math.max(camPos.z,R.z-R.d/2+m),R.z+R.d/2-m); }
     camera.position.lerp(camPos,Math.min(1,dt*8)); camera.lookAt(P.x,P.y+(hm?2.4:pz?1.4:3.6),P.z); }
@@ -4154,7 +4217,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,openPuzzle,pzNew,pzPlace,pzRot,pzFits,drawPuzzle,pzPick,pzDrop,pzRotHeld,pzAnchor,pzTick,pzHint,pzSolve,pzHintClear,PUZ,PUZLV,get PZ(){return PZ;},PLATS,solids,get houseGrp(){return typeof houseGrp!=="undefined"?houseGrp:null;},get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,mkBug,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,openPuzzle,pzNew,pzPlace,pzRot,pzFits,drawPuzzle,pzPick,pzDrop,pzRotHeld,pzAnchor,pzTick,pzHint,pzSolve,pzHintClear,PUZ,PUZLV,get PZ(){return PZ;},PLATS,solids,get houseGrp(){return typeof houseGrp!=="undefined"?houseGrp:null;},get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},startSurv,endSurv,lzTick,lzBatch,lzGridCell,lzHit,lzGiveRot,LZ,SDIFF,get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,mkBug,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
