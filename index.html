@@ -247,6 +247,31 @@
   .spellopts button.ok{background:linear-gradient(180deg,#4ede9f,#12c37c);color:#fff;box-shadow:0 5px 0 #0a7d4e}
   .spellopts button.no{background:linear-gradient(180deg,#ff8a7d,#e2564a);color:#fff;box-shadow:0 5px 0 #b03b31}
   .spellopts button:disabled{opacity:1}
+  /* 🧩 나무 블록 퍼즐 (우봉고식) */
+  .puzwrap{display:flex;flex-direction:column;align-items:center;gap:10px;touch-action:none;-webkit-user-select:none;user-select:none}
+  .puzboard{position:relative;border-radius:14px;padding:10px;
+    background:linear-gradient(135deg,#d9a262,#b97b3f 45%,#c98a4d);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 8px 0 #7a4b24,0 12px 22px rgba(80,45,10,.35)}
+  .puzgrid{position:relative;display:grid;gap:0}
+  .puzcell{width:var(--cs);height:var(--cs);box-sizing:border-box}
+  .puzcell.hole{background:#3b1f0e;box-shadow:inset 0 3px 6px rgba(0,0,0,.7),inset 0 -1px 0 rgba(255,255,255,.08);border:1px solid #2a150a}
+  .puzpiece{position:absolute;left:0;top:0;pointer-events:none}
+  .puzpiece i{position:absolute;width:var(--cs);height:var(--cs);box-sizing:border-box;border-radius:4px;
+    background:var(--pc);box-shadow:inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 0 rgba(0,0,0,.18),0 2px 3px rgba(0,0,0,.25);
+    background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.04) 0 3px,transparent 3px 9px)}
+  .puzpiece.onboard{pointer-events:auto;cursor:pointer}
+  .puztray{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;min-height:calc(var(--cs)*2.2);padding:10px;border-radius:16px;width:100%;box-sizing:border-box;
+    background:#f3e7c8;border:2px dashed #d9c69a}
+  .puztray .puzpiece{position:relative;pointer-events:auto;cursor:grab;transition:transform .12s}
+  .puztray .puzpiece.sel{transform:scale(1.06);filter:drop-shadow(0 0 8px rgba(255,200,61,.9))}
+  .puzghost{position:fixed;z-index:60;pointer-events:none;filter:drop-shadow(0 10px 12px rgba(0,0,0,.35))}
+  .puzghost.bad i{filter:saturate(.3) brightness(1.1)}
+  .puzsand{width:100%;height:10px;border-radius:99px;background:#eadcbd;overflow:hidden;box-shadow:inset 0 2px 4px rgba(120,95,50,.25)}
+  .puzsand i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ffb300,#ff7043);transition:width .5s linear}
+  .puzsand.out i{background:#c9b28c}
+  .puzmain{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;justify-content:center;width:100%}
+  .puzmain .puztray{flex:1 1 150px;width:auto;align-self:stretch;align-content:flex-start}
+  .puzbtns{display:flex;gap:8px;width:100%}
+  .puzbtns .buy{flex:1;height:52px;font-size:1rem}
   .mgrid .buy.ok{background:linear-gradient(180deg,#4ede9f,#12c37c);color:#fff;box-shadow:0 4px 0 #0a7d4e}
   .mgrid .buy.no{background:linear-gradient(180deg,#ff8a7d,#e2564a);color:#fff;box-shadow:0 4px 0 #b03b31}
   .mgrid .buy:disabled{opacity:1}
@@ -445,6 +470,7 @@
   <div class="gui" id="g-ach"><div class="win"><div class="hd">🏅 업적 <button class="x" data-close>✕</button></div><div class="bd" id="achBody"></div></div></div>
   <div class="gui" id="g-mail"><div class="win"><div class="hd">📮 편지함 <button class="x" data-close>✕</button></div><div class="bd" id="mailBody"></div></div></div>
   <div class="gui" id="g-pet"><div class="win"><div class="hd">🥚 미아의 펫 가게 <button class="x" data-close>✕</button></div><div class="bd" id="petList"></div></div></div>
+  <div class="gui" id="g-puzzle"><div class="win"><div class="hd">🧩 나무 블록 퍼즐 <small id="puzTime"></small><button class="x" data-close>✕</button></div><div class="bd" id="puzBody"></div></div></div>
   <div class="gui" id="g-gate"><div class="win"><div class="hd">🎟️ <span id="gateTitle"></span><small></small><button class="x" data-close>✕</button></div><div class="bd" id="gateBody"></div></div></div>
   <div class="gui" id="g-spell"><div class="win"><div class="hd">✏️ 맞춤법 수확 <small id="spellCnt"></small><button class="x" data-close>✕</button></div><div class="bd" id="spellBody"></div></div></div>
   <div class="gui" id="g-ped"><div class="win"><div class="hd">🦈 받침대 <small id="pedIps"></small><button class="x" data-close>✕</button></div><div class="bd" id="pedBody"></div></div></div>
@@ -545,7 +571,8 @@ const ACHS=[
   {id:"a12",e:"🏡",nm:"내 집 마련",n:1,r:1500,get:()=>S.house.done?1:0,sub:"집 완성하기"},
   {id:"a13",e:"🥚",nm:"펫 친구",n:3,r:700,get:()=>S.pets.length,sub:"펫 3마리"},
   {id:"a14",e:"🦈",nm:"브레인롯 수집가",n:6,r:1500,get:()=>S.base.filter(Boolean).length,sub:"받침대 6칸 채우기"},
-  {id:"a15",e:"⭐",nm:"레벨 15",n:15,r:2500,get:()=>S.lvl,sub:"레벨 15 달성"}
+  {id:"a15",e:"⭐",nm:"레벨 15",n:15,r:2500,get:()=>S.lvl,sub:"레벨 15 달성"},
+  {id:"a16",e:"🧩",nm:"퍼즐 박사",n:10,r:1200,get:()=>S.puzWins||0,sub:"나무 블록 퍼즐 10번 완성"}
 ];
 /* 시세가 붙는 품목 */
 const TRADE=SEEDS.map(s=>({id:s.id,nm:s.nm,e:s.e,base:s.sell})).concat([{id:"fish",nm:"물고기",e:"🐟",base:0},{id:"bug",nm:"곤충",e:"🦋",base:0}]);
@@ -599,7 +626,7 @@ const QUESTS=[
   {k:"tkd",nm:"태권도 단계",e:"🥋",n:[3,6],r:90},
   {k:"rope",nm:"줄넘기(번)",e:"🪢",n:[12,30],r:80},
   {k:"bug",nm:"곤충 잡기",e:"🦋",n:[3,8],r:85,req:()=>!!S.up.net},
-  {k:"cook",nm:"요리 만들기",e:"🍳",n:[2,5],r:95,req:()=>toolLv()>0}
+  {k:"cook",nm:"요리 만들기",e:"🍳",n:[2,5],r:95,req:()=>toolLv()>0},{k:"puzzle",nm:"블록 퍼즐 맞추기",e:"🧩",n:[1,3],r:80}
 ];
 const UPGRADES=[
   {id:"net",nm:"잠자리채",e:"🥅",cost:900,sub:"들판의 곤충을 잡을 수 있어요 (살금살금 다가가세요!)"},
@@ -724,7 +751,7 @@ function fresh(){
     can:0,sprinkler:false,pets:[],pet:null,eggs:[],quests:[],qc:{},chestAt:0,chest2At:0,shieldUntil:0,shieldCd:0,
     av:Object.assign({},DEFAULT_AV),hats:["none","cap","bow"],baseSize:6,petXp:{},mkt:null,mathRest:0,mathBest:0,tkdBest:0,ropeBest:0,
     boostUntil:0,baseLv:PEDS.map(()=>0),up:{},pet2:null,hauntAt:0,hauntClears:0,name:"플레이어",store:[],shuttles:0,badBest:0,
-    bugs:{},dish:{},ach:{},recipes:{d0:1},mathClear:0,mailDay:"",mailStreak:0,mail:null,readMail:{},spellLv:1,spellOk:0,spellNg:0,
+    bugs:{},dish:{},ach:{},recipes:{d0:1},mathClear:0,mailDay:"",mailStreak:0,mail:null,readMail:{},spellLv:1,spellOk:0,spellNg:0,puzLv:1,puzWins:0,puzBest:{},
     house:{walls:{F:null,B:null,L:null,R:null},roof:null,door:0,windows:0,fence:0,pots:0,flag:0,pond:0,tree:0,lamp:0,mailbox:0,swing:0,wallCol:0xc19a6b,roofCol:0xb5533c,done:false,storage:0,furn:{},tv:0,mile:0},
     bedAt:0,cakeAt:0,cakeUntil:0,hdiff:1,svBest:0,svDiff:0,fpBest:0};
 }
@@ -989,7 +1016,8 @@ const TIPS=[
   {e:"🦈",t:"기지가 꽉 찼으면 받침대에서 바꾸거나 팔 수 있어요",ok:()=>freeSlot()<0},
   {e:"🥚",t:"미아의 펫 가게에서 알을 사면 펫이 나와요",ok:()=>!S.pets.length&&S.coins>=300},
   {e:"📖",t:"도감에서 아직 못 잡은 것을 확인할 수 있어요",ok:()=>true},
-  {e:"👻",t:"귀신의 집에서 촛불을 모으면 코인을 받아요",ok:()=>S.coins>=200}
+  {e:"👻",t:"귀신의 집에서 촛불을 모으면 코인을 받아요",ok:()=>S.coins>=200},
+  {e:"🧩",t:"수학 선생님 옆 나무 탁자에서 블록 퍼즐을 맞춰 보세요",ok:()=>(S.puzWins||0)<3}
 ];
 const TIP={until:0,next:12,txt:"",cls:"goal",last:-1};
 function showTip(txt,secs,cls){ TIP.txt=txt; TIP.cls=cls||"goal"; TIP.until=now()+(secs||7); }
@@ -2899,6 +2927,137 @@ addI({x:SPAWN.x+7,z:SPAWN.z+.6,h:4.2,r:3.4,
 addI({r:3.4,get x(){ const o=bugNear(); return o?o.x:1e9; },get z(){ const o=bugNear(); return o?o.z:1e9; },get h(){ return 2.6; },
   text:()=>{ const o=bugNear(); return o?(S.up.net?"🥅 "+o.type.nm+" 잡기":"🥅 잠자리채가 필요해요 (준호 가게)"):null; },
   ok:()=>!!S.up.net,act:()=>catchBug()});
+/* ===================== 🧩 나무 블록 퍼즐 (우봉고식) =====================
+   나무판에 파인 모양을 나무 조각(폴리오미노)으로 빈틈없이 채운다.
+   모양을 먼저 만들고 그걸 조각으로 쪼개므로 답이 반드시 있다. 조각은 끌어서 놓고, 톡 치면 돌아간다.
+   모래시계가 다 떨어져도 계속 풀 수 있고, 시간 안에 끝내면 보너스만 더 받는다(아이가 실패로 끝나지 않게). */
+const PUZ={x:26,z:12};
+const PUZLV=[null,{nm:"쉬움",e:"🌱",G:4,cells:10,k:3,rot:false,sand:90,coin:40,xp:15,sub:"조각 3개 · 돌릴 필요 없음"},
+                  {nm:"보통",e:"🌿",G:5,cells:14,k:4,rot:true,sand:75,coin:90,xp:30,sub:"조각 4개 · 돌려서 맞추기"},
+                  {nm:"어려움",e:"🔥",G:6,cells:20,k:5,rot:true,sand:60,coin:160,xp:50,sub:"조각 5개 · 큰 모양"}];
+const PUZCOL=["#efd3a0","#c98a4d","#e2b16c","#a8703f","#f3e1bd","#d69a5a"];   /* 나무 색이지만 조각끼리 구별되게 밝기 차이를 둠 */
+const PZ={on:false,lv:1,G:6,region:null,pieces:[],placed:{},filled:null,t0:0,timer:null,sel:-1,won:false,drag:null};
+function pzKey(r,c){ return r*PZ.G+c; }
+/* 1) 가운데에서 자라나는 붙어 있는 모양 */
+function pzRegion(n){ const G=PZ.G, set=new Set(), c0=Math.floor(G/2); set.add(pzKey(c0,c0));
+  let guard=0; while(set.size<n&&guard++<500){ const front=[];
+    for(const k of set){ const r=Math.floor(k/G),c=k%G; for(const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){ const rr=r+dr,cc=c+dc; if(rr<0||cc<0||rr>=G||cc>=G) continue; const kk=pzKey(rr,cc); if(set.has(kk)) continue;
+      let nb=0; for(const [er,ec] of [[1,0],[-1,0],[0,1],[0,-1]]) if(set.has(pzKey(rr+er,cc+ec))) nb++; front.push({kk,nb}); } }
+    if(!front.length) break; front.sort((a,b)=>b.nb-a.nb+ (Math.random()-.5)*1.4); set.add(front[Math.floor(Math.random()*Math.min(front.length,3))].kk); }
+  return set; }
+/* 2) 모양을 k 조각으로 쪼개기 — 씨앗에서 번갈아 자라니 조각마다 서로 붙어 있다 */
+function pzSplit(region,k){ const G=PZ.G, cells=[...region]; for(let tries=0;tries<60;tries++){
+    const seeds=[]; const pool=cells.slice().sort(()=>Math.random()-.5);
+    for(const c of pool){ if(seeds.every(s=>Math.abs(Math.floor(s/G)-Math.floor(c/G))+Math.abs(s%G-c%G)>=2)) seeds.push(c); if(seeds.length===k) break; }
+    if(seeds.length<k) continue;
+    const own=new Map(); seeds.forEach((s,i)=>own.set(s,i)); const q=seeds.map(s=>[s]); let left=cells.length-k, stuck=0;
+    while(left>0&&stuck<200){ let grew=false; for(let i=0;i<k;i++){ const fr=[]; for(const c of q[i]){ const r=Math.floor(c/G),cc=c%G;
+        for(const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){ const kk=pzKey(r+dr,cc+dc); if(region.has(kk)&&!own.has(kk)&&r+dr>=0&&cc+dc>=0&&cc+dc<G) fr.push(kk); } }
+      if(fr.length){ const pick=fr[Math.floor(Math.random()*fr.length)]; own.set(pick,i); q[i].push(pick); left--; grew=true; } }
+      if(!grew) stuck++; }
+    if(left>0) continue;
+    const sizes=Array(k).fill(0); own.forEach(i=>sizes[i]++);
+    if(sizes.some(s=>s<3||s>6)) continue;
+    const pieces=Array.from({length:k},()=>[]); own.forEach((i,c)=>pieces[i].push([Math.floor(c/G),c%G]));
+    return pieces.map(pzNorm); }
+  return null; }
+function pzNorm(cells){ const r0=Math.min(...cells.map(c=>c[0])),c0=Math.min(...cells.map(c=>c[1])); return cells.map(c=>[c[0]-r0,c[1]-c0]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]); }
+function pzRot(cells){ const H=Math.max(...cells.map(c=>c[0])); return pzNorm(cells.map(([r,c])=>[c,H-r])); }
+function pzSame(a,b){ return a.length===b.length&&a.every((c,i)=>c[0]===b[i][0]&&c[1]===b[i][1]); }
+function pzNew(lv){
+  const L=PUZLV[lv]; PZ.G=L.G; let region=null,pieces=null;
+  for(let t=0;t<40&&!pieces;t++){ region=pzRegion(L.cells); pieces=pzSplit(region,L.k); }
+  if(!pieces){ region=new Set([pzKey(2,2),pzKey(2,3),pzKey(3,2),pzKey(3,3),pzKey(1,2),pzKey(4,3),pzKey(2,1),pzKey(3,4),pzKey(1,3),pzKey(4,2)]); pieces=pzSplit(region,3)||[[[0,0],[0,1],[1,0]],[[0,0],[1,0],[1,1]],[[0,0],[0,1],[0,2],[1,1]]]; }
+  PZ.lv=lv; PZ.region=region; PZ.placed={}; PZ.filled=new Map(); PZ.sel=-1; PZ.won=false; PZ.drag=null;
+  PZ.pieces=pieces.map((cells,i)=>{ let sh=cells; if(L.rot){ const n=Math.floor(Math.random()*4); for(let r=0;r<n;r++) sh=pzRot(sh); } return {id:i,cells:sh,col:PUZCOL[i%PUZCOL.length]}; });
+  PZ.t0=now(); PZ.on=true;
+}
+function openPuzzle(){ pzNew(S.puzLv||1); drawPuzzle(); openGui("g-puzzle"); clearInterval(PZ.timer);
+  PZ.timer=setInterval(()=>{ if(guiOpen!=="g-puzzle"){ clearInterval(PZ.timer); PZ.on=false; return; } pzClock(); },500); pzClock(); }
+function pzClock(){ const L=PUZLV[PZ.lv], t=PZ.won?PZ.tEnd:now()-PZ.t0, best=S.puzBest&&S.puzBest[PZ.lv];
+  $("puzTime").textContent="⏱ "+Math.floor(t)+"초"+(best?" · 최고 "+best+"초":"");
+  const sand=$("puzSand"); if(sand){ const left=Math.max(0,1-t/L.sand); sand.querySelector("i").style.width=(left*100).toFixed(1)+"%"; sand.classList.toggle("out",left<=0); } }
+/* 판은 모양이 있는 부분만(여백 1칸) 보여준다 — 6×6 전체를 그리면 쉬움에서 빈 나무판이 너무 크다 */
+function pzView(){ let r0=PZ.G,r1=-1,c0=PZ.G,c1=-1; for(const k of PZ.region){ const r=Math.floor(k/PZ.G),c=k%PZ.G; r0=Math.min(r0,r); r1=Math.max(r1,r); c0=Math.min(c0,c); c1=Math.max(c1,c); }
+  r0=Math.max(0,r0-1); c0=Math.max(0,c0-1); r1=Math.min(PZ.G-1,r1+1); c1=Math.min(PZ.G-1,c1+1); return {r0,c0,rows:r1-r0+1,cols:c1-c0+1}; }
+function pzCell(){ const v=pzView(); const availH=Math.max(160,innerHeight*.86-340);
+  return Math.max(26,Math.min(48,Math.floor((Math.min(innerWidth,540)-70)/v.cols),Math.floor(availH/v.rows))); }
+function pzPieceEl(p,cs){ const el=document.createElement("div"); el.className="puzpiece"; el.dataset.id=p.id;
+  const H=Math.max(...p.cells.map(c=>c[0]))+1, W=Math.max(...p.cells.map(c=>c[1]))+1; el.style.width=(W*cs)+"px"; el.style.height=(H*cs)+"px"; el.style.setProperty("--pc",p.col);
+  for(const [r,c] of p.cells){ const i=document.createElement("i"); i.style.left=(c*cs)+"px"; i.style.top=(r*cs)+"px"; el.appendChild(i); } return el; }
+function drawPuzzle(){
+  const B=$("puzBody"); B.innerHTML=""; const L=PUZLV[PZ.lv], cs=pzCell(); B.style.setProperty("--cs",cs+"px");
+  const wrap=document.createElement("div"); wrap.className="puzwrap"; B.appendChild(wrap);
+  const t=help2("🧩 조각을 <b>끌어서</b> 파인 자리에 놓고, <b>톡 치면</b> 돌아가요. 모래시계 안에 끝내면 코인 <b>1.5배</b>!"); t.style.width="100%"; t.style.boxSizing="border-box"; t.style.textAlign="center"; wrap.appendChild(t);
+  const chips=document.createElement("div"); chips.className="chips"; chips.style.justifyContent="center";
+  [1,2,3].forEach(lv=>{ const b=document.createElement("button"); const d=PUZLV[lv]; b.textContent=d.e+" "+d.nm; b.title=d.sub; b.setAttribute("aria-pressed",PZ.lv===lv?"true":"false");
+    b.onclick=()=>{ if(PZ.lv===lv&&!PZ.won) return; S.puzLv=lv; save(); pzNew(lv); drawPuzzle(); beep(620,.05); }; chips.appendChild(b); }); wrap.appendChild(chips);
+  const sand=document.createElement("div"); sand.className="puzsand"; sand.id="puzSand"; sand.innerHTML="<i style='width:100%'></i>"; wrap.appendChild(sand);
+  /* 판 */
+  const V=pzView(); PZ.view=V;
+  const board=document.createElement("div"); board.className="puzboard"; const grid=document.createElement("div"); grid.className="puzgrid"; grid.id="puzGrid";
+  grid.style.gridTemplateColumns="repeat("+V.cols+","+cs+"px)"; grid.style.width=(V.cols*cs)+"px"; grid.style.height=(V.rows*cs)+"px";
+  for(let r=V.r0;r<V.r0+V.rows;r++) for(let c=V.c0;c<V.c0+V.cols;c++){ const d=document.createElement("div"); d.className="puzcell"+(PZ.region.has(pzKey(r,c))?" hole":""); grid.appendChild(d); }
+  board.appendChild(grid); const main=document.createElement("div"); main.className="puzmain"; main.appendChild(board); wrap.appendChild(main);
+  for(const id in PZ.placed){ const p=PZ.pieces[id], [r0,c0]=PZ.placed[id]; const el=pzPieceEl(p,cs); el.classList.add("onboard"); el.style.left=((c0-V.c0)*cs)+"px"; el.style.top=((r0-V.r0)*cs)+"px";
+    el.addEventListener("pointerdown",e=>{ e.preventDefault(); if(PZ.won) return; pzLift(+id); },{passive:false}); grid.appendChild(el); }
+  /* 조각 쟁반 */
+  const tray=document.createElement("div"); tray.className="puztray"; tray.id="puzTray"; main.appendChild(tray);   /* 가로가 넓으면 판 옆, 좁으면 아래로 */
+  for(const p of PZ.pieces){ if(PZ.placed[p.id]!==undefined) continue; const el=pzPieceEl(p,cs); if(PZ.sel===p.id) el.classList.add("sel");
+    el.addEventListener("pointerdown",e=>pzDown(e,p.id),{passive:false}); tray.appendChild(el); }
+  const btns=document.createElement("div"); btns.className="puzbtns";
+  const rot=btn("↻ 돌리기","blue"); rot.onclick=()=>{ const id=PZ.sel>=0&&PZ.placed[PZ.sel]===undefined?PZ.sel:PZ.pieces.find(p=>PZ.placed[p.id]===undefined)?.id; if(id===undefined||PZ.won) return; pzRotate(id); };
+  const nw=btn("🔄 다른 퍼즐"); nw.onclick=()=>{ pzNew(PZ.lv); drawPuzzle(); beep(600,.05); };
+  btns.appendChild(rot); btns.appendChild(nw); wrap.appendChild(btns);
+  pzClock();
+}
+function pzRotate(id){ const p=PZ.pieces[id]; p.cells=pzRot(p.cells); PZ.sel=id; const old=document.querySelector('#puzTray .puzpiece[data-id="'+id+'"]');
+  if(old){ const el=pzPieceEl(p,pzCell()); el.classList.add("sel"); el.addEventListener("pointerdown",e=>pzDown(e,id),{passive:false}); old.replaceWith(el); document.querySelectorAll("#puzTray .puzpiece.sel").forEach(x=>{ if(x!==el) x.classList.remove("sel"); }); }
+  tone(520,.05,"triangle",.03); }
+function pzLift(id){ delete PZ.placed[id]; PZ.filled=new Map(); for(const k in PZ.placed){ const p=PZ.pieces[k],[r0,c0]=PZ.placed[k]; for(const [r,c] of p.cells) PZ.filled.set(pzKey(r0+r,c0+c),+k); }
+  PZ.sel=id; drawPuzzle(); tone(380,.06,"triangle",.03); }
+function pzFits(p,r0,c0){ for(const [r,c] of p.cells){ const rr=r0+r,cc=c0+c; if(rr<0||cc<0||rr>=PZ.G||cc>=PZ.G) return false; const k=pzKey(rr,cc); if(!PZ.region.has(k)||PZ.filled.has(k)) return false; } return true; }
+function pzDown(e,id){
+  if(PZ.won) return; e.preventDefault(); const cs=pzCell(), src=e.currentTarget, rect=src.getBoundingClientRect();
+  const gx=e.clientX-rect.left, gy=e.clientY-rect.top;
+  const ghost=pzPieceEl(PZ.pieces[id],cs); ghost.classList.add("puzghost"); ghost.style.left=(e.clientX-gx)+"px"; ghost.style.top=(e.clientY-gy)+"px";
+  PZ.drag={id,gx,gy,ghost,sx:e.clientX,sy:e.clientY,moved:false,pid:e.pointerId};
+  document.querySelectorAll("#puzTray .puzpiece.sel").forEach(x=>x.classList.remove("sel")); src.classList.add("sel"); PZ.sel=id;
+  const move=ev=>{ if(!PZ.drag) return; const d=PZ.drag; if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)>8&&!d.moved){ d.moved=true; document.body.appendChild(d.ghost); src.style.opacity=".25"; }
+    if(!d.moved) return; d.ghost.style.left=(ev.clientX-d.gx)+"px"; d.ghost.style.top=(ev.clientY-d.gy)+"px";
+    const pos=pzDropPos(d); d.ghost.classList.toggle("bad",!(pos&&pzFits(PZ.pieces[d.id],pos[0],pos[1]))); };
+  const up=ev=>{ window.removeEventListener("pointermove",move); window.removeEventListener("pointerup",up); window.removeEventListener("pointercancel",up);
+    const d=PZ.drag; PZ.drag=null; if(!d) return; src.style.opacity="";
+    if(!d.moved){ pzRotate(id); return; }                       /* 톡 = 돌리기 */
+    d.ghost.remove(); const pos=pzDropPos(d);
+    if(pos&&pzFits(PZ.pieces[id],pos[0],pos[1])) pzPlace(id,pos[0],pos[1]); else { tone(220,.08,"triangle",.03); } };
+  window.addEventListener("pointermove",move); window.addEventListener("pointerup",up); window.addEventListener("pointercancel",up);
+}
+function pzDropPos(d){ const g=$("puzGrid"); if(!g) return null; const gr=g.getBoundingClientRect(), cs=pzCell();
+  const left=parseFloat(d.ghost.style.left), top=parseFloat(d.ghost.style.top);
+  const c0=Math.round((left-gr.left)/cs), r0=Math.round((top-gr.top)/cs);
+  if(Math.abs(left-gr.left-c0*cs)>cs*.6||Math.abs(top-gr.top-r0*cs)>cs*.6) return null;
+  const V=PZ.view||{r0:0,c0:0}; return [r0+V.r0,c0+V.c0]; }
+function pzPlace(id,r0,c0){ const p=PZ.pieces[id]; PZ.placed[id]=[r0,c0]; for(const [r,c] of p.cells) PZ.filled.set(pzKey(r0+r,c0+c),id);
+  SFX.pop(); PZ.sel=-1; drawPuzzle();
+  if(PZ.filled.size===PZ.region.size) pzWin(); }
+function pzWin(){ PZ.won=true; PZ.tEnd=now()-PZ.t0; const L=PUZLV[PZ.lv], sec=Math.max(1,Math.round(PZ.tEnd)), inTime=PZ.tEnd<=L.sand;
+  let coins=L.coin*(inTime?1.5:1); coins=Math.round(coins*(1+bonus("sell")*0)); earn(coins,true); gainXp(L.xp); S.puzWins=(S.puzWins||0)+1; quest("puzzle");
+  if(!S.puzBest) S.puzBest={}; const rec=!S.puzBest[PZ.lv]||sec<S.puzBest[PZ.lv]; if(rec) S.puzBest[PZ.lv]=sec;
+  SFX.fanfare(); burst(P.x,P.y+4,P.z,0xffc83d,26,7,1); if(rec&&S.puzWins>1) setTimeout(()=>{ SFX.record(); note("🏆","신기록! "+sec+"초","gold"); },500);
+  note("🧩",L.nm+" 퍼즐 완성! "+num(coins)+" 코인"+(inTime?" (모래시계 안에! ×1.5)":""),"gold"); save(); pzClock();
+  const B=$("puzBody"); const w=document.createElement("div"); w.className="spellwhy ok"; w.style.textAlign="center"; w.style.fontSize="1.1rem";
+  w.innerHTML="🎉 빈틈없이 채웠어요! <b>"+sec+"초</b> · +"+num(coins)+" 코인"+(rec?"<br>🏆 이 단계 최고 기록!":""); B.querySelector(".puzwrap").insertBefore(w,B.querySelector(".puztray"));
+  const again=btn("🧩 한 판 더!","wide"); again.onclick=()=>{ pzNew(PZ.lv); drawPuzzle(); }; B.querySelector(".puzwrap").appendChild(again); }
+/* 섬에 놓인 퍼즐 탁자 (민지 선생님 옆) */
+(function puzzleTable(){ const {x,z}=PUZ;
+  at(box(5,.4,3.4,0x8d5a33),x,1.9,z); for(const [dx,dz] of [[-2.1,-1.3],[2.1,-1.3],[-2.1,1.3],[2.1,1.3]]) at(box(.35,1.8,.35,0x6b4423),x+dx,.9,z+dz);
+  at(box(3.2,.3,2.4,0xc98a4d),x,2.25,z); at(box(1.2,.28,1.2,0x3b1f0e),x-.4,2.32,z+.1); at(box(.6,.28,.6,0x3b1f0e),x+.6,2.32,z-.5);
+  at(box(.55,.3,.55,0xe9c891),x-1.6,2.55,z+.9); at(box(1.1,.3,.55,0xd4a064),x+1.2,2.55,z+.8); at(box(.55,.3,1.1,0xb8804a),x+1.4,2.55,z-.2);
+  at(label("🧩 나무 블록 퍼즐",{size:40,h:1.3,color:"#ffe08a"}),x,5.6,z); at(label("조각을 끼워 모양을 채워요",{size:26,h:.75,color:"#bdbebe"}),x,4.5,z);
+  PLATS.push({x,z,w:5,d:3.4,y:2.1,h:2.1,noDraw:true});
+  addI({x,z:z+2.6,h:4,r:4,text:()=>"🧩 나무 블록 퍼즐 (최고 "+(S.puzBest&&S.puzBest[S.puzLv||1]?S.puzBest[S.puzLv||1]+"초":"-")+")",act:()=>openPuzzle()});
+})();
 /* ===================== 🧱 충돌 보강: 보이는 모양 = 부딪히는 모양 =====================
    장면의 보이는 물체와 충돌판을 전부 대조하는 점검으로 찾은 것들을 한곳에 모았다. */
 (function colliderPatch(){
@@ -3356,7 +3515,7 @@ const MAPLIST=[["🌱","샘의 씨앗 가게","씨앗을 사서 밭에 심어요
   ["🦈","컨베이어","브레인롯을 사면 저절로 코인이 쌓여요"],["🏡","내 집터","벽·지붕을 사서 집을 지어요"],["👻","귀신의 집","촛불을 모아 탈출해요"],
   ["🏸","배드민턴장","코치와 시합해요"],["🎯","서바이벌·💦 물총","피하고 맞혀요"],["🥋","태권도장","사범 동작을 외워요"],["🪢","줄넘기","줄이 올 때 점프!"],
   ["🎢","놀이공원","롤러코스터·자이로드롭·대관람차·회전목마"],["⛰️","산꼭대기","보물상자가 있어요"],["🏗️","오비","발판을 뛰어 올라가요"],
-  ["🍳","요리 냄비","판매대 옆 — 재료를 합쳐 비싸게 팔아요"],["📮","우체통","출발점 옆 — 하루에 한 번 선물이 와요"],
+  ["🍳","요리 냄비","판매대 옆 — 재료를 합쳐 비싸게 팔아요"],["🧩","나무 블록 퍼즐","민지 선생님 옆 탁자 — 조각을 끼워 모양을 채워요"],["📮","우체통","출발점 옆 — 하루에 한 번 선물이 와요"],
   ["🦋","들판의 곤충","잠자리채(준호 가게)로 잡아요. 뛰면 도망가요!"],["🌙","밤","밤에만 나오는 곤충이 있어요"]];
 function menuPage(id){ const ap=$("menuApps"); ap.hidden=!!id;
   document.querySelectorAll(".mpage").forEach(p=>p.hidden=p.id!==id);
@@ -3889,7 +4048,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,PLATS,solids,get houseGrp(){return typeof houseGrp!=="undefined"?houseGrp:null;},get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,openPuzzle,pzNew,pzPlace,pzRot,pzFits,drawPuzzle,get PZ(){return PZ;},PLATS,solids,get houseGrp(){return typeof houseGrp!=="undefined"?houseGrp:null;},get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
