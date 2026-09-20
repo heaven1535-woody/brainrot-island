@@ -117,6 +117,10 @@
   .jump,.fire{position:absolute;right:max(20px,env(safe-area-inset-right));z-index:11;width:94px;height:94px;border-radius:50%;display:grid;place-items:center;
     border:3px solid rgba(255,255,255,.45);box-shadow:0 8px 20px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.25);transition:transform .08s}
   .jump{bottom:max(22px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.28),rgba(0,0,0,.34))}
+  /* 🧩 퍼즐 조각을 들고 있을 때만 점프 버튼 왼쪽에 나오는 돌리기 버튼 */
+  .jump.rot{right:max(128px,calc(env(safe-area-inset-right) + 108px));font:900 2.4rem/1 Montserrat,'Noto Sans KR',sans-serif;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.45);
+    background:radial-gradient(circle at 50% 30%,rgba(255,214,120,.6),rgba(150,85,20,.55))}
+  .jump.rot[hidden]{display:none}
   .jump:active,.fire:active{transform:translateY(3px) scale(.95)}
   .jump:active{background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.5),rgba(255,255,255,.28))}
   .jump svg{width:40px;height:40px;fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
@@ -247,33 +251,8 @@
   .spellopts button.ok{background:linear-gradient(180deg,#4ede9f,#12c37c);color:#fff;box-shadow:0 5px 0 #0a7d4e}
   .spellopts button.no{background:linear-gradient(180deg,#ff8a7d,#e2564a);color:#fff;box-shadow:0 5px 0 #b03b31}
   .spellopts button:disabled{opacity:1}
-  /* 🧩 나무 블록 퍼즐 (우봉고식) */
-  /* touch-action:none 은 조각과 판에만 — 창 전체에 걸면 손가락으로 창을 못 내린다 */
-  .puzwrap{display:flex;flex-direction:column;align-items:center;gap:10px;-webkit-user-select:none;user-select:none}
-  .puzpiece,.puzboard{touch-action:none}
-  .puzboard{position:relative;border-radius:14px;padding:10px;
-    background:linear-gradient(135deg,#d9a262,#b97b3f 45%,#c98a4d);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 8px 0 #7a4b24,0 12px 22px rgba(80,45,10,.35)}
-  .puzgrid{position:relative;display:grid;gap:0}
-  .puzcell{width:var(--cs);height:var(--cs);box-sizing:border-box}
-  .puzcell.hole{background:#3b1f0e;box-shadow:inset 0 3px 6px rgba(0,0,0,.7),inset 0 -1px 0 rgba(255,255,255,.08);border:1px solid #2a150a}
-  .puzpiece{position:absolute;left:0;top:0;pointer-events:none}
-  .puzpiece i{position:absolute;width:var(--cs);height:var(--cs);box-sizing:border-box;border-radius:4px;
-    background:var(--pc);box-shadow:inset 0 2px 0 rgba(255,255,255,.45),inset 0 -3px 0 rgba(0,0,0,.18),0 2px 3px rgba(0,0,0,.25);
-    background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.04) 0 3px,transparent 3px 9px)}
-  .puzpiece.onboard{pointer-events:auto;cursor:pointer}
-  .puztray{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;min-height:calc(var(--cs)*2.2);padding:10px;border-radius:16px;width:100%;box-sizing:border-box;
-    background:#f3e7c8;border:2px dashed #d9c69a}
-  .puztray .puzpiece{position:relative;pointer-events:auto;cursor:grab;transition:transform .12s}
-  .puztray .puzpiece.sel{transform:scale(1.06);filter:drop-shadow(0 0 8px rgba(255,200,61,.9))}
-  .puzghost{position:fixed;z-index:60;pointer-events:none;filter:drop-shadow(0 10px 12px rgba(0,0,0,.35))}
-  .puzghost.bad i{filter:saturate(.3) brightness(1.1)}
-  .puzsand{width:100%;height:10px;border-radius:99px;background:#eadcbd;overflow:hidden;box-shadow:inset 0 2px 4px rgba(120,95,50,.25)}
-  .puzsand i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ffb300,#ff7043);transition:width .5s linear}
-  .puzsand.out i{background:#c9b28c}
-  .puzmain{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start;justify-content:center;width:100%}
-  .puzmain .puztray{flex:1 1 150px;width:auto;align-self:stretch;align-content:flex-start}
-  .puzbtns{display:flex;gap:8px;width:100%}
-  .puzbtns .buy{flex:1;height:52px;font-size:1rem}
+  /* 🧩 나무 블록 퍼즐은 3D 로 옮겨서(조각을 들고 걸어가 놓기) 창은 팻말 설정창만 남음 — 기본 .help/.chips 스타일을 씀 */
+  #puzBody .chips button small{display:block;font-size:.72rem;opacity:.8}
   .mgrid .buy.ok{background:linear-gradient(180deg,#4ede9f,#12c37c);color:#fff;box-shadow:0 4px 0 #0a7d4e}
   .mgrid .buy.no{background:linear-gradient(180deg,#ff8a7d,#e2564a);color:#fff;box-shadow:0 4px 0 #b03b31}
   .mgrid .buy:disabled{opacity:1}
@@ -432,6 +411,7 @@
   <button class="prompt" id="prompt"><span class="key">E</span><span id="ptxt"></span></button>
   <div class="joy" id="joy"><div class="b"><div class="k" id="knob"></div></div></div>
   <button class="jump" id="jumpBtn" aria-label="점프"><svg viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"/></svg></button>
+  <button class="jump rot" id="rotBtn" hidden aria-label="조각 돌리기">↻</button>
   <div class="hotbar" id="hotbar"></div>
   <div class="notes" id="notes"></div>
 
@@ -993,7 +973,9 @@ function drawGoal(){ const g=$("goal");
   if(FP.on){ const d=FDIFF[FP.diff]; g.className="goal wx"; g.textContent="💦 "+d.nm+" · 🎈 "+FP.score+"개 · 남은 시간 "+Math.max(0,Math.ceil(FP.end-now()))+"초"; return; }
   if(SV.on){ const d=SDIFF[SV.diff],sec=Math.floor(now()-SV.t0); g.className="goal wx"; g.textContent=d.e+" "+d.nm+" · "+"❤️".repeat(Math.max(0,SV.hp))+" · "+sec+"초 버팀 (초당 "+d.pay+"코인)"; return; }
   if(H.zone==="home"){ g.className="goal"; g.textContent="🏡 우리 집 · 가구를 눌러서 써보세요 · 🚪 문으로 나가기"; return; }
-  if(H.zone==="haunt"){ const d=HDIFF[H.diff]||HDIFF[1]; g.className="goal wx"; g.textContent=d.e+" "+d.nm+" · 🕯️ 촛불 "+H.got+" / "+H.n+" · 문으로 나가면 촛불당 "+d.pay+"코인"; return; } if(weather.kind){ g.className="goal wx"; g.textContent=(weather.kind==="rain"?"🌧️ 비가 와요! 작물이 2배로 자라고 젖음 변이가 생겨요":"🌈 무지개 이벤트! 변이 확률과 낚시 행운이 크게 올라요")+" ("+Math.ceil(weather.until-now())+"초)"; return; } if(now()<TIP.until){ g.className=TIP.cls; g.textContent=TIP.txt; return; }
+  if(H.zone==="haunt"){ const d=HDIFF[H.diff]||HDIFF[1]; g.className="goal wx"; g.textContent=d.e+" "+d.nm+" · 🕯️ 촛불 "+H.got+" / "+H.n+" · 문으로 나가면 촛불당 "+d.pay+"코인"; return; }
+  { const pt=pzGoal(); if(pt){ g.className="goal wx"; g.textContent=pt; return; } }   /* 🧩 퍼즐 판 근처: 조각 수·모래시계 */
+  if(weather.kind){ g.className="goal wx"; g.textContent=(weather.kind==="rain"?"🌧️ 비가 와요! 작물이 2배로 자라고 젖음 변이가 생겨요":"🌈 무지개 이벤트! 변이 확률과 낚시 행운이 크게 올라요")+" ("+Math.ceil(weather.until-now())+"초)"; return; } if(now()<TIP.until){ g.className=TIP.cls; g.textContent=TIP.txt; return; }
   g.className="goal"; g.textContent=""; }
 function advance(step){ if(S.tut===step-1){ S.tut=step; TIP.next=0; showTip(GOALS[Math.min(step,GOALS.length-1)],9); drawGoal(); if(step<5) chime(700,900); } }
 /* 힌트는 늘 떠 있지 않고 가끔 한 줄씩 잠깐 나타났다 사라진다 */
@@ -1019,7 +1001,7 @@ const TIPS=[
   {e:"🥚",t:"미아의 펫 가게에서 알을 사면 펫이 나와요",ok:()=>!S.pets.length&&S.coins>=300},
   {e:"📖",t:"도감에서 아직 못 잡은 것을 확인할 수 있어요",ok:()=>true},
   {e:"👻",t:"귀신의 집에서 촛불을 모으면 코인을 받아요",ok:()=>S.coins>=200},
-  {e:"🧩",t:"수학 선생님 옆 나무 탁자에서 블록 퍼즐을 맞춰 보세요",ok:()=>(S.puzWins||0)<3}
+  {e:"🧩",t:"민지 선생님 옆 나무판 — 조각 앞에서 E를 눌러 들고, 파인 홈에 놓아 보세요",ok:()=>(S.puzWins||0)<3}
 ];
 const TIP={until:0,next:12,txt:"",cls:"goal",last:-1};
 function showTip(txt,secs,cls){ TIP.txt=txt; TIP.cls=cls||"goal"; TIP.until=now()+(secs||7); }
@@ -2688,7 +2670,7 @@ function teleport(x,z){ P.x=x; P.z=z; P.y=0; P.y=groundY(x,z); P.vy=0; }
 
 /* ======================= 입력 ======================= */
 const joy={id:null,cx:0,cy:0,dx:0,dy:0},cam={id:null,lx:0,ly:0,sx:0,sy:0,moved:false},keys={};
-addEventListener("keydown",e=>{ keys[e.code]=true; if(e.code==="Space"){ if(FP.on) fireFP(); else jump(); } if(e.code==="KeyE") doPrompt(); if(e.code==="Escape") closeGui(); });
+addEventListener("keydown",e=>{ keys[e.code]=true; if(e.code==="Space"){ if(FP.on) fireFP(); else jump(); } if(e.code==="KeyE") doPrompt(); if(e.code==="KeyR"||e.code==="KeyQ") pzRotHeld(); if(e.code==="Escape") closeGui(); });
 addEventListener("keyup",e=>{ keys[e.code]=false; });
 let lastGround=0,jumpReq=0,stepT=0,chirpT=0;
 function doJump(){ P.vy=JUMP_V*(S.up.boots?1.12:1); SFX.jump(); burst(P.x,P.y+.2,P.z,0xdddddd,5,2.5,.4); quest("jump"); }
@@ -2929,16 +2911,20 @@ addI({x:SPAWN.x+7,z:SPAWN.z+.6,h:4.2,r:3.4,
 addI({r:3.4,get x(){ const o=bugNear(); return o?o.x:1e9; },get z(){ const o=bugNear(); return o?o.z:1e9; },get h(){ return 2.6; },
   text:()=>{ const o=bugNear(); return o?(S.up.net?"🥅 "+o.type.nm+" 잡기":"🥅 잠자리채가 필요해요 (준호 가게)"):null; },
   ok:()=>!!S.up.net,act:()=>catchBug()});
-/* ===================== 🧩 나무 블록 퍼즐 (우봉고식) =====================
-   나무판에 파인 모양을 나무 조각(폴리오미노)으로 빈틈없이 채운다.
-   모양을 먼저 만들고 그걸 조각으로 쪼개므로 답이 반드시 있다. 조각은 끌어서 놓고, 톡 치면 돌아간다.
-   모래시계가 다 떨어져도 계속 풀 수 있고, 시간 안에 끝내면 보너스만 더 받는다(아이가 실패로 끝나지 않게). */
-const PUZ={x:26,z:12};
-const PUZLV=[null,{nm:"쉬움",e:"🌱",G:4,cells:10,k:3,rot:false,sand:90,coin:40,xp:15,sub:"조각 3개 · 돌릴 필요 없음"},
-                  {nm:"보통",e:"🌿",G:5,cells:14,k:4,rot:true,sand:75,coin:90,xp:30,sub:"조각 4개 · 돌려서 맞추기"},
-                  {nm:"어려움",e:"🔥",G:6,cells:20,k:5,rot:true,sand:60,coin:160,xp:50,sub:"조각 5개 · 큰 모양"}];
-const PUZCOL=["#efd3a0","#c98a4d","#e2b16c","#a8703f","#f3e1bd","#d69a5a"];   /* 나무 색이지만 조각끼리 구별되게 밝기 차이를 둠 */
-const PZ={on:false,lv:1,G:6,region:null,pieces:[],placed:{},filled:null,t0:0,timer:null,sel:-1,won:false,drag:null};
+/* ===================== 🧩 나무 블록 퍼즐 (우봉고식 · 들고 옮기기) =====================
+   민지 선생님 옆 바닥에 놓인 큰 나무판에 정답 모양이 홈으로 파여 있고(아이들 나무 모양 맞추기 장난감처럼),
+   흩어진 나무 조각을 캐릭터가 직접 머리 위로 들어 옮겨서 홈에 내려놓는다.
+   예전엔 창 안에서 2D 조각을 손가락으로 끌었는데 "옮기는 느낌이 없다"는 의견으로 바꿈 — 라이벌 기지에서
+   브레인롯을 업고 뛰는 것과 같은 방식. 모양을 먼저 만들고 그걸 조각으로 쪼개므로 답이 반드시 있다.
+   모래시계가 다 떨어져도 계속 풀 수 있고, 시간 안에 끝내면 코인 보너스만 더 받는다(아이가 실패로 끝나지 않게). */
+const PUZ={x:28,z:9.5,cs:1.4};   /* 판 중심, 한 칸 크기 — 칸이 커야 조이스틱으로도 자리를 맞추기 쉽다 */
+const PUZLV=[null,{nm:"쉬움",e:"🌱",G:4,cells:10,k:3,rot:false,sand:120,coin:40,xp:15,sub:"조각 3개 · 돌릴 필요 없음"},
+                  {nm:"보통",e:"🌿",G:5,cells:14,k:4,rot:true,sand:150,coin:90,xp:30,sub:"조각 4개 · 돌려서 맞추기"},
+                  {nm:"어려움",e:"🔥",G:6,cells:20,k:5,rot:true,sand:180,coin:160,xp:50,sub:"조각 5개 · 큰 모양"}];
+const PUZCOL=[0xefd3a0,0xc98a4d,0xe2b16c,0xa8703f,0xf3e1bd,0xd69a5a];   /* 나무 색이지만 조각끼리 구별되게 밝기 차이를 둠 */
+/* var: 앞쪽 drawGoal 이 로드 중에 불려도 PZ 가 아직 없으면 그냥 건너뛰도록(const 면 TDZ 오류) */
+var PZ={lv:1,G:6,region:null,pieces:[],placed:{},filled:null,t0:0,tEnd:0,won:false,hold:null,ghost:null,near:false,boardGrp:null,newAt:0,lastSec:-1,plat:null,sub:null,rotShown:false};
+const PZGM={ok:new T.MeshBasicMaterial({color:0x4ede9f,transparent:true,opacity:.55,depthWrite:false}),bad:new T.MeshBasicMaterial({color:0xff5252,transparent:true,opacity:.55,depthWrite:false})};
 function pzKey(r,c){ return r*PZ.G+c; }
 /* 1) 가운데에서 자라나는 붙어 있는 모양 */
 function pzRegion(n){ const G=PZ.G, set=new Set(), c0=Math.floor(G/2); set.add(pzKey(c0,c0));
@@ -2966,100 +2952,115 @@ function pzSplit(region,k){ const G=PZ.G, cells=[...region]; for(let tries=0;tri
 function pzNorm(cells){ const r0=Math.min(...cells.map(c=>c[0])),c0=Math.min(...cells.map(c=>c[1])); return cells.map(c=>[c[0]-r0,c[1]-c0]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]); }
 function pzRot(cells){ const H=Math.max(...cells.map(c=>c[0])); return pzNorm(cells.map(([r,c])=>[c,H-r])); }
 function pzSame(a,b){ return a.length===b.length&&a.every((c,i)=>c[0]===b[i][0]&&c[1]===b[i][1]); }
+function pzDims(p){ p.H=Math.max(...p.cells.map(c=>c[0]))+1; p.W=Math.max(...p.cells.map(c=>c[1]))+1; return p; }
+function pzFits(p,r0,c0){ for(const [r,c] of p.cells){ const rr=r0+r,cc=c0+c; if(rr<0||cc<0||rr>=PZ.G||cc>=PZ.G) return false; const k=pzKey(rr,cc); if(!PZ.region.has(k)||PZ.filled.has(k)) return false; } return true; }
+/* ---- 3D 자리 계산: 행은 +z, 열은 +x 방향 ---- */
+function pzSize(){ return PZ.G*PUZ.cs+1.2; }                                   /* 판 한 변(테두리 포함) */
+function pzOrigin(){ const h=PZ.G*PUZ.cs/2; return {x0:PUZ.x-h,z0:PUZ.z-h}; }  /* 0행 0열 칸의 모서리 */
+function pzCellXZ(r0,c0,p){ const {x0,z0}=pzOrigin(); return [x0+(c0+p.W/2)*PUZ.cs,z0+(r0+p.H/2)*PUZ.cs]; }   /* 왼쪽 위가 (r0,c0)인 조각의 가운데 */
+function pzSpots(){ const h=pzSize()/2, m=3.2, {x,z}=PUZ; return [[x+3.4,z+h+m],[x+h+m,z-3.2],[x+h+m,z+3.2],[x-3.4,z-h-m],[x+3.4,z-h-m]]; }   /* 조각 놓는 자리: 남·동·동·북·북 (서쪽은 민지 가게) */
+/* 서 있는 자리 → 조각의 왼쪽 위 칸. 조각 가운데가 발밑에 오도록 잡고 반올림하니 한 칸씩 딱딱 옮겨 간다 */
+function pzAnchor(p){ const {x0,z0}=pzOrigin(), cs=PUZ.cs; return [Math.round((P.z-z0)/cs-.5-(p.H-1)/2),Math.round((P.x-x0)/cs-.5-(p.W-1)/2)]; }
+function pzOnBoard(){ const h=pzSize()/2; return H.zone==="field"&&Math.abs(P.x-PUZ.x)<h&&Math.abs(P.z-PUZ.z)<h; }
+function pzNearBoard(){ const h=pzSize()/2+12; return H.zone==="field"&&Math.abs(P.x-PUZ.x)<h&&Math.abs(P.z-PUZ.z)<h; }
+/* ---- 새 퍼즐 ---- */
 function pzNew(lv){
   const L=PUZLV[lv]; PZ.G=L.G; let region=null,pieces=null;
   for(let t=0;t<40&&!pieces;t++){ region=pzRegion(L.cells); pieces=pzSplit(region,L.k); }
   if(!pieces){ region=new Set([pzKey(2,2),pzKey(2,3),pzKey(3,2),pzKey(3,3),pzKey(1,2),pzKey(4,3),pzKey(2,1),pzKey(3,4),pzKey(1,3),pzKey(4,2)]); pieces=pzSplit(region,3)||[[[0,0],[0,1],[1,0]],[[0,0],[1,0],[1,1]],[[0,0],[0,1],[0,2],[1,1]]]; }
-  PZ.lv=lv; PZ.region=region; PZ.placed={}; PZ.filled=new Map(); PZ.sel=-1; PZ.won=false; PZ.drag=null;
-  PZ.pieces=pieces.map((cells,i)=>{ let sh=cells; if(L.rot){ const n=Math.floor(Math.random()*4); for(let r=0;r<n;r++) sh=pzRot(sh); } return {id:i,cells:sh,col:PUZCOL[i%PUZCOL.length]}; });
-  PZ.t0=now(); PZ.on=true;
+  for(const p of PZ.pieces) if(p.obj) scene.remove(p.obj); if(PZ.ghost){ scene.remove(PZ.ghost); PZ.ghost=null; }
+  PZ.lv=lv; PZ.region=region; PZ.placed={}; PZ.filled=new Map(); PZ.won=false; PZ.hold=null; PZ.t0=0; PZ.tEnd=0; PZ.newAt=0; PZ.lastSec=-1;
+  PZ.pieces=pieces.map((cells,i)=>{ let sh=cells; if(L.rot){ const n=Math.floor(Math.random()*4); for(let r=0;r<n;r++) sh=pzRot(sh); } return pzDims({id:i,cells:sh,col:PUZCOL[i%PUZCOL.length],fall:0,baseY:.23}); });
+  pzBuildBoard(); const sp=pzSpots();
+  PZ.pieces.forEach((p,i)=>{ p.obj=pzPieceMesh(p); const s=sp[i%sp.length]; p.obj.position.set(s[0],.23,s[1]); scene.add(p.obj); });
+  if(PZ.near) drawGoal();
 }
-function openPuzzle(){ pzNew(S.puzLv||1); drawPuzzle(); openGui("g-puzzle"); clearInterval(PZ.timer);
-  PZ.timer=setInterval(()=>{ if(guiOpen!=="g-puzzle"){ clearInterval(PZ.timer); PZ.on=false; return; } pzClock(); },500); pzClock(); }
-function pzClock(){ const L=PUZLV[PZ.lv], t=PZ.won?PZ.tEnd:now()-PZ.t0, best=S.puzBest&&S.puzBest[PZ.lv];
-  $("puzTime").textContent="⏱ "+Math.floor(t)+"초"+(best?" · 최고 "+best+"초":"");
-  const sand=$("puzSand"); if(sand){ const left=Math.max(0,1-t/L.sand); sand.querySelector("i").style.width=(left*100).toFixed(1)+"%"; sand.classList.toggle("out",left<=0); } }
-/* 판은 모양이 있는 부분만(여백 1칸) 보여준다 — 6×6 전체를 그리면 쉬움에서 빈 나무판이 너무 크다 */
-function pzView(){ let r0=PZ.G,r1=-1,c0=PZ.G,c1=-1; for(const k of PZ.region){ const r=Math.floor(k/PZ.G),c=k%PZ.G; r0=Math.min(r0,r); r1=Math.max(r1,r); c0=Math.min(c0,c); c1=Math.max(c1,c); }
-  r0=Math.max(0,r0-1); c0=Math.max(0,c0-1); r1=Math.min(PZ.G-1,r1+1); c1=Math.min(PZ.G-1,c1+1); return {r0,c0,rows:r1-r0+1,cols:c1-c0+1}; }
-function pzCell(){ const v=pzView(); const availH=Math.max(160,innerHeight*.86-340);
-  return Math.max(26,Math.min(48,Math.floor((Math.min(innerWidth,540)-70)/v.cols),Math.floor(availH/v.rows))); }
-function pzPieceEl(p,cs){ const el=document.createElement("div"); el.className="puzpiece"; el.dataset.id=p.id;
-  const H=Math.max(...p.cells.map(c=>c[0]))+1, W=Math.max(...p.cells.map(c=>c[1]))+1; el.style.width=(W*cs)+"px"; el.style.height=(H*cs)+"px"; el.style.setProperty("--pc",p.col);
-  for(const [r,c] of p.cells){ const i=document.createElement("i"); i.style.left=(c*cs)+"px"; i.style.top=(r*cs)+"px"; el.appendChild(i); } return el; }
-function drawPuzzle(){
-  const B=$("puzBody"); B.innerHTML=""; const L=PUZLV[PZ.lv], cs=pzCell(); B.style.setProperty("--cs",cs+"px");
-  const wrap=document.createElement("div"); wrap.className="puzwrap"; B.appendChild(wrap);
-  const t=help2("🧩 조각을 <b>끌어서</b> 파인 자리에 놓고, <b>톡 치면</b> 돌아가요. 모래시계 안에 끝내면 코인 <b>1.5배</b>!"); t.style.width="100%"; t.style.boxSizing="border-box"; t.style.textAlign="center"; wrap.appendChild(t);
-  const chips=document.createElement("div"); chips.className="chips"; chips.style.justifyContent="center";
-  [1,2,3].forEach(lv=>{ const b=document.createElement("button"); const d=PUZLV[lv]; b.textContent=d.e+" "+d.nm; b.title=d.sub; b.setAttribute("aria-pressed",PZ.lv===lv?"true":"false");
-    b.onclick=()=>{ if(PZ.lv===lv&&!PZ.won) return; S.puzLv=lv; save(); pzNew(lv); drawPuzzle(); beep(620,.05); }; chips.appendChild(b); }); wrap.appendChild(chips);
-  const sand=document.createElement("div"); sand.className="puzsand"; sand.id="puzSand"; sand.innerHTML="<i style='width:100%'></i>"; wrap.appendChild(sand);
-  /* 판 */
-  const V=pzView(); PZ.view=V;
-  const board=document.createElement("div"); board.className="puzboard"; const grid=document.createElement("div"); grid.className="puzgrid"; grid.id="puzGrid";
-  grid.style.gridTemplateColumns="repeat("+V.cols+","+cs+"px)"; grid.style.width=(V.cols*cs)+"px"; grid.style.height=(V.rows*cs)+"px";
-  for(let r=V.r0;r<V.r0+V.rows;r++) for(let c=V.c0;c<V.c0+V.cols;c++){ const d=document.createElement("div"); d.className="puzcell"+(PZ.region.has(pzKey(r,c))?" hole":""); grid.appendChild(d); }
-  board.appendChild(grid); const main=document.createElement("div"); main.className="puzmain"; main.appendChild(board); wrap.appendChild(main);
-  for(const id in PZ.placed){ const p=PZ.pieces[id], [r0,c0]=PZ.placed[id]; const el=pzPieceEl(p,cs); el.classList.add("onboard"); el.style.left=((c0-V.c0)*cs)+"px"; el.style.top=((r0-V.r0)*cs)+"px";
-    el.addEventListener("pointerdown",e=>{ e.preventDefault(); if(PZ.won) return; pzLift(+id); },{passive:false}); grid.appendChild(el); }
-  /* 조각 쟁반 */
-  const tray=document.createElement("div"); tray.className="puztray"; tray.id="puzTray"; main.appendChild(tray);   /* 가로가 넓으면 판 옆, 좁으면 아래로 */
-  for(const p of PZ.pieces){ if(PZ.placed[p.id]!==undefined) continue; const el=pzPieceEl(p,cs); if(PZ.sel===p.id) el.classList.add("sel");
-    el.addEventListener("pointerdown",e=>pzDown(e,p.id),{passive:false}); tray.appendChild(el); }
-  const btns=document.createElement("div"); btns.className="puzbtns";
-  const rot=btn("↻ 돌리기","blue"); rot.onclick=()=>{ const id=PZ.sel>=0&&PZ.placed[PZ.sel]===undefined?PZ.sel:PZ.pieces.find(p=>PZ.placed[p.id]===undefined)?.id; if(id===undefined||PZ.won) return; pzRotate(id); };
-  const nw=btn("🔄 다른 퍼즐"); nw.onclick=()=>{ pzNew(PZ.lv); drawPuzzle(); beep(600,.05); };
-  btns.appendChild(rot); btns.appendChild(nw); wrap.appendChild(btns);
-  pzClock();
-}
-function pzRotate(id){ const p=PZ.pieces[id]; p.cells=pzRot(p.cells); PZ.sel=id; const old=document.querySelector('#puzTray .puzpiece[data-id="'+id+'"]');
-  if(old){ const el=pzPieceEl(p,pzCell()); el.classList.add("sel"); el.addEventListener("pointerdown",e=>pzDown(e,id),{passive:false}); old.replaceWith(el); document.querySelectorAll("#puzTray .puzpiece.sel").forEach(x=>{ if(x!==el) x.classList.remove("sel"); }); }
-  tone(520,.05,"triangle",.03); }
-function pzLift(id){ delete PZ.placed[id]; PZ.filled=new Map(); for(const k in PZ.placed){ const p=PZ.pieces[k],[r0,c0]=PZ.placed[k]; for(const [r,c] of p.cells) PZ.filled.set(pzKey(r0+r,c0+c),+k); }
-  PZ.sel=id; drawPuzzle(); tone(380,.06,"triangle",.03); }
-function pzFits(p,r0,c0){ for(const [r,c] of p.cells){ const rr=r0+r,cc=c0+c; if(rr<0||cc<0||rr>=PZ.G||cc>=PZ.G) return false; const k=pzKey(rr,cc); if(!PZ.region.has(k)||PZ.filled.has(k)) return false; } return true; }
-function pzDown(e,id){
-  if(PZ.won) return; e.preventDefault(); const cs=pzCell(), src=e.currentTarget, rect=src.getBoundingClientRect();
-  const gx=e.clientX-rect.left, gy=e.clientY-rect.top;
-  const ghost=pzPieceEl(PZ.pieces[id],cs); ghost.classList.add("puzghost"); ghost.style.left=(e.clientX-gx)+"px"; ghost.style.top=(e.clientY-gy)+"px";
-  PZ.drag={id,gx,gy,ghost,sx:e.clientX,sy:e.clientY,moved:false,pid:e.pointerId};
-  document.querySelectorAll("#puzTray .puzpiece.sel").forEach(x=>x.classList.remove("sel")); src.classList.add("sel"); PZ.sel=id;
-  const move=ev=>{ if(!PZ.drag) return; const d=PZ.drag; if(Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)>8&&!d.moved){ d.moved=true; document.body.appendChild(d.ghost); src.style.opacity=".25"; }
-    if(!d.moved) return; d.ghost.style.left=(ev.clientX-d.gx)+"px"; d.ghost.style.top=(ev.clientY-d.gy)+"px";
-    const pos=pzDropPos(d); d.ghost.classList.toggle("bad",!(pos&&pzFits(PZ.pieces[d.id],pos[0],pos[1]))); };
-  const up=ev=>{ window.removeEventListener("pointermove",move); window.removeEventListener("pointerup",up); window.removeEventListener("pointercancel",up);
-    const d=PZ.drag; PZ.drag=null; if(!d) return; src.style.opacity="";
-    if(!d.moved){ pzRotate(id); return; }                       /* 톡 = 돌리기 */
-    d.ghost.remove(); const pos=pzDropPos(d);
-    if(pos&&pzFits(PZ.pieces[id],pos[0],pos[1])) pzPlace(id,pos[0],pos[1]); else { tone(220,.08,"triangle",.03); } };
-  window.addEventListener("pointermove",move); window.addEventListener("pointerup",up); window.addEventListener("pointercancel",up);
-}
-function pzDropPos(d){ const g=$("puzGrid"); if(!g) return null; const gr=g.getBoundingClientRect(), cs=pzCell();
-  const left=parseFloat(d.ghost.style.left), top=parseFloat(d.ghost.style.top);
-  const c0=Math.round((left-gr.left)/cs), r0=Math.round((top-gr.top)/cs);
-  if(Math.abs(left-gr.left-c0*cs)>cs*.6||Math.abs(top-gr.top-r0*cs)>cs*.6) return null;
-  const V=PZ.view||{r0:0,c0:0}; return [r0+V.r0,c0+V.c0]; }
+/* 나무판: 어두운 바닥판 위에 홈이 아닌 칸만 타일을 올려서 정답 모양이 파인 홈으로 보이게 */
+function pzBuildBoard(){ if(PZ.boardGrp) scene.remove(PZ.boardGrp); const g=new T.Group(); PZ.boardGrp=g; const G=PZ.G, cs=PUZ.cs, S=pzSize(), {x0,z0}=pzOrigin();
+  const base=box(S,.16,S,0x3b1f0e); base.position.set(PUZ.x,.08,PUZ.z); g.add(base);
+  for(const [dx,dz,w,d] of [[0,-(S/2-.3),S,.6],[0,S/2-.3,S,.6],[-(S/2-.3),0,.6,S],[S/2-.3,0,.6,S]]){ const b=box(w,.5,d,0x8d5a33); b.position.set(PUZ.x+dx,.25,PUZ.z+dz); g.add(b); }
+  for(let r=0;r<G;r++) for(let c=0;c<G;c++){ if(PZ.region.has(pzKey(r,c))) continue; const t=box(cs-.04,.34,cs-.04,(r+c)%2?0xc98a4d:0xd39a58); t.position.set(x0+(c+.5)*cs,.33,z0+(r+.5)*cs); g.add(t); }
+  for(const [sx,sz] of pzSpots()){ const m=box(4.8,.06,4.8,0xe6d3a3); m.position.set(sx,.03,sz); m.castShadow=false; g.add(m); }   /* 조각 놓는 자리 깔개 */
+  scene.add(g); PZ.plat.w=PZ.plat.d=S; }
+function pzPieceMesh(p){ const g=new T.Group(), cs=PUZ.cs, top=new T.Color(p.col).lerp(new T.Color(0xffffff),.35).getHex();
+  for(const [r,c] of p.cells){ const x=(c-(p.W-1)/2)*cs, z=(r-(p.H-1)/2)*cs; const b=box(cs-.1,.34,cs-.1,p.col); b.position.set(x,0,z); g.add(b);
+    const cap=box(cs-.5,.05,cs-.5,top); cap.position.set(x,.19,z); cap.castShadow=false; g.add(cap); } return g; }
+/* 발밑 그림자: 들고 있는 조각이 놓일 자리를 초록(들어감)/빨강(안 됨)으로 */
+function pzGhost(p){ if(PZ.ghost) scene.remove(PZ.ghost); const g=new T.Group(), cs=PUZ.cs;
+  for(const [r,c] of p.cells){ const m=new T.Mesh(new T.BoxGeometry(cs-.14,.12,cs-.14),PZGM.bad); m.position.set((c-(p.W-1)/2)*cs,0,(r-(p.H-1)/2)*cs); g.add(m); }
+  g.visible=false; scene.add(g); PZ.ghost=g; }
+/* ---- 들기 · 놓기 · 돌리기 ---- */
+function pzPick(i){ const p=PZ.pieces[i]; if(!p||PZ.hold||PZ.won) return;
+  if(carry){ note("🧩","업고 있는 브레인롯을 먼저 기지에 놓고 와요","bad"); bad(); return; }
+  if(PZ.placed[i]!==undefined){ delete PZ.placed[i]; pzRefill(); }
+  PZ.hold={p,on:false,fit:false,anchor:null}; p.fall=0; p.obj.scale.setScalar(.55); pzGhost(p); if(!PZ.t0) PZ.t0=now();
+  tone(520,.08,"triangle",.04); burst(p.obj.position.x,.6,p.obj.position.z,0xd9a262,6,2,.4); drawGoal(); }
+function pzRefill(){ PZ.filled=new Map(); for(const k in PZ.placed){ const p=PZ.pieces[k],[r0,c0]=PZ.placed[k]; for(const [r,c] of p.cells) PZ.filled.set(pzKey(r0+r,c0+c),+k); } }
+function pzDrop(){ const h=PZ.hold; if(!h) return; const p=h.p;
+  if(h.on){ if(!h.fit){ bad(); return; } pzPlace(p.id,h.anchor[0],h.anchor[1]); return; }
+  if(!pzNearBoard()){ bad(); return; }
+  PZ.hold=null; PZ.ghost.visible=false; p.obj.scale.setScalar(1); p.obj.rotation.y=0; p.baseY=groundY(P.x,P.z)+.17; p.fall=1; p.obj.position.set(P.x,p.baseY,P.z); tone(300,.08,"triangle",.04); drawGoal(); }
 function pzPlace(id,r0,c0){ const p=PZ.pieces[id]; PZ.placed[id]=[r0,c0]; for(const [r,c] of p.cells) PZ.filled.set(pzKey(r0+r,c0+c),id);
-  SFX.pop(); PZ.sel=-1; drawPuzzle();
+  if(PZ.hold&&PZ.hold.p===p){ PZ.hold=null; PZ.ghost.visible=false; }
+  const [x,z]=pzCellXZ(r0,c0,p); p.obj.scale.setScalar(1); p.obj.rotation.y=0; p.baseY=.33; p.fall=1; p.obj.position.set(x,.33,z);   /* 홈 바닥(.16) 위, 윗면이 타일과 같은 높이 */
+  SFX.pop(); drawGoal();
   if(PZ.filled.size===PZ.region.size) pzWin(); }
+function pzRotHeld(){ const h=PZ.hold; if(!h||guiOpen) return; const p=h.p; p.cells=pzRot(p.cells); pzDims(p);
+  scene.remove(p.obj); p.obj=pzPieceMesh(p); p.obj.scale.setScalar(.55); scene.add(p.obj); pzGhost(p); tone(520,.05,"triangle",.03); }
+function pzReturn(p){ if(PZ.hold&&PZ.hold.p===p){ PZ.hold=null; if(PZ.ghost) PZ.ghost.visible=false; } const s=pzSpots()[p.id%5]; p.obj.scale.setScalar(1); p.obj.rotation.y=0; p.fall=0; p.baseY=.23; p.obj.position.set(s[0],.23,s[1]); }
 function pzWin(){ PZ.won=true; PZ.tEnd=now()-PZ.t0; const L=PUZLV[PZ.lv], sec=Math.max(1,Math.round(PZ.tEnd)), inTime=PZ.tEnd<=L.sand;
-  let coins=L.coin*(inTime?1.5:1); coins=Math.round(coins*(1+bonus("sell")*0)); earn(coins,true); gainXp(L.xp); S.puzWins=(S.puzWins||0)+1; quest("puzzle");
+  const coins=Math.round(L.coin*(inTime?1.5:1)); earn(coins,true); gainXp(L.xp); S.puzWins=(S.puzWins||0)+1; quest("puzzle");
   if(!S.puzBest) S.puzBest={}; const rec=!S.puzBest[PZ.lv]||sec<S.puzBest[PZ.lv]; if(rec) S.puzBest[PZ.lv]=sec;
-  SFX.fanfare(); burst(P.x,P.y+4,P.z,0xffc83d,26,7,1); if(rec&&S.puzWins>1) setTimeout(()=>{ SFX.record(); note("🏆","신기록! "+sec+"초","gold"); },500);
-  note("🧩",L.nm+" 퍼즐 완성! "+num(coins)+" 코인"+(inTime?" (모래시계 안에! ×1.5)":""),"gold"); save(); pzClock();
-  const B=$("puzBody"); const w=document.createElement("div"); w.className="spellwhy ok"; w.style.textAlign="center"; w.style.fontSize="1.1rem";
-  w.innerHTML="🎉 빈틈없이 채웠어요! <b>"+sec+"초</b> · +"+num(coins)+" 코인"+(rec?"<br>🏆 이 단계 최고 기록!":"");
-  const wrap=B.querySelector(".puzwrap"), main=B.querySelector(".puzmain"); if(main) wrap.insertBefore(w,main); else wrap.appendChild(w);   /* 판+쟁반 묶음 앞에 */
-  const again=btn("🧩 한 판 더!","wide"); again.onclick=()=>{ pzNew(PZ.lv); drawPuzzle(); }; B.querySelector(".puzwrap").appendChild(again); }
-/* 섬에 놓인 퍼즐 탁자 (민지 선생님 옆) */
-(function puzzleTable(){ const {x,z}=PUZ;
-  at(box(5,.4,3.4,0x8d5a33),x,1.9,z); for(const [dx,dz] of [[-2.1,-1.3],[2.1,-1.3],[-2.1,1.3],[2.1,1.3]]) at(box(.35,1.8,.35,0x6b4423),x+dx,.9,z+dz);
-  at(box(3.2,.3,2.4,0xc98a4d),x,2.25,z); at(box(1.2,.28,1.2,0x3b1f0e),x-.4,2.32,z+.1); at(box(.6,.28,.6,0x3b1f0e),x+.6,2.32,z-.5);
-  at(box(.55,.3,.55,0xe9c891),x-1.6,2.55,z+.9); at(box(1.1,.3,.55,0xd4a064),x+1.2,2.55,z+.8); at(box(.55,.3,1.1,0xb8804a),x+1.4,2.55,z-.2);
-  at(label("🧩 나무 블록 퍼즐",{size:40,h:1.3,color:"#ffe08a"}),x,5.6,z); at(label("조각을 끼워 모양을 채워요",{size:26,h:.75,color:"#bdbebe"}),x,4.5,z);
-  PLATS.push({x,z,w:5,d:3.4,y:2.1,h:2.1,noDraw:true});
-  addI({x,z:z+2.6,h:4,r:4,text:()=>"🧩 나무 블록 퍼즐 (최고 "+(S.puzBest&&S.puzBest[S.puzLv||1]?S.puzBest[S.puzLv||1]+"초":"-")+")",act:()=>openPuzzle()});
+  SFX.fanfare(); burst(PUZ.x,1.2,PUZ.z,0xffc83d,40,9,1.2); for(const p of PZ.pieces) p.obj.traverse(m=>{ if(m.isMesh&&m.material.emissive) m.material.emissive.setHex(0x5a4000); });
+  if(rec&&S.puzWins>1) setTimeout(()=>{ SFX.record(); note("🏆","신기록! "+sec+"초","gold"); },500);
+  note("🧩",L.nm+" 퍼즐 완성! "+sec+"초 · "+num(coins)+" 코인"+(inTime?" (모래시계 안에! ×1.5)":""),"gold"); save(); PZ.newAt=now()+5; drawGoal(); if(guiOpen==="g-puzzle") drawPuzzle(); }
+/* 화면 위 안내줄(판 근처에서만) */
+function pzGoal(){ if(!PZ||!PZ.near) return null; const L=PUZLV[PZ.lv], n=Object.keys(PZ.placed).length, k=PZ.pieces.length;
+  if(PZ.won) return "🎉 "+L.e+" "+L.nm+" 퍼즐 완성! 잠시 뒤 새 퍼즐이 나와요";
+  if(!PZ.t0) return "🧩 "+L.e+" "+L.nm+" 퍼즐 · 조각 앞에서 E로 들고, 판 위 초록 자리에서 E로 놓아요 · 🪧 팻말: 단계 바꾸기";
+  const left=Math.ceil(L.sand-(now()-PZ.t0));
+  return "🧩 "+L.e+" "+L.nm+" · 조각 "+n+"/"+k+(left>0?" · ⏳ "+left+"초 안에 끝내면 코인 ×1.5":" · ⏳ 모래시계 끝 — 천천히 마저 맞춰요"); }
+/* 매 프레임: 든 조각은 머리 위를 따라오고, 발밑 그림자가 놓일 자리를 보여준다 */
+function pzTick(t,dt){
+  if(!PZ.region) pzNew(S.puzLv||1);
+  const L=PUZLV[PZ.lv], hs=pzSize()/2+3, near=H.zone==="field"&&Math.abs(P.x-PUZ.x)<hs&&Math.abs(P.z-PUZ.z)<hs;
+  if(near!==PZ.near){ PZ.near=near; drawGoal(); }
+  for(const p of PZ.pieces) if(p.fall>0){ p.fall=Math.max(0,p.fall-dt/.3); const k=1-p.fall; p.obj.position.y=p.baseY+2.4*(1-k*k); if(p.fall===0) burst(p.obj.position.x,p.baseY+.4,p.obj.position.z,0xe6d3a3,8,2.2,.45); }   /* 툭 떨어져 자리에 앉는 느낌 */
+  const h=PZ.hold;
+  if(h){ const p=h.p, o=p.obj; o.position.set(P.x,P.y+6.6+Math.sin(t*3)*.1,P.z); o.rotation.y=Math.sin(t*1.7)*.05;
+    h.on=pzOnBoard(); h.anchor=pzAnchor(p); h.fit=h.on&&pzFits(p,h.anchor[0],h.anchor[1]);
+    PZ.ghost.visible=h.on; if(h.on){ const [gx,gz]=pzCellXZ(h.anchor[0],h.anchor[1],p); PZ.ghost.position.set(gx,.58,gz); const m=h.fit?PZGM.ok:PZGM.bad; for(const c of PZ.ghost.children) c.material=m; }
+    if(Math.hypot(P.x-PUZ.x,P.z-PUZ.z)>pzSize()/2+16||H.zone!=="field"||RIDE.on||inGame()){ pzReturn(p); note("🧩","조각은 퍼즐 판 옆에 두고 왔어요"); } }   /* 판에서 너무 멀어지면(출발점쯤) 조각은 제자리로 */
+  const rs=!!(h&&L.rot); if(rs!==PZ.rotShown){ PZ.rotShown=rs; $("rotBtn").hidden=!rs; }
+  if(PZ.won&&PZ.newAt&&t>=PZ.newAt){ PZ.newAt=0; pzNew(PZ.lv); if(near) note("🧩","✨ 새 퍼즐이 나왔어요!"); }
+  if(near&&PZ.t0&&!PZ.won){ const s=Math.floor(t-PZ.t0); if(s!==PZ.lastSec){ PZ.lastSec=s; drawGoal(); } }
+  if(PZ.sub){ const n=Object.keys(PZ.placed).length, best=S.puzBest&&S.puzBest[PZ.lv]; relabel(PZ.sub,L.e+" "+L.nm+" · 조각 "+n+"/"+PZ.pieces.length+(best?" · 최고 "+best+"초":"")); }
+}
+/* 팻말 창: 단계 바꾸기 · 다른 퍼즐 · 설명 */
+function openPuzzle(){ drawPuzzle(); openGui("g-puzzle"); }
+function drawPuzzle(){ const B=$("puzBody"); B.innerHTML=""; const L=PUZLV[PZ.lv], n=Object.keys(PZ.placed).length, best=S.puzBest&&S.puzBest[PZ.lv];
+  $("puzTime").textContent=best?"최고 "+best+"초":"";
+  B.appendChild(help2("🧩 나무판에 파인 <b>홈 모양</b>을 조각으로 빈틈없이 채워요.<br>① 조각 앞에서 <b>E</b> → 머리 위로 번쩍! ② 판 위를 걸으면 발밑에 <b>그림자</b>가 따라와요 — <b>초록</b>일 때 <b>E</b>로 내려놓기 ③ <b>↻</b> 버튼으로 돌리기<br>모래시계 안에 끝내면 코인 <b>1.5배</b>!"));
+  const chips=document.createElement("div"); chips.className="chips"; chips.style.justifyContent="center";
+  [1,2,3].forEach(lv=>{ const d=PUZLV[lv], b=document.createElement("button"), bb=S.puzBest&&S.puzBest[lv]; b.innerHTML=d.e+" "+d.nm+(bb?" <small>"+bb+"초</small>":""); b.title=d.sub; b.setAttribute("aria-pressed",PZ.lv===lv?"true":"false");
+    b.onclick=()=>{ if(PZ.lv===lv&&!PZ.won) return; S.puzLv=lv; save(); pzNew(lv); drawPuzzle(); beep(620,.05); }; chips.appendChild(b); }); B.appendChild(chips);
+  const st=document.createElement("div"); st.className="help"; st.innerHTML="<b>"+L.e+" "+L.nm+"</b> — "+L.sub+" · 조각 <b>"+n+"/"+PZ.pieces.length+"</b> · 모래시계 "+L.sand+"초 · 완성 "+L.coin+"코인 (시간 안에 "+Math.round(L.coin*1.5)+")"+(PZ.won?"<br>🎉 완성! 잠시 뒤 새 퍼즐이 나와요":""); B.appendChild(st);
+  const nw=btn("🔄 다른 퍼즐 (조각 다시 섞기)","wide"); nw.onclick=()=>{ pzNew(PZ.lv); drawPuzzle(); beep(600,.05); }; B.appendChild(nw); }
+/* 섬에 놓기: 판(걸어 올라갈 수 있는 낮은 발판) · 팻말 · 상호작용 */
+(function puzzleBoard(){ const {x,z}=PUZ; PZ.plat={x,z,w:9.6,d:9.6,y:.5,h:.5,noDraw:true,pad:0}; PLATS.push(PZ.plat);
+  const sx=x-6.4, sz=z+6.4;   /* 팻말: 판 남서쪽 모서리 */
+  at(box(.3,2.8,.3,0x6b4423),sx,1.4,sz); at(box(3,1.7,.18,0xc98a4d),sx,3.1,sz); at(box(3.2,.2,.3,0x8d5a33),sx,4.05,sz); solids.push({x:sx,z:sz,r:.3});
+  at(label("🧩 나무 블록 퍼즐",{size:40,h:1.3,color:"#ffe08a"}),sx,5.7,sz); PZ.sub=at(label("조각을 들어 홈에 놓아요",{size:26,h:.75,color:"#bdbebe"}),sx,4.75,sz);
+  addI({x:sx,z:sz,h:4.6,r:3.4,text:()=>"🪧 퍼즐 단계 · 다른 퍼즐 (최고 "+(S.puzBest&&S.puzBest[S.puzLv||1]?S.puzBest[S.puzLv||1]+"초":"-")+")",act:()=>openPuzzle()});
+  /* 조각 집기: 조각은 판마다 새로 만들지만 상호작용 자리는 6개를 고정으로 두고 지금 조각을 가리키게 한다 */
+  for(let i=0;i<6;i++) addI({get x(){ const p=PZ.pieces[i]; return p&&p.obj&&!(PZ.hold&&PZ.hold.p===p)?p.obj.position.x:1e9; },get z(){ const p=PZ.pieces[i]; return p&&p.obj?p.obj.position.z:1e9; },h:2.4,r:2.9,
+    text:()=>{ const p=PZ.pieces[i]; if(!p||PZ.hold||PZ.won) return null; if(carry) return "🧩 업은 걸 먼저 기지에 놓고 와요"; return PZ.placed[i]!==undefined?"🧩 조각 다시 들기":"🧩 조각 들기"; },ok:()=>!carry,act:()=>pzPick(i)});
+  /* 들고 있는 동안: 프롬프트가 내 머리 위에 붙어 다닌다 */
+  addI({get x(){ return PZ.hold?P.x:1e9; },get z(){ return PZ.hold?P.z:1e9; },get h(){ return P.y+7.9; },r:2,
+    text:()=>{ const h=PZ.hold; if(!h) return null; if(h.on) return h.fit?"⬇ 여기에 놓기":"🚫 여기엔 안 맞아요"; return pzNearBoard()?"⬇ 바닥에 내려놓기":"🧩 퍼즐 판 근처로 가져가요"; },
+    ok:()=>{ const h=PZ.hold; return !!h&&(h.on?h.fit:pzNearBoard()); },act:()=>pzDrop()});
+  $("rotBtn").addEventListener("touchstart",e=>{ e.preventDefault(); e.stopPropagation(); pzRotHeld(); },{passive:false}); $("rotBtn").addEventListener("mousedown",e=>{ e.preventDefault(); pzRotHeld(); });
+  /* 첫 퍼즐은 저장(S)이 읽힌 뒤 첫 프레임(pzTick)에서 만든다 — 여기선 아직 S 가 없다 */
 })();
 /* ===================== 🧱 충돌 보강: 보이는 모양 = 부딪히는 모양 =====================
    장면의 보이는 물체와 충돌판을 전부 대조하는 점검으로 찾은 것들을 한곳에 모았다. */
@@ -3518,7 +3519,7 @@ const MAPLIST=[["🌱","샘의 씨앗 가게","씨앗을 사서 밭에 심어요
   ["🦈","컨베이어","브레인롯을 사면 저절로 코인이 쌓여요"],["🏡","내 집터","벽·지붕을 사서 집을 지어요"],["👻","귀신의 집","촛불을 모아 탈출해요"],
   ["🏸","배드민턴장","코치와 시합해요"],["🎯","서바이벌·💦 물총","피하고 맞혀요"],["🥋","태권도장","사범 동작을 외워요"],["🪢","줄넘기","줄이 올 때 점프!"],
   ["🎢","놀이공원","롤러코스터·자이로드롭·대관람차·회전목마"],["⛰️","산꼭대기","보물상자가 있어요"],["🏗️","오비","발판을 뛰어 올라가요"],
-  ["🍳","요리 냄비","판매대 옆 — 재료를 합쳐 비싸게 팔아요"],["🧩","나무 블록 퍼즐","민지 선생님 옆 탁자 — 조각을 끼워 모양을 채워요"],["📮","우체통","출발점 옆 — 하루에 한 번 선물이 와요"],
+  ["🍳","요리 냄비","판매대 옆 — 재료를 합쳐 비싸게 팔아요"],["🧩","나무 블록 퍼즐","민지 선생님 옆 나무판 — 조각을 들고 가서 홈에 놓아요"],["📮","우체통","출발점 옆 — 하루에 한 번 선물이 와요"],
   ["🦋","들판의 곤충","잠자리채(준호 가게)로 잡아요. 뛰면 도망가요!"],["🌙","밤","밤에만 나오는 곤충이 있어요"]];
 function menuPage(id){ const ap=$("menuApps"); ap.hidden=!!id;
   document.querySelectorAll(".mpage").forEach(p=>p.hidden=p.id!==id);
@@ -3724,15 +3725,17 @@ function tick(){
     if(keys.KeyW||keys.ArrowUp) fy=1; if(keys.KeyS||keys.ArrowDown) fy=-1; if(keys.KeyA||keys.ArrowLeft) fx=-1; if(keys.KeyD||keys.ArrowRight) fx=1;
     const l=Math.hypot(fx,fy); if(l>1){ fx/=l; fy/=l; } const f=[-Math.sin(camYaw),-Math.cos(camYaw)],r=[-f[1],f[0]]; mx=f[0]*fy+r[0]*fx; mz=f[1]*fy+r[1]*fx; }
   P.moving=Math.hypot(mx,mz)>.05;
-  if(P.moving){ const air=P.y>groundY(P.x,P.z)+.05&&P.vy>-50; const sp=(carry?9:16)*(1+bonus("speed")+(S.up.shoes?.3:0)+(t<S.cakeUntil?.5:0))*(air?.6:1); tryMove(P.x+mx*sp*dt,P.z+mz*sp*dt); P.ry=Math.atan2(mx,mz); }
+  if(P.moving){ const air=P.y>groundY(P.x,P.z)+.05&&P.vy>-50; const sp=(carry||PZ.hold?8:16)*(1+bonus("speed")+(S.up.shoes?.3:0)+(t<S.cakeUntil?.5:0))*(air?.6:1); tryMove(P.x+mx*sp*dt,P.z+mz*sp*dt); P.ry=Math.atan2(mx,mz); }
   const gy=groundY(P.x,P.z); if(!RIDE.on){ P.vy-=GRAV*dt; P.y+=P.vy*dt; }
   if(!RIDE.on&&P.y<=gy){ if(P.vy<-9){ SFX.land(); burst(P.x,gy+.2,P.z,0xdddddd,8,3,.5); if(P.vy<-22) shake(.35,.25); } P.y=gy; P.vy=0; lastGround=t; if(t-jumpReq<.15){ jumpReq=0; doJump(); } }
   if(P.y<=gy+.01&&!guiOpen) for(const l of LPADS) if(Math.abs(P.x-l.x)<1.9&&Math.abs(P.z-l.z)<1.9){ P.vy=34; SFX.whoosh(); burst(l.x,.6,l.z,0xff8c1a,24,7,.9); break; }
   if(P.moving&&P.y<=gy+.01){ stepT+=dt; if(stepT>.27){ stepT=0; SFX.step(); burst(P.x,P.y+.15,P.z,H.zone==="haunt"?0x444455:0xa8d97a,2,1.5,.35); } }
-  player.position.set(P.x,P.y,P.z); nameTag.position.set(P.x,P.y+6.7,P.z); nameTag.visible=guiOpen!=="g-av"&&!FP.on&&!TK.on&&!RP.on&&!(RIDE.on&&RIDE.type!=="caro");
+  player.position.set(P.x,P.y,P.z); nameTag.position.set(P.x,P.y+(PZ.hold?8.3:6.7),P.z);   /* 퍼즐 조각을 머리 위에 들면 이름표는 더 위로 */ nameTag.visible=guiOpen!=="g-av"&&!FP.on&&!TK.on&&!RP.on&&!(RIDE.on&&RIDE.type!=="caro");
   sun.position.set(P.x+40,P.y+70,P.z+30); sun.target.position.set(P.x,P.y,P.z);
   { let ry=player.rotation.y,d=P.ry-ry; d=Math.atan2(Math.sin(d),Math.cos(d)); if(P.moving) player.rotation.y=ry+d*Math.min(1,dt*14); }
   swing(player,t,P.moving); if(fishing) player.userData.aR.rotation.x=-2.2;
+  if(PZ.hold) player.userData.aL.rotation.x=player.userData.aR.rotation.x=-3;   /* 두 팔을 번쩍 들어 조각 받치기 */
+  pzTick(t,dt);
 
   /* 배드민턴 */
   if(BD.on){
@@ -3875,10 +3878,10 @@ function tick(){
     camera.position.lerp(camPos,Math.min(1,dt*5)); camera.lookAt(gcam[1][0],gcam[1][1],gcam[1][2]); }
   else if(FP.on){ const dir=fpDir(); camera.position.set(P.x,P.y+4.6,P.z); camera.lookAt(P.x+dir.x,P.y+4.6+dir.y,P.z+dir.z); player.rotation.y=camYaw+Math.PI; P.ry=player.rotation.y; }
   else if(guiOpen==="g-av"){ player.rotation.y+=dt*.9; const fx=Math.sin(editYaw),fz=Math.cos(editYaw); camPos.set(P.x+fx*9,P.y+3.6,P.z+fz*9); camera.position.lerp(camPos,Math.min(1,dt*6)); camera.lookAt(P.x-fz*1.6,P.y+2.9,P.z+fx*1.6); }
-  else { const hz=H.zone==="haunt",hm=H.zone==="home",D=hz?11:hm?16:17,Hy=hz?5.5:hm?8.5:8.8;
+  else { const hz=H.zone==="haunt",hm=H.zone==="home",pz=PZ.near&&!hz&&!hm,D=hz?11:hm?16:pz?12:17,Hy=hz?5.5:hm?8.5:pz?15:8.8;   /* 🧩 퍼즐 판 근처는 위에서 내려다봐야 홈과 그림자가 보인다 */
     camPos.set(P.x+Math.sin(camYaw)*D,P.y+Hy,P.z+Math.cos(camYaw)*D);
     if(hm){ const R=ROOM,m=1.6; camPos.x=Math.min(Math.max(camPos.x,R.x-R.w/2+m),R.x+R.w/2-m); camPos.z=Math.min(Math.max(camPos.z,R.z-R.d/2+m),R.z+R.d/2-m); }
-    camera.position.lerp(camPos,Math.min(1,dt*8)); camera.lookAt(P.x,P.y+(hm?2.4:3.6),P.z); }
+    camera.position.lerp(camPos,Math.min(1,dt*8)); camera.lookAt(P.x,P.y+(hm?2.4:pz?1.4:3.6),P.z); }
   if(shakeT>0){ shakeT-=dt; camera.position.x+=(Math.random()-.5)*shakeA; camera.position.y+=(Math.random()-.5)*shakeA; }
 
   /* 파티클 · 떠오르는 글자 · 새소리 */
@@ -4051,7 +4054,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,openPuzzle,pzNew,pzPlace,pzRot,pzFits,drawPuzzle,get PZ(){return PZ;},PLATS,solids,get houseGrp(){return typeof houseGrp!=="undefined"?houseGrp:null;},get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,openPuzzle,pzNew,pzPlace,pzRot,pzFits,drawPuzzle,pzPick,pzDrop,pzRotHeld,pzAnchor,pzTick,PUZ,PUZLV,get PZ(){return PZ;},PLATS,solids,get houseGrp(){return typeof houseGrp!=="undefined"?houseGrp:null;},get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
