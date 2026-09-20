@@ -716,6 +716,13 @@ const CHEST2={x:MTN.x,z:MTN.z-2,y:14.4};
 const TOWN={x:-80,z:60};
 const HOUSES=[{x:-96,z:46,c:0xff8a80},{x:-80,z:44,c:0x80d8ff},{x:-64,z:46,c:0xffe082},{x:-96,z:76,c:0xb9f6ca},{x:-64,z:76,c:0xe1bee7}];
 const LPADS=[{x:9,z:10},{x:OBBY.x-10,z:OBBY.z+10},{x:MTN.x-30,z:MTN.z+30},{x:TOWN.x,z:TOWN.z},{x:-60,z:-60}];
+/* 🚀 발사대: 밟으면 포물선을 그리며 목적지까지 날아간다 — 퍼즐 광장이 출발점에서 96m 라 "너무 멀다"고 할 때 쓰라고(사용자: "점프패드 넣어줘").
+   출발점 남쪽(2,13.5)은 스폰 주변에서 5×5m 가 비는 가장 가까운 자리. 광장 쪽에도 돌아오는 발사대. 착지 자리는 발사대에서 떨어뜨려 다시 밟히지 않게 */
+const FLYPADS=[{x:2,z:13.5,to:{x:96,z:22},nm:"🧩 퍼즐 광장으로 슝!",col:0xffe08a},{x:104,z:21,to:{x:-7,z:13},nm:"🏠 출발점으로 슝!",col:0x9ed0ff}];
+const FLY={on:false,t0:0,dur:0,h:0,from:null,to:null,y1:0};
+function startFly(f){ const dx=f.to.x-P.x,dz=f.to.z-P.z,d=Math.hypot(dx,dz);
+  FLY.on=true; FLY.t0=now(); FLY.dur=Math.min(3.4,1.2+d/40); FLY.h=Math.min(30,8+d*.22); FLY.from={x:P.x,z:P.z,y:P.y}; FLY.to=f.to; FLY.y1=groundY(f.to.x,f.to.z);
+  P.ry=Math.atan2(dx,dz); P.vy=0; SFX.whoosh(); burst(P.x,.6,P.z,f.col,26,7,.9); note("🚀",f.nm.replace("슝!","날아가요!")); }
 const THIEF_SPAWNS=[{x:120,z:120},{x:-125,z:125},{x:130,z:10},{x:-40,z:-130}];
 const BOUND=145, RESTOCK=60, BELT_GAP=4, BELT_SPEED=3;
 const JUMP_V=16, GRAV=30;
@@ -1001,7 +1008,8 @@ const TIPS=[
   {e:"🥚",t:"미아의 펫 가게에서 알을 사면 펫이 나와요",ok:()=>!S.pets.length&&S.coins>=300},
   {e:"📖",t:"도감에서 아직 못 잡은 것을 확인할 수 있어요",ok:()=>true},
   {e:"👻",t:"귀신의 집에서 촛불을 모으면 코인을 받아요",ok:()=>S.coins>=200},
-  {e:"🧩",t:"동쪽 꽃밭 옆 퍼즐 광장(노란 빛기둥) — 조각 앞에서 E를 눌러 들고, 파인 홈에 놓아 보세요",ok:()=>(S.puzWins||0)<3}
+  {e:"🧩",t:"동쪽 꽃밭 옆 퍼즐 광장(노란 빛기둥) — 조각 앞에서 E를 눌러 들고, 파인 홈에 놓아 보세요",ok:()=>(S.puzWins||0)<3},
+  {e:"🚀",t:"출발점 남쪽 노란 발사대를 밟으면 퍼즐 광장까지 슝 날아가요",ok:()=>(S.puzWins||0)<5}
 ];
 const TIP={until:0,next:12,txt:"",cls:"goal",last:-1};
 function showTip(txt,secs,cls){ TIP.txt=txt; TIP.cls=cls||"goal"; TIP.until=now()+(secs||7); }
@@ -1440,6 +1448,13 @@ mkChest(CHEST); mkChest(CHEST2);
 
 /* ---- 점프 패드 / 빛기둥 ---- */
 LPADS.forEach(l=>{ at(box(3.6,.3,3.6,0xff8c1a),l.x,.15,l.z); at(box(2,.2,2,0xfff176),l.x,.32,l.z); at(label("🚀 점프 패드",{size:30,h:.8,color:"#ffe08a"}),l.x,2.4,l.z); });
+/* 발사대: 나무 받침 + 색 판 + 흰 고리 + 목적지를 가리키는 화살표 원뿔, 도착 자리엔 같은 색 깔개 */
+FLYPADS.forEach(f=>{ at(box(3.6,.3,3.6,0x5b4636),f.x,.15,f.z); at(box(2.6,.2,2.6,f.col),f.x,.32,f.z);
+  const ring=new T.Mesh(new T.TorusGeometry(1.5,.09,6,28),mat(0xffffff)); ring.rotation.x=Math.PI/2; at(ring,f.x,.46,f.z);
+  const ar=new T.Group(); const cone=new T.Mesh(new T.ConeGeometry(.45,1.3,4),mat(f.col)); cone.rotation.x=Math.PI/2; cone.position.z=.9; ar.add(cone);
+  const stem=box(.3,.3,1.2,f.col); stem.position.z=-.3; ar.add(stem); ar.rotation.y=Math.atan2(f.to.x-f.x,f.to.z-f.z); at(ar,f.x,1.1,f.z);
+  at(label(f.nm,{size:30,h:.85,color:"#ffe08a"}),f.x,2.9,f.z); at(label("🚀 밟으면 날아가요",{size:22,h:.6,color:"#bdbebe"}),f.x,2.1,f.z);
+  const mat2=box(3.4,.08,3.4,f.col); mat2.castShadow=false; at(mat2,f.to.x,.04,f.to.z); at(label("🛬 착지",{size:22,h:.6,color:"#bdbebe"}),f.to.x,1.6,f.to.z); });
 /* ---- 하늘: 구름 · 태양 ---- */
 const skyGrp=new T.Group(); scene.add(skyGrp);
 const sunDir=new T.Vector3(.42,.68,.6).normalize();
@@ -3523,7 +3538,7 @@ const MAPLIST=[["🌱","샘의 씨앗 가게","씨앗을 사서 밭에 심어요
   ["🦈","컨베이어","브레인롯을 사면 저절로 코인이 쌓여요"],["🏡","내 집터","벽·지붕을 사서 집을 지어요"],["👻","귀신의 집","촛불을 모아 탈출해요"],
   ["🏸","배드민턴장","코치와 시합해요"],["🎯","서바이벌·💦 물총","피하고 맞혀요"],["🥋","태권도장","사범 동작을 외워요"],["🪢","줄넘기","줄이 올 때 점프!"],
   ["🎢","놀이공원","롤러코스터·자이로드롭·대관람차·회전목마"],["⛰️","산꼭대기","보물상자가 있어요"],["🏗️","오비","발판을 뛰어 올라가요"],
-  ["🍳","요리 냄비","판매대 옆 — 재료를 합쳐 비싸게 팔아요"],["🧩","나무 블록 퍼즐","동쪽 꽃밭 옆 퍼즐 광장(노란 빛기둥) — 조각을 들고 가서 홈에 놓아요"],["📮","우체통","출발점 옆 — 하루에 한 번 선물이 와요"],
+  ["🍳","요리 냄비","판매대 옆 — 재료를 합쳐 비싸게 팔아요"],["🧩","나무 블록 퍼즐","동쪽 꽃밭 옆 퍼즐 광장(노란 빛기둥) — 출발점 남쪽 🚀 발사대를 밟으면 바로 날아가요"],["📮","우체통","출발점 옆 — 하루에 한 번 선물이 와요"],
   ["🦋","들판의 곤충","잠자리채(준호 가게)로 잡아요. 뛰면 도망가요!"],["🌙","밤","밤에만 나오는 곤충이 있어요"]];
 function menuPage(id){ const ap=$("menuApps"); ap.hidden=!!id;
   document.querySelectorAll(".mpage").forEach(p=>p.hidden=p.id!==id);
@@ -3725,7 +3740,7 @@ function tick(){
 
   /* 이동 */
   let mx=0,mz=0;
-  if(!guiOpen&&can("move")){ let fx=0,fy=0; if(joy.id!==null){ fx=joy.dx; fy=-joy.dy; }
+  if(!guiOpen&&can("move")&&!FLY.on){ let fx=0,fy=0; if(joy.id!==null){ fx=joy.dx; fy=-joy.dy; }
     if(keys.KeyW||keys.ArrowUp) fy=1; if(keys.KeyS||keys.ArrowDown) fy=-1; if(keys.KeyA||keys.ArrowLeft) fx=-1; if(keys.KeyD||keys.ArrowRight) fx=1;
     const l=Math.hypot(fx,fy); if(l>1){ fx/=l; fy/=l; } const f=[-Math.sin(camYaw),-Math.cos(camYaw)],r=[-f[1],f[0]]; mx=f[0]*fy+r[0]*fx; mz=f[1]*fy+r[1]*fx; }
   P.moving=Math.hypot(mx,mz)>.05;
@@ -3733,6 +3748,12 @@ function tick(){
   const gy=groundY(P.x,P.z); if(!RIDE.on){ P.vy-=GRAV*dt; P.y+=P.vy*dt; }
   if(!RIDE.on&&P.y<=gy){ if(P.vy<-9){ SFX.land(); burst(P.x,gy+.2,P.z,0xdddddd,8,3,.5); if(P.vy<-22) shake(.35,.25); } P.y=gy; P.vy=0; lastGround=t; if(t-jumpReq<.15){ jumpReq=0; doJump(); } }
   if(P.y<=gy+.01&&!guiOpen) for(const l of LPADS) if(Math.abs(P.x-l.x)<1.9&&Math.abs(P.z-l.z)<1.9){ P.vy=34; SFX.whoosh(); burst(l.x,.6,l.z,0xff8c1a,24,7,.9); break; }
+  /* 🚀 발사대 — 나는 동안은 조작·중력을 끄고 포물선 위치를 직접 넣는다 */
+  if(!FLY.on&&P.y<=gy+.01&&!guiOpen&&!RIDE.on&&H.zone==="field") for(const f of FLYPADS) if(Math.abs(P.x-f.x)<1.9&&Math.abs(P.z-f.z)<1.9){ startFly(f); break; }
+  if(FLY.on){ const k=Math.min(1,(t-FLY.t0)/FLY.dur), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;   /* 천천히 떠서 천천히 내려앉기 */
+    P.x=FLY.from.x+(FLY.to.x-FLY.from.x)*e; P.z=FLY.from.z+(FLY.to.z-FLY.from.z)*e; P.y=FLY.from.y+(FLY.y1-FLY.from.y)*k+Math.sin(k*Math.PI)*FLY.h; P.vy=0;
+    if(Math.random()<dt*18) burst(P.x,P.y+.4,P.z,0xffffff,1,.8,.6);   /* 구름 꼬리 */
+    if(k>=1){ FLY.on=false; P.y=groundY(P.x,P.z); lastGround=t; SFX.land(); burst(P.x,P.y+.2,P.z,0xffe08a,22,5,.8); shake(.2,.2); } }
   if(P.moving&&P.y<=gy+.01){ stepT+=dt; if(stepT>.27){ stepT=0; SFX.step(); burst(P.x,P.y+.15,P.z,H.zone==="haunt"?0x444455:0xa8d97a,2,1.5,.35); } }
   player.position.set(P.x,P.y,P.z); nameTag.position.set(P.x,P.y+(PZ.hold?8.3:6.7),P.z);   /* 퍼즐 조각을 머리 위에 들면 이름표는 더 위로 */ nameTag.visible=guiOpen!=="g-av"&&!FP.on&&!TK.on&&!RP.on&&!(RIDE.on&&RIDE.type!=="caro");
   sun.position.set(P.x+40,P.y+70,P.z+30); sun.target.position.set(P.x,P.y,P.z);
