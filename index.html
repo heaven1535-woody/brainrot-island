@@ -1009,7 +1009,8 @@ const TIPS=[
   {e:"📖",t:"도감에서 아직 못 잡은 것을 확인할 수 있어요",ok:()=>true},
   {e:"👻",t:"귀신의 집에서 촛불을 모으면 코인을 받아요",ok:()=>S.coins>=200},
   {e:"🧩",t:"동쪽 꽃밭 옆 퍼즐 광장(노란 빛기둥) — 조각 앞에서 E를 눌러 들고, 파인 홈에 놓아 보세요",ok:()=>(S.puzWins||0)<3},
-  {e:"🚀",t:"출발점 남쪽 노란 발사대를 밟으면 퍼즐 광장까지 슝 날아가요",ok:()=>(S.puzWins||0)<5}
+  {e:"🚀",t:"출발점 남쪽 노란 발사대를 밟으면 퍼즐 광장까지 슝 날아가요",ok:()=>(S.puzWins||0)<5},
+  {e:"🦉",t:"퍼즐이 어려우면 광장의 부엉이 박사에게 힌트를 물어봐요 — 1분 넘게 막히면 무료",ok:()=>(S.puzWins||0)<8}
 ];
 const TIP={until:0,next:12,txt:"",cls:"goal",last:-1};
 function showTip(txt,secs,cls){ TIP.txt=txt; TIP.cls=cls||"goal"; TIP.until=now()+(secs||7); }
@@ -2941,7 +2942,8 @@ const PUZLV=[null,{nm:"쉬움",e:"🌱",G:4,cells:10,k:3,rot:false,sand:120,coin
 const PUZCOL=[0xefd3a0,0xc98a4d,0xe2b16c,0xa8703f,0xf3e1bd,0xd69a5a];   /* 나무 색이지만 조각끼리 구별되게 밝기 차이를 둠 */
 /* var: 앞쪽 drawGoal 이 로드 중에 불려도 PZ 가 아직 없으면 그냥 건너뛰도록(const 면 TDZ 오류) */
 var PZ={lv:1,G:6,region:null,pieces:[],placed:{},filled:null,t0:0,tEnd:0,won:false,hold:null,ghost:null,near:false,boardGrp:null,newAt:0,lastSec:-1,plat:null,sub:null,rotShown:false};
-const PZGM={ok:new T.MeshBasicMaterial({color:0x4ede9f,transparent:true,opacity:.55,depthWrite:false}),bad:new T.MeshBasicMaterial({color:0xff5252,transparent:true,opacity:.55,depthWrite:false})};
+const PZGM={ok:new T.MeshBasicMaterial({color:0x4ede9f,transparent:true,opacity:.55,depthWrite:false}),bad:new T.MeshBasicMaterial({color:0xff5252,transparent:true,opacity:.55,depthWrite:false}),
+  hint:new T.MeshBasicMaterial({color:0xffd54a,transparent:true,opacity:.7,depthWrite:false})};
 function pzKey(r,c){ return r*PZ.G+c; }
 /* 1) 가운데에서 자라나는 붙어 있는 모양 */
 function pzRegion(n){ const G=PZ.G, set=new Set(), c0=Math.floor(G/2); set.add(pzKey(c0,c0));
@@ -2988,9 +2990,10 @@ function pzNew(lv){
   for(const p of PZ.pieces) if(p.obj) scene.remove(p.obj); if(PZ.ghost){ scene.remove(PZ.ghost); PZ.ghost=null; }
   PZ.lv=lv; PZ.region=region; PZ.placed={}; PZ.filled=new Map(); PZ.won=false; PZ.hold=null; PZ.t0=0; PZ.tEnd=0; PZ.newAt=0; PZ.lastSec=-1;
   PZ.pieces=pieces.map((cells,i)=>{ let sh=cells; if(L.rot){ const n=Math.floor(Math.random()*4); for(let r=0;r<n;r++) sh=pzRot(sh); } return pzDims({id:i,cells:sh,col:PUZCOL[i%PUZCOL.length],fall:0,baseY:.23}); });
+  pzHintClear(); PZ.lastAct=now(); PZ.called=false;
   pzBuildBoard(); const sp=pzSpots();
   PZ.pieces.forEach((p,i)=>{ p.obj=pzPieceMesh(p); const s=sp[i%sp.length]; p.obj.position.set(s[0],.23,s[1]); scene.add(p.obj); });
-  if(PZ.near) drawGoal();
+  pzSignDraw(); if(PZ.near) drawGoal();
 }
 /* 나무판: 어두운 바닥판 위에 홈이 아닌 칸만 타일을 올려서 정답 모양이 파인 홈으로 보이게 */
 function pzBuildBoard(){ if(PZ.boardGrp) scene.remove(PZ.boardGrp); const g=new T.Group(); PZ.boardGrp=g; const G=PZ.G, cs=PUZ.cs, S=pzSize(), {x0,z0}=pzOrigin();
@@ -3009,8 +3012,8 @@ function pzGhost(p){ if(PZ.ghost) scene.remove(PZ.ghost); const g=new T.Group(),
 /* ---- 들기 · 놓기 · 돌리기 ---- */
 function pzPick(i){ const p=PZ.pieces[i]; if(!p||PZ.hold||PZ.won) return;
   if(carry){ note("🧩","업고 있는 브레인롯을 먼저 기지에 놓고 와요","bad"); bad(); return; }
-  if(PZ.placed[i]!==undefined){ delete PZ.placed[i]; pzRefill(); }
-  PZ.hold={p,on:false,fit:false,anchor:null}; p.fall=0; p.obj.scale.setScalar(.55); pzGhost(p); if(!PZ.t0) PZ.t0=now();
+  if(PZ.placed[i]!==undefined){ delete PZ.placed[i]; pzRefill(); pzSignDraw(); }
+  PZ.hold={p,on:false,fit:false,anchor:null}; p.fall=0; p.obj.scale.setScalar(.55); pzGhost(p); if(!PZ.t0) PZ.t0=now(); PZ.lastAct=now();
   tone(520,.08,"triangle",.04); burst(p.obj.position.x,.6,p.obj.position.z,0xd9a262,6,2,.4); drawGoal(); }
 function pzRefill(){ PZ.filled=new Map(); for(const k in PZ.placed){ const p=PZ.pieces[k],[r0,c0]=PZ.placed[k]; for(const [r,c] of p.cells) PZ.filled.set(pzKey(r0+r,c0+c),+k); } }
 function pzDrop(){ const h=PZ.hold; if(!h) return; const p=h.p;
@@ -3020,12 +3023,13 @@ function pzDrop(){ const h=PZ.hold; if(!h) return; const p=h.p;
 function pzPlace(id,r0,c0){ const p=PZ.pieces[id]; PZ.placed[id]=[r0,c0]; for(const [r,c] of p.cells) PZ.filled.set(pzKey(r0+r,c0+c),id);
   if(PZ.hold&&PZ.hold.p===p){ PZ.hold=null; PZ.ghost.visible=false; }
   const [x,z]=pzCellXZ(r0,c0,p); p.obj.scale.setScalar(1); p.obj.rotation.y=0; p.baseY=.33; p.fall=1; p.obj.position.set(x,.33,z);   /* 홈 바닥(.16) 위, 윗면이 타일과 같은 높이 */
+  if(PZ.hintPiece===p) pzHintClear(); PZ.lastAct=now(); pzSignDraw();
   SFX.pop(); drawGoal();
   if(PZ.filled.size===PZ.region.size) pzWin(); }
 function pzRotHeld(){ const h=PZ.hold; if(!h||guiOpen) return; const p=h.p; p.cells=pzRot(p.cells); pzDims(p);
   scene.remove(p.obj); p.obj=pzPieceMesh(p); p.obj.scale.setScalar(.55); scene.add(p.obj); pzGhost(p); tone(520,.05,"triangle",.03); }
 function pzReturn(p){ if(PZ.hold&&PZ.hold.p===p){ PZ.hold=null; if(PZ.ghost) PZ.ghost.visible=false; } const s=pzSpots()[p.id%5]; p.obj.scale.setScalar(1); p.obj.rotation.y=0; p.fall=0; p.baseY=.23; p.obj.position.set(s[0],.23,s[1]); }
-function pzWin(){ PZ.won=true; PZ.tEnd=now()-PZ.t0; const L=PUZLV[PZ.lv], sec=Math.max(1,Math.round(PZ.tEnd)), inTime=PZ.tEnd<=L.sand;
+function pzWin(){ PZ.won=true; PZ.tEnd=now()-PZ.t0; pzHintClear(); const L=PUZLV[PZ.lv], sec=Math.max(1,Math.round(PZ.tEnd)), inTime=PZ.tEnd<=L.sand;
   const coins=Math.round(L.coin*(inTime?1.5:1)); earn(coins,true); gainXp(L.xp); S.puzWins=(S.puzWins||0)+1; quest("puzzle");
   if(!S.puzBest) S.puzBest={}; const rec=!S.puzBest[PZ.lv]||sec<S.puzBest[PZ.lv]; if(rec) S.puzBest[PZ.lv]=sec;
   SFX.fanfare(); burst(PUZ.x,1.2,PUZ.z,0xffc83d,40,9,1.2); for(const p of PZ.pieces) p.obj.traverse(m=>{ if(m.isMesh&&m.material.emissive) m.material.emissive.setHex(0x5a4000); });
@@ -3052,12 +3056,68 @@ function pzTick(t,dt){
   if(PZ.won&&PZ.newAt&&t>=PZ.newAt){ PZ.newAt=0; pzNew(PZ.lv); if(near) note("🧩","✨ 새 퍼즐이 나왔어요!"); }
   if(near&&PZ.t0&&!PZ.won){ const s=Math.floor(t-PZ.t0); if(s!==PZ.lastSec){ PZ.lastSec=s; drawGoal(); } }
   if(PZ.sub){ const n=Object.keys(PZ.placed).length, best=S.puzBest&&S.puzBest[PZ.lv]; relabel(PZ.sub,L.e+" "+L.nm+" · 조각 "+n+"/"+PZ.pieces.length+(best?" · 최고 "+best+"초":"")); }
+  /* 🦉 힌트 반짝임 · 부엉이 박사는 가까이 오면 쳐다보고, 1분 넘게 못 맞추면 한 번 말을 건다 */
+  if(PZ.hintUntil){ if(t>PZ.hintUntil) pzHintClear(); else if(PZ.hintGrp){ const s=1+Math.sin(t*6)*.08; PZ.hintGrp.scale.set(s,1,s); PZ.hintGrp.position.y=.62+Math.abs(Math.sin(t*4))*.18; } }
+  if(PZ.owl){ const o=PZ.owl, d=Math.hypot(P.x-o.position.x,P.z-o.position.z); o.position.y=o.userData.y0+Math.sin(t*2)*.05;
+    const want=d<12?Math.atan2(P.x-o.position.x,P.z-o.position.z):0.35; let dr=want-o.rotation.y; dr=Math.atan2(Math.sin(dr),Math.cos(dr)); o.rotation.y+=dr*Math.min(1,dt*4);
+    if(near&&PZ.t0&&!PZ.won&&!PZ.called&&t-PZ.lastAct>60){ PZ.called=true; note("🦉","어려우면 부엉이 박사한테 물어봐 — 지금은 힌트가 무료야!","gold"); tone(660,.12,"triangle",.04); } }
 }
+/* ---- 🦉 부엉이 박사 힌트: 지금 놓인 조각을 그대로 두고 나머지를 풀어 보고(회전 포함 되돌리기 탐색), 한 조각이 들어갈 자리를 반짝여 준다.
+   풀리지 않으면 잘못 놓인 조각을 찾아(하나씩 빼 보며) 그걸 반짝인다. 막힌 지 1분이 넘으면 무료, 아니면 10코인 ---- */
+function pzSolve(){ const L=PUZLV[PZ.lv]; const ids=PZ.pieces.filter(p=>PZ.placed[p.id]===undefined).map(p=>p.id); const filled=new Map(PZ.filled); const res={}; let steps=0;
+  const fits=(cells,r0,c0)=>cells.every(([r,c])=>{ const rr=r0+r,cc=c0+c; if(rr<0||cc<0||rr>=PZ.G||cc>=PZ.G) return false; const k=pzKey(rr,cc); return PZ.region.has(k)&&!filled.has(k); });
+  function rec(i){ if(i===ids.length) return true; if(++steps>40000) return false; const p=PZ.pieces[ids[i]]; let cells=p.cells; const nrot=L.rot?4:1;
+    for(let rot=0;rot<nrot;rot++){ for(let r=0;r<PZ.G;r++) for(let c=0;c<PZ.G;c++){ if(!fits(cells,r,c)) continue; cells.forEach(([dr,dc])=>filled.set(pzKey(r+dr,c+dc),1)); res[p.id]={rot,r,c,cells}; if(rec(i+1)) return true; cells.forEach(([dr,dc])=>filled.delete(pzKey(r+dr,c+dc))); }
+      cells=pzRot(cells); } return false; }
+  return rec(0)?res:null; }
+function pzHintFree(){ return !!PZ.t0&&now()-PZ.lastAct>60; }
+function pzHint(){ if(PZ.won||!PZ.pieces.length){ note("🦉","지금은 새 퍼즐을 기다리는 중이야"); return; }
+  if(!PZ.t0){ note("🦉","먼저 조각 앞에서 E를 눌러 들어 보렴. 판 위에서 초록 그림자가 보이면 그 자리야!"); return; }
+  if(!pzHintFree()&&!pay(10)) return;
+  let sol=pzSolve(), wrong=null;
+  if(!sol){ for(const id of Object.keys(PZ.placed).map(Number)){ const keep=PZ.placed[id]; delete PZ.placed[id]; pzRefill(); const s=pzSolve(); PZ.placed[id]=keep; pzRefill(); if(s){ wrong=id; break; } } }
+  PZ.lastAct=now(); S.puzHints=(S.puzHints||0)+1; save();
+  if(wrong!==null){ pzHintShow(PZ.pieces[wrong],null); note("🦉","반짝이는 조각이 잘못 놓였어 — 다시 들어서 옮겨 보렴","gold"); tone(520,.1,"triangle",.04); return; }
+  if(!sol){ note("🦉","음… 놓은 조각들을 다 들어서 처음부터 해 보자!","gold"); return; }
+  const pick=(PZ.hold&&sol[PZ.hold.p.id])?PZ.hold.p:PZ.pieces.find(p=>sol[p.id]); const q=sol[pick.id];
+  pzHintShow(pick,q); note("🦉","반짝이는 조각을 노란 자리에"+(q.rot?" ↻ "+q.rot+"번 돌려서":"")+" 놓아 보렴","gold"); tone(660,.1,"triangle",.04); tone(880,.1,"triangle",.04,null,.12); }
+function pzHintShow(p,q){ pzHintClear(); PZ.hintPiece=p; p.obj.traverse(m=>{ if(m.isMesh&&m.material.emissive) m.material.emissive.setHex(0x8a6a00); });
+  if(q){ const g=new T.Group(), cs=PUZ.cs, W=Math.max(...q.cells.map(c=>c[1]))+1, H=Math.max(...q.cells.map(c=>c[0]))+1;
+    for(const [r,c] of q.cells){ const m=new T.Mesh(new T.BoxGeometry(cs-.16,.14,cs-.16),PZGM.hint); m.position.set((c-(W-1)/2)*cs,0,(r-(H-1)/2)*cs); g.add(m); }
+    const {x0,z0}=pzOrigin(); g.position.set(x0+(q.c+W/2)*cs,.62,z0+(q.r+H/2)*cs); scene.add(g); PZ.hintGrp=g; }
+  PZ.hintUntil=now()+8; }
+function pzHintClear(){ if(PZ.hintGrp){ scene.remove(PZ.hintGrp); PZ.hintGrp=null; }
+  if(PZ.hintPiece){ const p=PZ.hintPiece; if(!PZ.won&&p.obj) p.obj.traverse(m=>{ if(m.isMesh&&m.material.emissive) m.material.emissive.setHex(0); }); PZ.hintPiece=null; } PZ.hintUntil=0; }
+/* 팻말 미니 그림: 위에서 본 판(북쪽이 위) — 홈은 어두운 칸, 놓은 조각은 그 조각 색. 판 위를 왔다 갔다 안 해도 모양을 볼 수 있게 */
+function pzSignDraw(){ const cv=PZ.signCv; if(!cv||!PZ.region) return; const g=cv.getContext("2d"), G=PZ.G, B=216, pad=12, cs=B/G;
+  g.fillStyle="#f3e7c8"; g.fillRect(0,0,cv.width,cv.height); g.fillStyle="#8d5a33"; g.fillRect(pad-4,pad-4,B+8,B+8);
+  for(let r=0;r<G;r++) for(let c=0;c<G;c++){ const k=pzKey(r,c), x=pad+c*cs, y=pad+r*cs;
+    if(!PZ.region.has(k)) g.fillStyle=(r+c)%2?"#c98a4d":"#d39a58"; else if(PZ.filled.has(k)) g.fillStyle=new T.Color(PZ.pieces[PZ.filled.get(k)].col).getStyle(); else g.fillStyle="#3b1f0e";
+    g.fillRect(x+1,y+1,cs-2,cs-2); }
+  const L=PUZLV[PZ.lv], n=Object.keys(PZ.placed).length; g.fillStyle="#3b2a1a"; g.font="800 26px Montserrat,'Noto Sans KR',sans-serif"; g.textAlign="center";
+  g.fillText("지금 모양",332,60); g.font="700 22px Montserrat,'Noto Sans KR',sans-serif"; g.fillText(L.e+" "+L.nm,332,100); g.fillText("조각 "+n+"/"+PZ.pieces.length,332,134); g.fillText("🦉 힌트는",332,180); g.fillText("부엉이 박사",332,210);
+  if(PZ.signTex) PZ.signTex.needsUpdate=true; }
+function mkOwl(){ const g=new T.Group();
+  const body=new T.Mesh(new T.SphereGeometry(.7,14,10),mat(0x8d6e63)); body.scale.set(1,1.15,.9); body.position.y=.9; g.add(body);
+  const belly=new T.Mesh(new T.SphereGeometry(.5,12,9),mat(0xefdcc3)); belly.scale.set(1,1.1,.5); belly.position.set(0,.75,.42); g.add(belly);
+  for(const s of [-1,1]){ const w=new T.Mesh(new T.SphereGeometry(.3,10,8),mat(0x6d4c41)); w.scale.set(.5,1.3,.8); w.position.set(s*.68,.85,0); g.add(w);
+    const ear=new T.Mesh(new T.ConeGeometry(.16,.4,6),mat(0x6d4c41)); ear.position.set(s*.4,1.72,0); ear.rotation.z=s*-.3; g.add(ear);
+    const eye=new T.Mesh(new T.SphereGeometry(.2,10,8),mat(0xffffff)); eye.position.set(s*.26,1.22,.56); g.add(eye);
+    const pu=new T.Mesh(new T.SphereGeometry(.1,8,6),mat(0x1b1b1b)); pu.position.set(s*.26,1.23,.72); g.add(pu);
+    const hl=new T.Mesh(new T.SphereGeometry(.04,5,4),new T.MeshBasicMaterial({color:0xffffff})); hl.position.set(s*.3,1.28,.8); g.add(hl);
+    const ring=new T.Mesh(new T.TorusGeometry(.24,.03,6,16),mat(0x3b2a1a)); ring.position.set(s*.26,1.22,.68); g.add(ring);   /* 안경 */
+    const f=box(.22,.08,.3,0xffb300); f.position.set(s*.25,.16,.2); g.add(f); }
+  const bridge=box(.14,.03,.03,0x3b2a1a); bridge.position.set(0,1.22,.68); g.add(bridge);
+  const beak=new T.Mesh(new T.ConeGeometry(.1,.26,5),mat(0xffb300)); beak.position.set(0,1.05,.72); beak.rotation.x=Math.PI/2; g.add(beak);
+  const capB=new T.Mesh(new T.CylinderGeometry(.42,.42,.22,10),mat(0x1b1b1b)); capB.position.y=1.62; g.add(capB);   /* 학사모 */
+  const cap=box(.9,.08,.9,0x1b1b1b); cap.position.set(0,1.75,0); cap.rotation.y=.4; g.add(cap); const tassel=box(.05,.3,.05,0xffd54a); tassel.position.set(.45,1.62,.2); g.add(tassel);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow=true; }); return g; }
 /* 팻말 창: 단계 바꾸기 · 다른 퍼즐 · 설명 */
 function openPuzzle(){ drawPuzzle(); openGui("g-puzzle"); }
 function drawPuzzle(){ const B=$("puzBody"); B.innerHTML=""; const L=PUZLV[PZ.lv], n=Object.keys(PZ.placed).length, best=S.puzBest&&S.puzBest[PZ.lv];
   $("puzTime").textContent=best?"최고 "+best+"초":"";
-  B.appendChild(help2("🧩 나무판에 파인 <b>홈 모양</b>을 조각으로 빈틈없이 채워요.<br>① 조각 앞에서 <b>E</b> → 머리 위로 번쩍! ② 판 위를 걸으면 발밑에 <b>그림자</b>가 따라와요 — <b>초록</b>일 때 <b>E</b>로 내려놓기 ③ <b>↻</b> 버튼으로 돌리기<br>모래시계 안에 끝내면 코인 <b>1.5배</b>!"));
+  B.appendChild(help2("🧩 나무판에 파인 <b>홈 모양</b>을 조각으로 빈틈없이 채워요.<br>① 조각 앞에서 <b>E</b> → 머리 위로 번쩍! ② 판 위를 걸으면 발밑에 <b>그림자</b>가 따라와요 — <b>초록</b>일 때 <b>E</b>로 내려놓기 ③ <b>↻</b> 버튼으로 돌리기<br>모래시계 안에 끝내면 코인 <b>1.5배</b>! 어려우면 <b>🦉 부엉이 박사</b>에게 힌트를 물어봐요 (1분 넘게 막히면 무료)"));
+  if(PZ.signCv){ const im=document.createElement("img"); im.src=PZ.signCv.toDataURL(); im.alt="지금 판 모양"; im.style.cssText="display:block;width:240px;max-width:100%;margin:0 auto;border-radius:12px;box-shadow:0 4px 0 #d9c69a"; B.appendChild(im); }
   const chips=document.createElement("div"); chips.className="chips"; chips.style.justifyContent="center";
   [1,2,3].forEach(lv=>{ const d=PUZLV[lv], b=document.createElement("button"), bb=S.puzBest&&S.puzBest[lv]; b.innerHTML=d.e+" "+d.nm+(bb?" <small>"+bb+"초</small>":""); b.title=d.sub; b.setAttribute("aria-pressed",PZ.lv===lv?"true":"false");
     b.onclick=()=>{ if(PZ.lv===lv&&!PZ.won) return; S.puzLv=lv; save(); pzNew(lv); drawPuzzle(); beep(620,.05); }; chips.appendChild(b); }); B.appendChild(chips);
@@ -3070,13 +3130,23 @@ function drawPuzzle(){ const B=$("puzBody"); B.innerHTML=""; const L=PUZLV[PZ.lv
   const sx=x-8.8, sz=z+8.8;   /* 팻말: 판 남서쪽 모서리(깔개 밖) */
   at(box(.3,2.8,.3,0x6b4423),sx,1.4,sz); at(box(3,1.7,.18,0xc98a4d),sx,3.1,sz); at(box(3.2,.2,.3,0x8d5a33),sx,4.05,sz); solids.push({x:sx,z:sz,r:.3});
   at(label("🧩 나무 블록 퍼즐",{size:40,h:1.3,color:"#ffe08a"}),sx,5.7,sz); PZ.sub=at(label("조각을 들어 홈에 놓아요",{size:26,h:.75,color:"#bdbebe"}),sx,4.75,sz);
+  /* 팻말 앞면 미니 그림(캔버스 텍스처) */
+  const cv=document.createElement("canvas"); cv.width=416; cv.height=240; PZ.signCv=cv; PZ.signTex=new T.CanvasTexture(cv); PZ.signTex.minFilter=T.LinearFilter;
+  const pl=new T.Mesh(new T.PlaneGeometry(2.6,1.5),new T.MeshBasicMaterial({map:PZ.signTex})); at(pl,sx,3.1,sz+.1);
+  /* 🦉 부엉이 박사: 팻말 왼쪽 그루터기 위 */
+  const ox=sx-2.8, oz=sz; at(new T.Mesh(new T.CylinderGeometry(.6,.75,1,10),mat(0x8d5a33)),ox,.5,oz); solids.push({x:ox,z:oz,r:.8});
+  PZ.owl=mkOwl(); PZ.owl.position.set(ox,1,oz); PZ.owl.userData.y0=1; PZ.owl.rotation.y=.35; scene.add(PZ.owl);
+  at(label("🦉 부엉이 박사",{size:30,h:.9,color:"#ffe08a"}),ox,4.1,oz);
+  addI({x:ox,z:oz,h:3.6,r:3.4,text:()=>{ if(PZ.won||!PZ.t0) return "🦉 부엉이 박사에게 말 걸기"; return pzHintFree()?"🦉 힌트 보기 (지금은 무료!)":"🦉 힌트 보기 (🪙 10)"; },
+    ok:()=>PZ.won||!PZ.t0||pzHintFree()||S.coins>=10,act:()=>pzHint()});
   addI({x:sx,z:sz,h:4.6,r:3.4,text:()=>"🪧 퍼즐 단계 · 다른 퍼즐 (최고 "+(S.puzBest&&S.puzBest[S.puzLv||1]?S.puzBest[S.puzLv||1]+"초":"-")+")",act:()=>openPuzzle()});
   /* 조각 집기: 조각은 판마다 새로 만들지만 상호작용 자리는 6개를 고정으로 두고 지금 조각을 가리키게 한다 */
   for(let i=0;i<6;i++) addI({get x(){ const p=PZ.pieces[i]; return p&&p.obj&&!(PZ.hold&&PZ.hold.p===p)?p.obj.position.x:1e9; },get z(){ const p=PZ.pieces[i]; return p&&p.obj?p.obj.position.z:1e9; },h:2.4,r:2.9,
     text:()=>{ const p=PZ.pieces[i]; if(!p||PZ.hold||PZ.won) return null; if(carry) return "🧩 업은 걸 먼저 기지에 놓고 와요"; return PZ.placed[i]!==undefined?"🧩 조각 다시 들기":"🧩 조각 들기"; },ok:()=>!carry,act:()=>pzPick(i)});
   /* 들고 있는 동안: 프롬프트가 내 머리 위에 붙어 다닌다 */
   addI({get x(){ return PZ.hold?P.x:1e9; },get z(){ return PZ.hold?P.z:1e9; },get h(){ return P.y+7.9; },r:2,
-    text:()=>{ const h=PZ.hold; if(!h) return null; if(h.on) return h.fit?"⬇ 여기에 놓기":"🚫 여기엔 안 맞아요"; return pzNearBoard()?"⬇ 바닥에 내려놓기":"🧩 퍼즐 판 근처로 가져가요"; },
+    text:()=>{ const h=PZ.hold; if(!h) return null; if(PZ.owl&&Math.hypot(P.x-PZ.owl.position.x,P.z-PZ.owl.position.z)<3.4) return null;   /* 부엉이 옆에선 힌트 프롬프트가 우선 — 들고 있는 조각의 자리를 물어보는 게 제일 자연스러워서 */
+      if(h.on) return h.fit?"⬇ 여기에 놓기":"🚫 여기엔 안 맞아요"; return pzNearBoard()?"⬇ 바닥에 내려놓기":"🧩 퍼즐 판 근처로 가져가요"; },
     ok:()=>{ const h=PZ.hold; return !!h&&(h.on?h.fit:pzNearBoard()); },act:()=>pzDrop()});
   $("rotBtn").addEventListener("touchstart",e=>{ e.preventDefault(); e.stopPropagation(); pzRotHeld(); },{passive:false}); $("rotBtn").addEventListener("mousedown",e=>{ e.preventDefault(); pzRotHeld(); });
   /* 첫 퍼즐은 저장(S)이 읽힌 뒤 첫 프레임(pzTick)에서 만든다 — 여기선 아직 S 가 없다 */
@@ -4079,7 +4149,7 @@ function tick(){
   renderer.render(scene,camera);
 }
 
-window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,openPuzzle,pzNew,pzPlace,pzRot,pzFits,drawPuzzle,pzPick,pzDrop,pzRotHeld,pzAnchor,pzTick,PUZ,PUZLV,get PZ(){return PZ;},PLATS,solids,get houseGrp(){return typeof houseGrp!=="undefined"?houseGrp:null;},get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,mkBug,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
+window.BRA={get S(){return S;},get vidOn(){return vidOn;},get blogMail(){return blogMail;},fetchBlogMail,drawMail,stopVid,closeGui,setBlog,setFeed,parseFeed,openMail,gate,openPuzzle,pzNew,pzPlace,pzRot,pzFits,drawPuzzle,pzPick,pzDrop,pzRotHeld,pzAnchor,pzTick,pzHint,pzSolve,pzHintClear,PUZ,PUZLV,get PZ(){return PZ;},PLATS,solids,get houseGrp(){return typeof houseGrp!=="undefined"?houseGrp:null;},get GATE(){return GATE;},SPELL,get MAILCFG(){return MAILCFG;},get MAILV(){return MAILV;},get P(){return P;},get BD(){return BD;},get H(){return H;},get MU(){return MU;},get SV(){return SV;},get FP(){return FP;},fireFP,get RIDE(){return RIDE;},startRide,endRide,camera,scene,T,coaster,DROP,frameAt,get TK(){return TK;},get RP(){return RP;},startTkd,startRope,tkTap,mkTick,mkMul,drawMarket,TRADE,GAMES,inGame,can,zoneTrack,gameMusic,setDay,dayPhase,dayName,isNight,bugs,mkBug,catchBug,drawBook,achDraw,achReady,drawCook,openMail,BUGS,DISHES,ACHS,teleport,jump,earn,openGui,tick,blockers,groundY,buildHouse,get guiOpen(){return guiOpen;}};
 function start(){ load(); applyState(); teleport(SPAWN.x,SPAWN.z); $("load").style.display="none"; last=now(); loop(); musPrefetch();
   const flush=()=>{ S.tick=now(); save(); }; document.addEventListener("visibilitychange",flush); addEventListener("pagehide",flush); addEventListener("beforeunload",flush); addEventListener("blur",flush); }
 const fontsReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
