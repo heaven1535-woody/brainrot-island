@@ -3047,7 +3047,8 @@ function pzWin(){ PZ.won=true; PZ.tEnd=now()-PZ.t0; const L=PUZLV[PZ.lv], sec=Ma
   SFX.fanfare(); burst(P.x,P.y+4,P.z,0xffc83d,26,7,1); if(rec&&S.puzWins>1) setTimeout(()=>{ SFX.record(); note("🏆","신기록! "+sec+"초","gold"); },500);
   note("🧩",L.nm+" 퍼즐 완성! "+num(coins)+" 코인"+(inTime?" (모래시계 안에! ×1.5)":""),"gold"); save(); pzClock();
   const B=$("puzBody"); const w=document.createElement("div"); w.className="spellwhy ok"; w.style.textAlign="center"; w.style.fontSize="1.1rem";
-  w.innerHTML="🎉 빈틈없이 채웠어요! <b>"+sec+"초</b> · +"+num(coins)+" 코인"+(rec?"<br>🏆 이 단계 최고 기록!":""); B.querySelector(".puzwrap").insertBefore(w,B.querySelector(".puztray"));
+  w.innerHTML="🎉 빈틈없이 채웠어요! <b>"+sec+"초</b> · +"+num(coins)+" 코인"+(rec?"<br>🏆 이 단계 최고 기록!":"");
+  const wrap=B.querySelector(".puzwrap"), main=B.querySelector(".puzmain"); if(main) wrap.insertBefore(w,main); else wrap.appendChild(w);   /* 판+쟁반 묶음 앞에 */
   const again=btn("🧩 한 판 더!","wide"); again.onclick=()=>{ pzNew(PZ.lv); drawPuzzle(); }; B.querySelector(".puzwrap").appendChild(again); }
 /* 섬에 놓인 퍼즐 탁자 (민지 선생님 옆) */
 (function puzzleTable(){ const {x,z}=PUZ;
