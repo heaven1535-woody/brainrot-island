@@ -248,7 +248,9 @@
   .spellopts button.no{background:linear-gradient(180deg,#ff8a7d,#e2564a);color:#fff;box-shadow:0 5px 0 #b03b31}
   .spellopts button:disabled{opacity:1}
   /* 🧩 나무 블록 퍼즐 (우봉고식) */
-  .puzwrap{display:flex;flex-direction:column;align-items:center;gap:10px;touch-action:none;-webkit-user-select:none;user-select:none}
+  /* touch-action:none 은 조각과 판에만 — 창 전체에 걸면 손가락으로 창을 못 내린다 */
+  .puzwrap{display:flex;flex-direction:column;align-items:center;gap:10px;-webkit-user-select:none;user-select:none}
+  .puzpiece,.puzboard{touch-action:none}
   .puzboard{position:relative;border-radius:14px;padding:10px;
     background:linear-gradient(135deg,#d9a262,#b97b3f 45%,#c98a4d);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 8px 0 #7a4b24,0 12px 22px rgba(80,45,10,.35)}
   .puzgrid{position:relative;display:grid;gap:0}
