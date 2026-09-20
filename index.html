@@ -118,9 +118,13 @@
     border:3px solid rgba(255,255,255,.45);box-shadow:0 8px 20px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.25);transition:transform .08s}
   .jump{bottom:max(22px,env(safe-area-inset-bottom));background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.28),rgba(0,0,0,.34))}
   /* 🧩 퍼즐 조각을 들고 있을 때만 점프 버튼 왼쪽에 나오는 돌리기 버튼 */
-  .jump.rot{right:max(128px,calc(env(safe-area-inset-right) + 108px));font:900 2.4rem/1 Montserrat,'Noto Sans KR',sans-serif;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.45);
-    background:radial-gradient(circle at 50% 30%,rgba(255,214,120,.6),rgba(150,85,20,.55))}
+  .jump.rot{right:max(128px,calc(env(safe-area-inset-right) + 108px));grid-template-rows:auto auto;row-gap:0;align-content:center;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.45);
+    background:radial-gradient(circle at 50% 30%,rgba(255,214,120,.65),rgba(150,85,20,.6));animation:ppop .25s cubic-bezier(.2,1.4,.4,1)}
+  .jump.rot b{font:900 2.1rem/1 Montserrat,'Noto Sans KR',sans-serif}
+  .jump.rot small{font:800 .8rem/1 'Noto Sans KR',sans-serif;margin-top:2px}
+  .jump.rot::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:3px solid rgba(255,224,138,.7);animation:keypulse 1.8s cubic-bezier(.2,.7,.4,1) infinite;pointer-events:none}
   .jump.rot[hidden]{display:none}
+  body.rot .hotbar{max-width:max(140px,calc(100vw - 470px))}   /* 돌리기 버튼이 나와 있을 땐 가방 줄이 겹치지 않게 (작은 화면에선 최소 폭 유지) */
   .jump:active,.fire:active{transform:translateY(3px) scale(.95)}
   .jump:active{background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.5),rgba(255,255,255,.28))}
   .jump svg{width:40px;height:40px;fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
@@ -411,7 +415,7 @@
   <button class="prompt" id="prompt"><span class="key">E</span><span id="ptxt"></span></button>
   <div class="joy" id="joy"><div class="b"><div class="k" id="knob"></div></div></div>
   <button class="jump" id="jumpBtn" aria-label="점프"><svg viewBox="0 0 24 24"><path d="M5 15l7-7 7 7"/></svg></button>
-  <button class="jump rot" id="rotBtn" hidden aria-label="조각 돌리기">↻</button>
+  <button class="jump rot" id="rotBtn" hidden aria-label="조각 돌리기"><b>↻</b><small>돌리기</small></button>
   <div class="hotbar" id="hotbar"></div>
   <div class="notes" id="notes"></div>
 
@@ -3052,7 +3056,8 @@ function pzTick(t,dt){
     h.on=pzOnBoard(); h.anchor=pzAnchor(p); h.fit=h.on&&pzFits(p,h.anchor[0],h.anchor[1]);
     PZ.ghost.visible=h.on; if(h.on){ const [gx,gz]=pzCellXZ(h.anchor[0],h.anchor[1],p); PZ.ghost.position.set(gx,.58,gz); const m=h.fit?PZGM.ok:PZGM.bad; for(const c of PZ.ghost.children) c.material=m; }
     if(Math.hypot(P.x-PUZ.x,P.z-PUZ.z)>pzSize()/2+16||H.zone!=="field"||RIDE.on||inGame()){ pzReturn(p); note("🧩","조각은 퍼즐 판 옆에 두고 왔어요"); } }   /* 판에서 너무 멀어지면(출발점쯤) 조각은 제자리로 */
-  const rs=!!(h&&L.rot); if(rs!==PZ.rotShown){ PZ.rotShown=rs; $("rotBtn").hidden=!rs; }
+  /* 돌리기 버튼은 조각을 들고 있으면 단계와 상관없이 보여준다 — 쉬움에서만 안 보이니 "버튼이 없다"고 헷갈렸음(아이패드) */
+  const rs=!!h; if(rs!==PZ.rotShown){ PZ.rotShown=rs; $("rotBtn").hidden=!rs; document.body.classList.toggle("rot",rs); }
   if(PZ.won&&PZ.newAt&&t>=PZ.newAt){ PZ.newAt=0; pzNew(PZ.lv); if(near) note("🧩","✨ 새 퍼즐이 나왔어요!"); }
   if(near&&PZ.t0&&!PZ.won){ const s=Math.floor(t-PZ.t0); if(s!==PZ.lastSec){ PZ.lastSec=s; drawGoal(); } }
   if(PZ.sub){ const n=Object.keys(PZ.placed).length, best=S.puzBest&&S.puzBest[PZ.lv]; relabel(PZ.sub,L.e+" "+L.nm+" · 조각 "+n+"/"+PZ.pieces.length+(best?" · 최고 "+best+"초":"")); }
@@ -3066,7 +3071,7 @@ function pzTick(t,dt){
    풀리지 않으면 잘못 놓인 조각을 찾아(하나씩 빼 보며) 그걸 반짝인다. 막힌 지 1분이 넘으면 무료, 아니면 10코인 ---- */
 function pzSolve(){ const L=PUZLV[PZ.lv]; const ids=PZ.pieces.filter(p=>PZ.placed[p.id]===undefined).map(p=>p.id); const filled=new Map(PZ.filled); const res={}; let steps=0;
   const fits=(cells,r0,c0)=>cells.every(([r,c])=>{ const rr=r0+r,cc=c0+c; if(rr<0||cc<0||rr>=PZ.G||cc>=PZ.G) return false; const k=pzKey(rr,cc); return PZ.region.has(k)&&!filled.has(k); });
-  function rec(i){ if(i===ids.length) return true; if(++steps>40000) return false; const p=PZ.pieces[ids[i]]; let cells=p.cells; const nrot=L.rot?4:1;
+  function rec(i){ if(i===ids.length) return true; if(++steps>40000) return false; const p=PZ.pieces[ids[i]]; let cells=p.cells; const nrot=4;   /* 쉬움에서도 아이가 돌려 놓았을 수 있으니 항상 4방향 */
     for(let rot=0;rot<nrot;rot++){ for(let r=0;r<PZ.G;r++) for(let c=0;c<PZ.G;c++){ if(!fits(cells,r,c)) continue; cells.forEach(([dr,dc])=>filled.set(pzKey(r+dr,c+dc),1)); res[p.id]={rot,r,c,cells}; if(rec(i+1)) return true; cells.forEach(([dr,dc])=>filled.delete(pzKey(r+dr,c+dc))); }
       cells=pzRot(cells); } return false; }
   return rec(0)?res:null; }
