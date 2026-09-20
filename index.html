@@ -1001,7 +1001,7 @@ const TIPS=[
   {e:"🥚",t:"미아의 펫 가게에서 알을 사면 펫이 나와요",ok:()=>!S.pets.length&&S.coins>=300},
   {e:"📖",t:"도감에서 아직 못 잡은 것을 확인할 수 있어요",ok:()=>true},
   {e:"👻",t:"귀신의 집에서 촛불을 모으면 코인을 받아요",ok:()=>S.coins>=200},
-  {e:"🧩",t:"민지 선생님 옆 나무판 — 조각 앞에서 E를 눌러 들고, 파인 홈에 놓아 보세요",ok:()=>(S.puzWins||0)<3}
+  {e:"🧩",t:"동쪽 꽃밭 옆 퍼즐 광장(노란 빛기둥) — 조각 앞에서 E를 눌러 들고, 파인 홈에 놓아 보세요",ok:()=>(S.puzWins||0)<3}
 ];
 const TIP={until:0,next:12,txt:"",cls:"goal",last:-1};
 function showTip(txt,secs,cls){ TIP.txt=txt; TIP.cls=cls||"goal"; TIP.until=now()+(secs||7); }
@@ -2917,7 +2917,9 @@ addI({r:3.4,get x(){ const o=bugNear(); return o?o.x:1e9; },get z(){ const o=bug
    예전엔 창 안에서 2D 조각을 손가락으로 끌었는데 "옮기는 느낌이 없다"는 의견으로 바꿈 — 라이벌 기지에서
    브레인롯을 업고 뛰는 것과 같은 방식. 모양을 먼저 만들고 그걸 조각으로 쪼개므로 답이 반드시 있다.
    모래시계가 다 떨어져도 계속 풀 수 있고, 시간 안에 끝내면 코인 보너스만 더 받는다(아이가 실패로 끝나지 않게). */
-const PUZ={x:28,z:9.5,cs:1.4};   /* 판 중심, 한 칸 크기 — 칸이 커야 조이스틱으로도 자리를 맞추기 쉽다 */
+/* 자리: 동쪽 꽃밭 옆 넓은 풀밭(사용자: "좀 더 넓은 곳으로 보기 쉽게"). 처음 자리(민지 가게 옆 28,9.5)는 오비 발판이 머리 위에 떠 있고
+   가게·컨베이어·빛기둥이 붙어 있어 위에서 내려다보면 어수선했다. 장면 전체를 2m 격자로 훑어 32×32m 가 완전히 빈 곳 중 출발점에서 가장 가까운 자리 */
+const PUZ={x:96,z:8,cs:1.6};   /* 판 중심, 한 칸 크기 — 칸이 커야 조이스틱으로도 자리를 맞추기 쉽다 */
 const PUZLV=[null,{nm:"쉬움",e:"🌱",G:4,cells:10,k:3,rot:false,sand:120,coin:40,xp:15,sub:"조각 3개 · 돌릴 필요 없음"},
                   {nm:"보통",e:"🌿",G:5,cells:14,k:4,rot:true,sand:150,coin:90,xp:30,sub:"조각 4개 · 돌려서 맞추기"},
                   {nm:"어려움",e:"🔥",G:6,cells:20,k:5,rot:true,sand:180,coin:160,xp:50,sub:"조각 5개 · 큰 모양"}];
@@ -2958,7 +2960,7 @@ function pzFits(p,r0,c0){ for(const [r,c] of p.cells){ const rr=r0+r,cc=c0+c; if
 function pzSize(){ return PZ.G*PUZ.cs+1.2; }                                   /* 판 한 변(테두리 포함) */
 function pzOrigin(){ const h=PZ.G*PUZ.cs/2; return {x0:PUZ.x-h,z0:PUZ.z-h}; }  /* 0행 0열 칸의 모서리 */
 function pzCellXZ(r0,c0,p){ const {x0,z0}=pzOrigin(); return [x0+(c0+p.W/2)*PUZ.cs,z0+(r0+p.H/2)*PUZ.cs]; }   /* 왼쪽 위가 (r0,c0)인 조각의 가운데 */
-function pzSpots(){ const h=pzSize()/2, m=3.2, {x,z}=PUZ; return [[x+3.4,z+h+m],[x+h+m,z-3.2],[x+h+m,z+3.2],[x-3.4,z-h-m],[x+3.4,z-h-m]]; }   /* 조각 놓는 자리: 남·동·동·북·북 (서쪽은 민지 가게) */
+function pzSpots(){ const h=pzSize()/2, m=3.4, {x,z}=PUZ; return [[x-3.6,z+h+m],[x+3.6,z+h+m],[x+h+m,z],[x-h-m,z],[x,z-h-m]]; }   /* 조각 놓는 자리: 남남·동·서·북 — 사방이 트여 있어 판을 빙 둘러 놓는다 */
 /* 서 있는 자리 → 조각의 왼쪽 위 칸. 조각 가운데가 발밑에 오도록 잡고 반올림하니 한 칸씩 딱딱 옮겨 간다 */
 function pzAnchor(p){ const {x0,z0}=pzOrigin(), cs=PUZ.cs; return [Math.round((P.z-z0)/cs-.5-(p.H-1)/2),Math.round((P.x-x0)/cs-.5-(p.W-1)/2)]; }
 function pzOnBoard(){ const h=pzSize()/2; return H.zone==="field"&&Math.abs(P.x-PUZ.x)<h&&Math.abs(P.z-PUZ.z)<h; }
@@ -3047,8 +3049,10 @@ function drawPuzzle(){ const B=$("puzBody"); B.innerHTML=""; const L=PUZLV[PZ.lv
   const st=document.createElement("div"); st.className="help"; st.innerHTML="<b>"+L.e+" "+L.nm+"</b> — "+L.sub+" · 조각 <b>"+n+"/"+PZ.pieces.length+"</b> · 모래시계 "+L.sand+"초 · 완성 "+L.coin+"코인 (시간 안에 "+Math.round(L.coin*1.5)+")"+(PZ.won?"<br>🎉 완성! 잠시 뒤 새 퍼즐이 나와요":""); B.appendChild(st);
   const nw=btn("🔄 다른 퍼즐 (조각 다시 섞기)","wide"); nw.onclick=()=>{ pzNew(PZ.lv); drawPuzzle(); beep(600,.05); }; B.appendChild(nw); }
 /* 섬에 놓기: 판(걸어 올라갈 수 있는 낮은 발판) · 팻말 · 상호작용 */
-(function puzzleBoard(){ const {x,z}=PUZ; PZ.plat={x,z,w:9.6,d:9.6,y:.5,h:.5,noDraw:true,pad:0}; PLATS.push(PZ.plat);
-  const sx=x-6.4, sz=z+6.4;   /* 팻말: 판 남서쪽 모서리 */
+(function puzzleBoard(){ const {x,z}=PUZ; PZ.plat={x,z,w:10.8,d:10.8,y:.5,h:.5,noDraw:true,pad:0}; PLATS.push(PZ.plat);
+  /* 퍼즐 광장: 연한 풀밭 한 장을 깔아 멀리서도 한 덩어리로 보이고, 빛기둥으로 위치를 알린다 */
+  const lawn=box(30,.04,30,0xc4e39a); lawn.castShadow=false; at(lawn,x,0,z); beacon(x+9.5,z-9.5,0xffe08a);
+  const sx=x-8.8, sz=z+8.8;   /* 팻말: 판 남서쪽 모서리(깔개 밖) */
   at(box(.3,2.8,.3,0x6b4423),sx,1.4,sz); at(box(3,1.7,.18,0xc98a4d),sx,3.1,sz); at(box(3.2,.2,.3,0x8d5a33),sx,4.05,sz); solids.push({x:sx,z:sz,r:.3});
   at(label("🧩 나무 블록 퍼즐",{size:40,h:1.3,color:"#ffe08a"}),sx,5.7,sz); PZ.sub=at(label("조각을 들어 홈에 놓아요",{size:26,h:.75,color:"#bdbebe"}),sx,4.75,sz);
   addI({x:sx,z:sz,h:4.6,r:3.4,text:()=>"🪧 퍼즐 단계 · 다른 퍼즐 (최고 "+(S.puzBest&&S.puzBest[S.puzLv||1]?S.puzBest[S.puzLv||1]+"초":"-")+")",act:()=>openPuzzle()});
@@ -3519,7 +3523,7 @@ const MAPLIST=[["🌱","샘의 씨앗 가게","씨앗을 사서 밭에 심어요
   ["🦈","컨베이어","브레인롯을 사면 저절로 코인이 쌓여요"],["🏡","내 집터","벽·지붕을 사서 집을 지어요"],["👻","귀신의 집","촛불을 모아 탈출해요"],
   ["🏸","배드민턴장","코치와 시합해요"],["🎯","서바이벌·💦 물총","피하고 맞혀요"],["🥋","태권도장","사범 동작을 외워요"],["🪢","줄넘기","줄이 올 때 점프!"],
   ["🎢","놀이공원","롤러코스터·자이로드롭·대관람차·회전목마"],["⛰️","산꼭대기","보물상자가 있어요"],["🏗️","오비","발판을 뛰어 올라가요"],
-  ["🍳","요리 냄비","판매대 옆 — 재료를 합쳐 비싸게 팔아요"],["🧩","나무 블록 퍼즐","민지 선생님 옆 나무판 — 조각을 들고 가서 홈에 놓아요"],["📮","우체통","출발점 옆 — 하루에 한 번 선물이 와요"],
+  ["🍳","요리 냄비","판매대 옆 — 재료를 합쳐 비싸게 팔아요"],["🧩","나무 블록 퍼즐","동쪽 꽃밭 옆 퍼즐 광장(노란 빛기둥) — 조각을 들고 가서 홈에 놓아요"],["📮","우체통","출발점 옆 — 하루에 한 번 선물이 와요"],
   ["🦋","들판의 곤충","잠자리채(준호 가게)로 잡아요. 뛰면 도망가요!"],["🌙","밤","밤에만 나오는 곤충이 있어요"]];
 function menuPage(id){ const ap=$("menuApps"); ap.hidden=!!id;
   document.querySelectorAll(".mpage").forEach(p=>p.hidden=p.id!==id);
@@ -3878,7 +3882,7 @@ function tick(){
     camera.position.lerp(camPos,Math.min(1,dt*5)); camera.lookAt(gcam[1][0],gcam[1][1],gcam[1][2]); }
   else if(FP.on){ const dir=fpDir(); camera.position.set(P.x,P.y+4.6,P.z); camera.lookAt(P.x+dir.x,P.y+4.6+dir.y,P.z+dir.z); player.rotation.y=camYaw+Math.PI; P.ry=player.rotation.y; }
   else if(guiOpen==="g-av"){ player.rotation.y+=dt*.9; const fx=Math.sin(editYaw),fz=Math.cos(editYaw); camPos.set(P.x+fx*9,P.y+3.6,P.z+fz*9); camera.position.lerp(camPos,Math.min(1,dt*6)); camera.lookAt(P.x-fz*1.6,P.y+2.9,P.z+fx*1.6); }
-  else { const hz=H.zone==="haunt",hm=H.zone==="home",pz=PZ.near&&!hz&&!hm,D=hz?11:hm?16:pz?12:17,Hy=hz?5.5:hm?8.5:pz?15:8.8;   /* 🧩 퍼즐 판 근처는 위에서 내려다봐야 홈과 그림자가 보인다 */
+  else { const hz=H.zone==="haunt",hm=H.zone==="home",pz=PZ.near&&!hz&&!hm,D=hz?11:hm?16:pz?9+pzSize()*.35:17,Hy=hz?5.5:hm?8.5:pz?10+pzSize()*.7:8.8;   /* 🧩 퍼즐 판 근처는 위에서 내려다봐야 홈과 그림자가 보인다 — 판이 클수록 더 높이 */
     camPos.set(P.x+Math.sin(camYaw)*D,P.y+Hy,P.z+Math.cos(camYaw)*D);
     if(hm){ const R=ROOM,m=1.6; camPos.x=Math.min(Math.max(camPos.x,R.x-R.w/2+m),R.x+R.w/2-m); camPos.z=Math.min(Math.max(camPos.z,R.z-R.d/2+m),R.z+R.d/2-m); }
     camera.position.lerp(camPos,Math.min(1,dt*8)); camera.lookAt(P.x,P.y+(hm?2.4:pz?1.4:3.6),P.z); }
